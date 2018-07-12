@@ -15,7 +15,8 @@ cimport clpy.backend.opencl.utility
 
 cpdef _get_simple_elementwise_kernel(
         params, operation, name, preamble,
-        loop_prep='', after_loop='', options=(), clpy_variables_declaration=''):
+        loop_prep='', after_loop='', options=(),
+        clpy_variables_declaration=''):
     if loop_prep != '' or after_loop != '':
         raise NotImplementedError("clpy does not support this")
 
@@ -24,10 +25,13 @@ cpdef _get_simple_elementwise_kernel(
     __kernel void ${name}(${params}) {
       ${clpy_variables_declaration}
       ${loop_prep};
-      const size_t i = get_global_id(0); // TODO: Add offset and/or stride
-      __attribute__((annotate("clpy_elementwise_tag"))) void __clpy_elementwise_preprocess();
+      // TODO: Add offset and/or stride
+      const size_t i = get_global_id(0);
+      __attribute__((annotate("clpy_elementwise_tag"))) \
+        void __clpy_elementwise_preprocess();
       ${operation};
-      __attribute__((annotate("clpy_elementwise_tag"))) void __clpy_elementwise_postprocess();
+      __attribute__((annotate("clpy_elementwise_tag"))) \
+        void __clpy_elementwise_postprocess();
       ${after_loop};
     }
     ''').substitute(
@@ -186,16 +190,16 @@ cpdef _get_kernel_params(tuple params, tuple args_info):
         else:
             t = _get_typename(dtype)
             if is_array:
-            # TODO(LWisteria): add "const" if p.is_const
-            #    if p.is_const:
-            #        t = 'const ' + t
+                # TODO(LWisteria): add "const" if p.is_const
+                # if p.is_const:
+                #     t = 'const ' + t
                 t = 'CArray<%s, %d>' % (t, ndim)
                 if p.raw:
-                    t = '__attribute__((annotate("clpy_arg:raw %s%s"))) '
-                        % (p.name, " const" if p.is_const else "") + t
+                    t = '__attribute__((annotate("clpy_arg:raw %s%s"))) ' % (
+                        p.name, " const" if p.is_const else "") + t
                 else:
-                    t = '__attribute__((annotate("clpy_arg:ind %s%s"))) '
-                        % (p.name, " const" if p.is_const else "") + t
+                    t = '__attribute__((annotate("clpy_arg:ind %s%s"))) ' % (
+                        p.name, " const" if p.is_const else "") + t
         ret.append('%s %s%s' % (t,
                                 '_raw_' if is_array and not p.raw else '',
                                 p.name))
@@ -451,6 +455,7 @@ cdef list _get_out_args_with_params(
             raise ValueError('Out shape is mismatched')
     return out_args
 
+
 @util.memoize(for_each_device=True)
 def _get_elementwise_kernel(args_info, types, params, operation, name,
                             preamble, kwargs):
@@ -646,7 +651,7 @@ def _get_ufunc_kernel(
             clvd.append('__attribute__((annotate("clpy_ignore")))'
                         'in{0}_type* in{0}_data;'
                         '__attribute__((annotate("clpy_ignore")))'
-                        'CArray_{1} in{0}_info;'.format(i,args_info[i][2]))
+                        'CArray_{1} in{0}_info;'.format(i, args_info[i][2]))
 
     for i, x in enumerate(out_types):
         types.append('typedef %s out%d_type;' % (
@@ -658,7 +663,7 @@ def _get_ufunc_kernel(
                         'out{0}_type* out{0}_data;'
                         '__attribute__((annotate("clpy_ignore")))'
                         'CArray_{1} out{0}_info;'
-                            .format(i,args_info[i + len(in_types)][2]))
+                        .format(i, args_info[i + len(in_types)][2]))
 
     operation = '\n'.join(op) + routine
 

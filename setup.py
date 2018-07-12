@@ -133,7 +133,7 @@ setup(
             'core/include/cl_stub.hpp',
         ],
     },
-    data_files = [
+    data_files=[
         ('ultima', ['ultima/ultima']),
     ],
     zip_safe=False,
