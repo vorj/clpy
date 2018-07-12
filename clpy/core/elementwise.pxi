@@ -45,9 +45,9 @@ cpdef _get_simple_elementwise_kernel(
 cdef dict _typenames_base = {
     numpy.dtype('float64'): 'double',
     numpy.dtype('float32'): 'float',
-#    numpy.dtype('float16'): 'half', # Extension type
-#    numpy.dtype('complex128'): 'complex<double>', # OpenCL does not support
-#    numpy.dtype('complex64'): 'complex<float>', # OpenCL does not support
+    # numpy.dtype('float16'): 'half', # Extension type
+    # numpy.dtype('complex128'): 'complex<double>', # OpenCL does not support
+    # numpy.dtype('complex64'): 'complex<float>', # OpenCL does not support
     numpy.dtype('int64'): 'long',
     numpy.dtype('int32'): 'int',
     numpy.dtype('int16'): 'short',
@@ -56,7 +56,9 @@ cdef dict _typenames_base = {
     numpy.dtype('uint32'): 'uint',
     numpy.dtype('uint16'): 'ushort',
     numpy.dtype('uint8'): 'uchar',
-    numpy.dtype('bool'): 'uchar',  # OpenCL deos not support bool in kernel param but sizeof(numpy.bool) = 1 (same as uchar)
+    numpy.dtype('bool'): 'uchar',
+    # OpenCL deos not support bool in kernel param but sizeof(numpy.bool) = 1
+    # (same as uchar)
 }
 
 cdef str _all_type_chars = 'dfqlihbQLIHB?'
@@ -189,9 +191,11 @@ cpdef _get_kernel_params(tuple params, tuple args_info):
             #        t = 'const ' + t
                 t = 'CArray<%s, %d>' % (t, ndim)
                 if p.raw:
-                    t = '__attribute__((annotate("clpy_arg:raw %s%s"))) ' % (p.name, " const" if p.is_const else "") + t
+                    t = '__attribute__((annotate("clpy_arg:raw %s%s"))) '
+                        % (p.name, " const" if p.is_const else "") + t
                 else:
-                    t = '__attribute__((annotate("clpy_arg:ind %s%s"))) ' % (p.name, " const" if p.is_const else "") + t
+                    t = '__attribute__((annotate("clpy_arg:ind %s%s"))) '
+                        % (p.name, " const" if p.is_const else "") + t
         ret.append('%s %s%s' % (t,
                                 '_raw_' if is_array and not p.raw else '',
                                 p.name))
@@ -461,15 +465,19 @@ def _get_elementwise_kernel(args_info, types, params, operation, name,
     for p, a in zip(params, args_info):
         if a[0] == ndarray:
             if not p.raw:
-                fmt = '__attribute__((annotate("clpy_elementwise_tag"))) {t} {n};'
+                fmt = '__attribute__((annotate("clpy_elementwise_tag")))' \
+                      '{t} {n};'
                 op.append(fmt.format(t=p.ctype, n=p.name))
-                clvd.append('__attribute__((annotate("clpy_ignore"))) {t}* {n}_data;'.format(t=p.ctype, n=p.name))
-            clvd.append('__attribute__((annotate("clpy_ignore"))) CArray_{ndim} {n}_info;'.format(n=p.name, ndim=a[2]))
+                clvd.append('__attribute__((annotate("clpy_ignore"))) '
+                            '{t}* {n}_data;'.format(t=p.ctype, n=p.name))
+            clvd.append('__attribute__((annotate("clpy_ignore"))) '
+                        'CArray_{ndim} {n}_info;'.format(n=p.name, ndim=a[2]))
     operation = '\n'.join(op) + operation
     clpy_variables_declaration = '\n'.join(clvd)
     return _get_simple_elementwise_kernel(
         kernel_params, operation, name,
-        preamble, **dict(kwargs), clpy_variables_declaration=clpy_variables_declaration)
+        preamble, **dict(kwargs),
+        clpy_variables_declaration=clpy_variables_declaration)
 
 
 cdef class ElementwiseKernel:
@@ -633,15 +641,24 @@ def _get_ufunc_kernel(
     for i, x in enumerate(in_types):
         types.append('typedef %s in%d_type;' % (_get_typename(x), i))
         if args_info[i][0] is ndarray:
-            op.append('__attribute__((annotate("clpy_elementwise_tag"))) in{0}_type in{0};'.format(i))
-            clvd.append('__attribute__((annotate("clpy_ignore")))in{0}_type* in{0}_data;__attribute__((annotate("clpy_ignore")))CArray_{1} in{0}_info;'.format(i,args_info[i][2]))
+            op.append('__attribute__((annotate("clpy_elementwise_tag"))) '
+                      'in{0}_type in{0};'.format(i))
+            clvd.append('__attribute__((annotate("clpy_ignore")))'
+                        'in{0}_type* in{0}_data;'
+                        '__attribute__((annotate("clpy_ignore")))'
+                        'CArray_{1} in{0}_info;'.format(i,args_info[i][2]))
 
     for i, x in enumerate(out_types):
         types.append('typedef %s out%d_type;' % (
             _get_typename(args_info[i + len(in_types)][1]), i))
-        op.append('__attribute__((annotate("clpy_elementwise_tag"))) out{0}_type out{0};'.format(i))
+        op.append('__attribute__((annotate("clpy_elementwise_tag")))'
+                  'out{0}_type out{0};'.format(i))
         if args_info[i + len(in_types)][0] is ndarray:
-            clvd.append('__attribute__((annotate("clpy_ignore")))out{0}_type* out{0}_data;__attribute__((annotate("clpy_ignore")))CArray_{1} out{0}_info;'.format(i,args_info[i + len(in_types)][2]))
+            clvd.append('__attribute__((annotate("clpy_ignore")))'
+                        'out{0}_type* out{0}_data;'
+                        '__attribute__((annotate("clpy_ignore")))'
+                        'CArray_{1} out{0}_info;'
+                            .format(i,args_info[i + len(in_types)][2]))
 
     operation = '\n'.join(op) + routine
 
@@ -651,7 +668,8 @@ def _get_ufunc_kernel(
     clpy_variables_declaration = '\n'.join(clvd)
 
     return _get_simple_elementwise_kernel(
-        kernel_params, operation, name, preamble, clpy_variables_declaration=clpy_variables_declaration)
+        kernel_params, operation, name, preamble,
+        clpy_variables_declaration=clpy_variables_declaration)
 
 
 cdef tuple _guess_routine_from_in_types(list ops, tuple in_types):
