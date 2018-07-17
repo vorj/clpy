@@ -34,7 +34,8 @@ build_ext = clpy_setup_build.custom_build_ext
 sdist = clpy_setup_build.sdist_with_cython
 
 here = os.path.abspath(os.path.dirname(__file__))
-version = imm.SourceFileLoader('version', os.path.join(here, 'clpy', '_version.py')).load_module()
+version = imm.SourceFileLoader('version', os.path.join(
+    here, 'clpy', '_version.py')).load_module()
 __version__ = version.__version__
 
 packages_clpy = [

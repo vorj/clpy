@@ -36,8 +36,9 @@ class CupyAliasMetaPathFinder(MetaPathFinder):
             if len(split_name) == 2:
                 alias_name += '.' + split_name[1]
                 import_module(fullname.rsplit('.', maxsplit=1)[0])
-            path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
-                                alias_name.replace('.', os.sep))
+            path = os.path.join(
+                os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                alias_name.replace('.', os.sep))
             if os.path.isdir(path):
                 path = os.path.join(path, '__init__.py')
                 return ModuleSpec(
