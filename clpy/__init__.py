@@ -1,15 +1,17 @@
 from __future__ import division
-import sys
 import os
+import sys
 
 import numpy
 import six
 
 from clpy import _version
 
-from importlib import import_module
 from importlib.abc import MetaPathFinder
-from importlib.machinery import ModuleSpec, SourceFileLoader
+from importlib import import_module
+from importlib.machinery import ModuleSpec
+from importlib.machinery import SourceFileLoader
+
 
 try:
     from clpy import core  # NOQA
