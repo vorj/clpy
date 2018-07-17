@@ -56,7 +56,12 @@ class CudaAliasMetaPathFinder(MetaPathFinder):
 
 
 if os.getenv('CLPY_NOT_HOOK_CUPY') != '1':
-    if sys.meta_path[0].__name__ != 'CudaAliasMetaPathFinder':
+    CudaAliasMetaPathFinder_hooked = False
+    for meta_path_item in sys.meta_path:
+        if hasattr(meta_path_item, '__name__'):
+            if meta_path_item.__name__ == 'CudaAliasMetaPathFinder':
+                CudaAliasMetaPathFinder_hooked = True
+    if CudaAliasMetaPathFinder_hooked == False:
         sys.meta_path.insert(0, CudaAliasMetaPathFinder)
 
 
