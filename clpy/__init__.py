@@ -28,7 +28,7 @@ except ImportError:
 from clpy import backend
 
 
-class CudaAliasMetaPathFinder(MetaPathFinder):
+class CupyAliasMetaPathFinder(MetaPathFinder):
     def find_spec(fullname, path, target=None):
         split_name = fullname.split('.', maxsplit=1)
         if split_name[0] == 'cupy':
@@ -56,13 +56,13 @@ class CudaAliasMetaPathFinder(MetaPathFinder):
 
 
 if os.getenv('CLPY_NOT_HOOK_CUPY') != '1':
-    CudaAliasMetaPathFinder_hooked = False
+    CupyAliasMetaPathFinder_hooked = False
     for meta_path_item in sys.meta_path:
         if hasattr(meta_path_item, '__name__'):
-            if meta_path_item.__name__ == 'CudaAliasMetaPathFinder':
-                CudaAliasMetaPathFinder_hooked = True
-    if CudaAliasMetaPathFinder_hooked == False:
-        sys.meta_path.insert(0, CudaAliasMetaPathFinder)
+            if meta_path_item.__name__ == 'CupyAliasMetaPathFinder':
+                CupyAliasMetaPathFinder_hooked = True
+    if CupyAliasMetaPathFinder_hooked is False:
+        sys.meta_path.insert(0, CupyAliasMetaPathFinder)
 
 
 def is_available():
