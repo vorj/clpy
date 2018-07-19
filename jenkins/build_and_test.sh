@@ -28,7 +28,7 @@ pip install Cython pytest
 set +e
 # Install clpy
 python setup.py develop 2>&1 | tee build_log
-if [[ $? -ne 0 ]]; then
+if [[ ${PIPESTATUS[0]} -ne 0 ]]; then
   cat build_log >> $ERRORS_FILENAME
   exit 1
 fi
@@ -67,7 +67,7 @@ ERROR_HAS_OCCURRED=0
 for d in $TEST_DIRS; do
   pushd $d
   python -m pytest  2>&1 | tee temporary_log
-  if [[ $? -ne 0 ]]; then
+  if [[ ${PIPESTATUS[0]} -ne 0 ]]; then
     cat temporary_log >> $ERRORS_FILENAME
     ERROR_HAS_OCCURRED=1
   fi
@@ -77,7 +77,7 @@ done
 for f in $TEST_FILES; do
   pushd $(dirname $f)
   python -m pytest $(basename $f) 2>&1 | tee temporary_log
-  if [[ $? -ne 0 ]]; then
+  if [[ ${PIPESTATUS[0]} -ne 0 ]]; then
     cat temporary_log >> $ERRORS_FILENAME
     ERROR_HAS_OCCURRED=1
   fi
