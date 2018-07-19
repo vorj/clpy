@@ -1,4 +1,9 @@
 #!/bin/bash
+
+# A filename to record stderrs
+ERRORS_FILENAME=$WORKSPACE/erros.log
+
+
 # Detailed output
 set -x
 # Exit immediately if an error has occurred
@@ -19,8 +24,16 @@ source venv/bin/activate
 pip install -U pip
 pip install Cython pytest
 
+# Ignore occurred errors below
+set +e
 # Install clpy
-python setup.py develop
+python setup.py develop 2>&1 | tee build_log
+if [[ ${PIPESTATUS[0]} -ne 0 ]]; then
+  cat build_log >> $ERRORS_FILENAME
+  exit 1
+fi
+
+
 
 
 # Run pytests
@@ -49,16 +62,12 @@ tests/clpy_tests/creation_tests/test_matrix.py
 tests/clpy_tests/creation_tests/test_ranges.py
 "
 
-# Ignore occurred errors below
-set +e
-# A filename to record stderrs
-ERRORS_FILENAME=$WORKSPACE/erros.log
 ERROR_HAS_OCCURRED=0
 
 for d in $TEST_DIRS; do
   pushd $d
-  python -m pytest >temporary_log 2>&1
-  if [[ $? -ne 0 ]]; then
+  python -m pytest  2>&1 | tee temporary_log
+  if [[ ${PIPESTATUS[0]} -ne 0 ]]; then
     cat temporary_log >> $ERRORS_FILENAME
     ERROR_HAS_OCCURRED=1
   fi
@@ -67,8 +76,8 @@ done
 
 for f in $TEST_FILES; do
   pushd $(dirname $f)
-  python -m pytest $(basename $f) >temporary_log 2>&1
-  if [[ $? -ne 0 ]]; then
+  python -m pytest $(basename $f) 2>&1 | tee temporary_log
+  if [[ ${PIPESTATUS[0]} -ne 0 ]]; then
     cat temporary_log >> $ERRORS_FILENAME
     ERROR_HAS_OCCURRED=1
   fi
