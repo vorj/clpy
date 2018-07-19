@@ -1,10 +1,16 @@
 from __future__ import division
+import os
 import sys
 
 import numpy
 import six
 
 from clpy import _version
+
+from importlib.abc import MetaPathFinder
+from importlib import import_module
+from importlib.machinery import ModuleSpec
+from importlib.machinery import SourceFileLoader
 
 
 try:
@@ -21,8 +27,45 @@ except ImportError:
 
     six.reraise(ImportError, ImportError(msg), exc_info[2])
 
-
 from clpy import backend
+
+
+class CupyAliasMetaPathFinder(MetaPathFinder):
+    def find_spec(fullname, path, target=None):
+        split_name = fullname.split('.', maxsplit=1)
+        if split_name[0] == 'cupy':
+            alias_name = 'cupy_alias'
+            if len(split_name) == 2:
+                alias_name += '.' + split_name[1]
+                import_module(fullname.rsplit('.', maxsplit=1)[0])
+            path = os.path.join(
+                os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                alias_name.replace('.', os.sep))
+            if os.path.isdir(path):
+                path = os.path.join(path, '__init__.py')
+                return ModuleSpec(
+                    name=fullname,
+                    loader=SourceFileLoader(fullname, path),
+                    origin=path,
+                    is_package=True
+                )
+            else:
+                path = path+'.py'
+                return ModuleSpec(
+                    name=fullname,
+                    loader=SourceFileLoader(fullname, path),
+                    origin=path
+                )
+
+
+if os.getenv('CLPY_NOT_HOOK_CUPY') != '1':
+    CupyAliasMetaPathFinder_hooked = False
+    for meta_path_item in sys.meta_path:
+        if hasattr(meta_path_item, '__name__'):
+            if meta_path_item.__name__ == 'CupyAliasMetaPathFinder':
+                CupyAliasMetaPathFinder_hooked = True
+    if CupyAliasMetaPathFinder_hooked is False:
+        sys.meta_path.insert(0, CupyAliasMetaPathFinder)
 
 
 def is_available():

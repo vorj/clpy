@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import imp
+import importlib.machinery as imm
 import os
 from setuptools import setup
 import sys
@@ -19,7 +19,6 @@ set 1 to CUPY_PYTHON_350_FORCE environment variable."""
         print(msg)
         sys.exit(1)
 
-generate_cupy_alias = (os.getenv('CLPY_GENERATE_CUPY_ALIAS') == '1')
 
 setup_requires = [
     'fastrlock>=0.3',
@@ -35,8 +34,9 @@ build_ext = clpy_setup_build.custom_build_ext
 sdist = clpy_setup_build.sdist_with_cython
 
 here = os.path.abspath(os.path.dirname(__file__))
-__version__ = imp.load_source(
-    '_version', os.path.join(here, 'clpy', '_version.py')).__version__
+version = imm.SourceFileLoader('version', os.path.join(
+    here, 'clpy', '_version.py')).load_module()
+__version__ = version.__version__
 
 packages_clpy = [
     'clpy',
@@ -62,35 +62,32 @@ packages_clpy = [
     'clpy.testing'
 ]
 
-packages_cupy_aliasing = [
-    'cupy',
-    'cupy.binary',
-    'cupy.core',
-    'cupy.creation',
-    'cupy.backend',
-    #   'cupy.backend.memory_hooks',
-    #   'cupy.ext',
-    'cupy.indexing',
-    #   'cupy.io',
-    'cupy.linalg',
-    'cupy.logic',
-    'cupy.manipulation',
-    'cupy.math',
-    'cupy.backend.opencl',
-    'cupy.cuda',
-    #   'cupy.padding',
-    #   'cupy.prof',
-    'cupy.random',
-    'cupy.sorting',
-    'cupy.sparse',
-    'cupy.statistics',
-    'cupy.testing'
+packages_cupy_alias = [
+    'cupy_alias',
+    'cupy_alias.binary',
+    'cupy_alias.core',
+    'cupy_alias.creation',
+    'cupy_alias.backend',
+    #   'cupy_alias.backend.memory_hooks',
+    #   'cupy_alias.ext',
+    'cupy_alias.indexing',
+    #   'cupy_alias.io',
+    'cupy_alias.linalg',
+    'cupy_alias.logic',
+    'cupy_alias.manipulation',
+    'cupy_alias.math',
+    'cupy_alias.backend.opencl',
+    'cupy_alias.cuda',
+    #   'cupy_alias.padding',
+    #   'cupy_alias.prof',
+    'cupy_alias.random',
+    'cupy_alias.sorting',
+    'cupy_alias.sparse',
+    'cupy_alias.statistics',
+    'cupy_alias.testing'
 ]
 
-if generate_cupy_alias:
-    packages = packages_clpy + packages_cupy_aliasing
-else:
-    packages = packages_clpy
+packages = packages_clpy + packages_cupy_alias
 
 setup(
     name='clpy',
