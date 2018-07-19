@@ -152,12 +152,32 @@ class TestNdarray(unittest.TestCase):
 
         self.assertTrue(np.all(expected == actual))
 
+    def test_argmax(self):
+        x_np = np.array([[1, 3, 2, 4]], dtype='float32')
+        x = clpy.array(x_np)
+
+        expected = x_np.argmax()
+        y = x.argmax()
+        actual = y.get()
+
+        self.assertTrue(np.all(expected == actual))
+
     def test_min(self):
         x_np = np.array([[1, 3, 2, 4]], dtype='float32')
         x = clpy.array(x_np)
 
         expected = x_np.min()
         y = x.min()
+        actual = y.get()
+
+        self.assertTrue(np.all(expected == actual))
+
+    def test_argmin(self):
+        x_np = np.array([[4, 3, 1, 2]], dtype='float32')
+        x = clpy.array(x_np)
+
+        expected = x_np.argmin()
+        y = x.argmin()
         actual = y.get()
 
         self.assertTrue(np.all(expected == actual))
