@@ -3,7 +3,7 @@ cpdef clGetErrorName(cl_int status):
     if status in __OPENCL_ERROR_CODE:
         return __OPENCL_ERROR_CODE[status]
     else:
-        return "UNKNOWN ERROR"
+        return "UNKNOWN ERROR: " + str(status)
 
 
 class OpenCLRuntimeError(RuntimeError):
