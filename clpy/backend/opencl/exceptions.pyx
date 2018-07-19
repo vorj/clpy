@@ -3,7 +3,7 @@ cpdef clGetErrorName(cl_int status):
     if status in __OPENCL_ERROR_CODE:
         return __OPENCL_ERROR_CODE[status]
     else:
-        return "UNKNOWN ERROR"
+        return "UNKNOWN ERROR: " + str(status)
 
 
 class OpenCLRuntimeError(RuntimeError):
@@ -11,7 +11,7 @@ class OpenCLRuntimeError(RuntimeError):
         self.status = status
         name = clGetErrorName(status)
         super(OpenCLRuntimeError, self).__init__(
-                '%s %s' % (name, detail))
+            '%s %s' % (name, detail))
 
 
 class OpenCLProgramBuildError(OpenCLRuntimeError):
@@ -38,7 +38,8 @@ __OPENCL_ERROR_CODE = {
     CL_BUILD_PROGRAM_FAILURE: "CL_BUILD_PROGRAM_FAILURE",
     CL_MAP_FAILURE: "CL_MAP_FAILURE",
     CL_MISALIGNED_SUB_BUFFER_OFFSET: "CL_MISALIGNED_SUB_BUFFER_OFFSET",
-    CL_EXEC_STATUS_ERROR_FOR_EVENTS_IN_WAIT_LIST: "CL_EXEC_STATUS_ERROR_FOR_EVENTS_IN_WAIT_LIST",
+    CL_EXEC_STATUS_ERROR_FOR_EVENTS_IN_WAIT_LIST:
+    "CL_EXEC_STATUS_ERROR_FOR_EVENTS_IN_WAIT_LIST",
     CL_COMPILE_PROGRAM_FAILURE: "CL_COMPILE_PROGRAM_FAILURE",
     CL_LINKER_NOT_AVAILABLE: "CL_LINKER_NOT_AVAILABLE",
     CL_LINK_PROGRAM_FAILURE: "CL_LINK_PROGRAM_FAILURE",
