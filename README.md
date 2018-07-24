@@ -29,13 +29,13 @@ We develop and test ClPy in following environments.
 
 * Primary machine
 	* OS: Ubuntu 16.04.4 LTS
-	* CPU: Core i7-4790
-	* GPU: AMD Radeon R9 Fury X
-	* SDK: AMD APP SDK 3.0
+	* CPU: Core i7-7700
+	* GPU: AMD Radeon Vega Frontier Edition (Air Cooled)
+	* SDK: amdgpu-pro-18.20
 * Secondary machine
-	* OS: CentOS 7.2.1511
-	* CPU: Core i7-4790
-	* GPU: NVIDIA GeForce GTX 1060
+	* OS: Ubuntu 16.04.4 LTS
+	* CPU: Core i9-7900X
+	* GPU: NVIDIA TITAN V
 	* SDK: CUDA 9.2
 
 We recommend those environments to all ClPy users. However, reports on other environments are welcome.
