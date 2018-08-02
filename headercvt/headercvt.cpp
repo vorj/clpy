@@ -20,9 +20,11 @@
 #include "clang/Basic/CharInfo.h"
 #include "llvm/ADT/SmallString.h"
 #include "llvm/Support/Format.h"
+#include "llvm/Support/raw_os_ostream.h"
 #include <memory>
 #include <utility>
 #include <sstream>
+#include <fstream>
 #include <iostream>
 #include <regex>
 
@@ -31,7 +33,9 @@ namespace headercvt{
 
 std::stringstream
   types_dot_pxi,
-  api_dot_pxd;
+  api_dot_pxd,
+  not_handled;
+llvm::raw_os_ostream not_handled_ostream(not_handled);
 
 struct ostreams{
   std::vector<llvm::raw_ostream*> oss;
@@ -69,6 +73,42 @@ class preprocessor : public clang::PPCallbacks{
 
 
 
+  static clang::QualType getDeclType(clang::Decl* D) {
+    if (clang::TypedefNameDecl* TDD = clang::dyn_cast<clang::TypedefNameDecl>(D))
+      return TDD->getUnderlyingType();
+    if (clang::ValueDecl* VD = clang::dyn_cast<clang::ValueDecl>(D))
+      return VD->getType();
+    return clang::QualType();
+  }
+
+  static clang::QualType GetBaseType(clang::QualType T) {
+    // FIXME: This should be on the Type class!
+    clang::QualType BaseType = T;
+    while (!BaseType->isSpecifierType()) {
+      if (const clang::PointerType *PTy = BaseType->getAs<clang::PointerType>())
+        BaseType = PTy->getPointeeType();
+      else if (const clang::BlockPointerType *BPy = BaseType->getAs<clang::BlockPointerType>())
+        BaseType = BPy->getPointeeType();
+      else if (const clang::ArrayType* ATy = clang::dyn_cast<clang::ArrayType>(BaseType))
+        BaseType = ATy->getElementType();
+      else if (const clang::FunctionType* FTy = BaseType->getAs<clang::FunctionType>())
+        BaseType = FTy->getReturnType();
+      else if (const clang::VectorType *VTy = BaseType->getAs<clang::VectorType>())
+        BaseType = VTy->getElementType();
+      else if (const clang::ReferenceType *RTy = BaseType->getAs<clang::ReferenceType>())
+        BaseType = RTy->getPointeeType();
+      else if (const clang::AutoType *ATy = BaseType->getAs<clang::AutoType>())
+        BaseType = ATy->getDeducedType();
+      else if (const clang::ParenType *PTy = BaseType->getAs<clang::ParenType>())
+        BaseType = PTy->desugar();
+      else
+        // This must be a syntax error.
+        break;
+    }
+    return BaseType;
+  }
+
+
 
 class simple_vardecl_printer : public clang::DeclVisitor<simple_vardecl_printer>{
   llvm::raw_ostream &Out;
@@ -96,28 +136,18 @@ public:
   }
 };
 
-class decl_printer : public clang::DeclVisitor<decl_printer>{
+
+class typedef_printer : public clang::DeclVisitor<typedef_printer>{
   llvm::raw_ostream &Out;
   clang::PrintingPolicy Policy;
   const clang::ASTContext &Context;
   unsigned Indentation;
 
 public:
-  decl_printer(llvm::raw_ostream &Out, const clang::PrintingPolicy &Policy,
+  typedef_printer(llvm::raw_ostream &Out, const clang::PrintingPolicy &Policy,
               const clang::ASTContext &Context, unsigned Indentation = 0)
       : Out(Out), Policy(Policy), Context(Context), Indentation(Indentation) {}
 
-
-  void VisitTranslationUnitDecl(clang::TranslationUnitDecl *D) {
-    VisitDeclContext(D, false);
-  }
-  static clang::QualType getDeclType(clang::Decl* D) {
-    if (clang::TypedefNameDecl* TDD = clang::dyn_cast<clang::TypedefNameDecl>(D))
-      return TDD->getUnderlyingType();
-    if (clang::ValueDecl* VD = clang::dyn_cast<clang::ValueDecl>(D))
-      return VD->getType();
-    return clang::QualType();
-  }
   llvm::raw_ostream& Indent() { return Indent(Indentation); }
   llvm::raw_ostream& Indent(unsigned Indentation) {
     for (unsigned i = 0; i != Indentation; ++i)
@@ -125,180 +155,50 @@ public:
     return Out;
   }
 
-  void ProcessDeclGroup(clang::SmallVectorImpl<clang::Decl*>& Decls) {
-    this->Indent();
-    clang::Decl::printGroup(Decls.data(), Decls.size(), Out, Policy, Indentation);
-    Out << ";\n";
-    Decls.clear();
-  }
-  static clang::QualType GetBaseType(clang::QualType T) {
-    // FIXME: This should be on the Type class!
-    clang::QualType BaseType = T;
-    while (!BaseType->isSpecifierType()) {
-      if (const clang::PointerType *PTy = BaseType->getAs<clang::PointerType>())
-        BaseType = PTy->getPointeeType();
-      else if (const clang::BlockPointerType *BPy = BaseType->getAs<clang::BlockPointerType>())
-        BaseType = BPy->getPointeeType();
-      else if (const clang::ArrayType* ATy = clang::dyn_cast<clang::ArrayType>(BaseType))
-        BaseType = ATy->getElementType();
-      else if (const clang::FunctionType* FTy = BaseType->getAs<clang::FunctionType>())
-        BaseType = FTy->getReturnType();
-      else if (const clang::VectorType *VTy = BaseType->getAs<clang::VectorType>())
-        BaseType = VTy->getElementType();
-      else if (const clang::ReferenceType *RTy = BaseType->getAs<clang::ReferenceType>())
-        BaseType = RTy->getPointeeType();
-      else if (const clang::AutoType *ATy = BaseType->getAs<clang::AutoType>())
-        BaseType = ATy->getDeducedType();
-      else if (const clang::ParenType *PTy = BaseType->getAs<clang::ParenType>())
-        BaseType = PTy->desugar();
-      else
-        // This must be a syntax error.
-        break;
-    }
-    return BaseType;
-  }
-  void Print(clang::AccessSpecifier AS) {
-    switch(AS) {
-      case clang::AS_none:      llvm_unreachable("No access specifier!");
-      case clang::AS_public:    Out << "public"; break;
-      case clang::AS_protected: Out << "protected"; break;
-      case clang::AS_private:   Out << "private"; break;
-    }
-  }
-  void VisitDeclContext(clang::DeclContext *DC, bool Indent) {
-    if (Policy.TerseOutput)
-      return;
-
-    if (Indent)
-      Indentation += Policy.Indentation;
-
-    clang::SmallVector<clang::Decl*, 2> Decls;
-    for (clang::DeclContext::decl_iterator D = DC->decls_begin(), DEnd = DC->decls_end();
-        D != DEnd; ++D) {
-
-      // Don't print ObjCIvarDecls, as they are printed when visiting the
-      // containing ObjCInterfaceDecl.
-      if (clang::isa<clang::ObjCIvarDecl>(*D))
-        continue;
-
-      // Skip over implicit declarations in pretty-printing mode.
-      if (D->isImplicit())
-        continue;
-
-      // Don't print implicit specializations, as they are printed when visiting
-      // corresponding templates.
-      if (auto FD = clang::dyn_cast<clang::FunctionDecl>(*D))
-        if (FD->getTemplateSpecializationKind() == clang::TSK_ImplicitInstantiation &&
-            !clang::isa<clang::ClassTemplateSpecializationDecl>(DC))
-          continue;
-
-      // The next bits of code handle stuff like "struct {int x;} a,b"; we're
-      // forced to merge the declarations because there's no other way to
-      // refer to the struct in question.  When that struct is named instead, we
-      // also need to merge to avoid splitting off a stand-alone struct
-      // declaration that produces the warning ext_no_declarators in some
-      // contexts.
-      //
-      // This limited merging is safe without a bunch of other checks because it
-      // only merges declarations directly referring to the tag, not typedefs.
-      //
-      // Check whether the current declaration should be grouped with a previous
-      // non-free-standing tag declaration.
-      clang::QualType CurDeclType = getDeclType(*D);
-      if (!Decls.empty() && !CurDeclType.isNull()) {
-        clang::QualType BaseType = GetBaseType(CurDeclType);
-        if (!BaseType.isNull() && clang::isa<clang::ElaboratedType>(BaseType))
-          BaseType = clang::cast<clang::ElaboratedType>(BaseType)->getNamedType();
-        if (!BaseType.isNull() && clang::isa<clang::TagType>(BaseType) &&
-            clang::cast<clang::TagType>(BaseType)->getDecl() == Decls[0]) {
-          Decls.push_back(*D);
-          continue;
-        }
-      }
-
-      // If we have a merged group waiting to be handled, handle it now.
-      if (!Decls.empty())
-        ProcessDeclGroup(Decls);
-
-      // If the current declaration is not a free standing declaration, save it
-      // so we can merge it with the subsequent declaration(s) using it.
-      if (clang::isa<clang::TagDecl>(*D) && !clang::cast<clang::TagDecl>(*D)->isFreeStanding()) {
-        Decls.push_back(*D);
-        continue;
-      }
-
-      if (clang::isa<clang::AccessSpecDecl>(*D)) {
-        Indentation -= Policy.Indentation;
-        this->Indent();
-        Print(D->getAccess());
-        Out << ":\n";
-        Indentation += Policy.Indentation;
-        continue;
-      }
-
-      this->Indent();
-      Visit(*D);
-
-      // FIXME: Need to be able to tell the DeclPrinter when
-      const char *Terminator = nullptr;
-      if (clang::isa<clang::OMPThreadPrivateDecl>(*D) || clang::isa<clang::OMPDeclareReductionDecl>(*D))
-        Terminator = nullptr;
-      else if (clang::isa<clang::ObjCMethodDecl>(*D) && clang::cast<clang::ObjCMethodDecl>(*D)->hasBody())
-        Terminator = nullptr;
-      else if (auto FD = clang::dyn_cast<clang::FunctionDecl>(*D)) {
-        if (FD->isThisDeclarationADefinition())
-          Terminator = nullptr;
-        else
-          Terminator = ";";
-      } else if (auto TD = clang::dyn_cast<clang::FunctionTemplateDecl>(*D)) {
-        if (TD->getTemplatedDecl()->isThisDeclarationADefinition())
-          Terminator = nullptr;
-        else
-          Terminator = ";";
-      } else if (clang::isa<clang::NamespaceDecl>(*D) || clang::isa<clang::LinkageSpecDecl>(*D) ||
-          clang::isa<clang::ObjCImplementationDecl>(*D) ||
-          clang::isa<clang::ObjCInterfaceDecl>(*D) ||
-          clang::isa<clang::ObjCProtocolDecl>(*D) ||
-          clang::isa<clang::ObjCCategoryImplDecl>(*D) ||
-          clang::isa<clang::ObjCCategoryDecl>(*D))
-        Terminator = nullptr;
-      else if (clang::isa<clang::EnumConstantDecl>(*D)) {
-        clang::DeclContext::decl_iterator Next = D;
-        ++Next;
-        if (Next != DEnd)
-          Terminator = ",";
-      } else
-        Terminator = ";";
-
-      if (Terminator)
-        Out << Terminator;
-      if (!Policy.TerseOutput &&
-          ((clang::isa<clang::FunctionDecl>(*D) &&
-            clang::cast<clang::FunctionDecl>(*D)->doesThisDeclarationHaveABody()) ||
-           (clang::isa<clang::FunctionTemplateDecl>(*D) &&
-            clang::cast<clang::FunctionTemplateDecl>(*D)->getTemplatedDecl()->doesThisDeclarationHaveABody())))
-        ; // StmtPrinter already added '\n' after CompoundStmt.
-      else
-        Out << "\n";
-    }
-
-    if (!Decls.empty())
-      ProcessDeclGroup(Decls);
-
-    if (Indent)
-      Indentation -= Policy.Indentation;
-  }
-
   void VisitTypedefDecl(clang::TypedefDecl* D) {
     if (!Policy.SuppressSpecifiers) {
-      Out << "typedef ";
+      Out << "ctypedef ";
 
       if (D->isModulePrivate())
         Out << "__module_private__ ";
     }
-    clang::QualType Ty = D->getTypeSourceInfo()->getType();
-    Ty.print(Out, Policy, D->getName(), Indentation);
+
+    clang::PrintingPolicy SubPolicy(Policy);
+    SubPolicy.PolishForDeclaration = 1;
+    auto Ty = D->getTypeSourceInfo()->getType().getUnqualifiedType();
+    auto Typtr = Ty.getTypePtr();
+
+    if (auto attrtyptr = clang::dyn_cast<clang::VectorType>(Typtr)){
+      Out << attrtyptr->getElementType().getAsString();
+    } else{
+      Out << Ty.getAsString();
+    }
+
+    Out << " " << D->getName();
+    Out << "\n";
   }
+
+};
+
+class funcdecl_printer : public clang::DeclVisitor<funcdecl_printer>{
+  llvm::raw_ostream &Out;
+  clang::PrintingPolicy Policy;
+  const clang::ASTContext &Context;
+  unsigned Indentation;
+
+public:
+  funcdecl_printer(llvm::raw_ostream &Out, const clang::PrintingPolicy &Policy,
+              const clang::ASTContext &Context, unsigned Indentation = 0)
+      : Out(Out), Policy(Policy), Context(Context), Indentation(Indentation) {}
+
+
+  llvm::raw_ostream& Indent() { return Indent(Indentation); }
+  llvm::raw_ostream& Indent(unsigned Indentation) {
+    for (unsigned i = 0; i != Indentation; ++i)
+      Out << "  ";
+    return Out;
+  }
+
 
   void prettyPrintAttributes(clang::Decl) {
     return;
@@ -458,17 +358,141 @@ public:
           Out << " {}";
       }
     }
+
+    Out << "\n";
   }
 
+};
+
+
+class general_decl_visitor : public clang::DeclVisitor<general_decl_visitor>{
+  llvm::raw_ostream &Out;
+  clang::PrintingPolicy Policy;
+  const clang::ASTContext &Context;
+  unsigned Indentation;
+
+public:
+  general_decl_visitor(llvm::raw_ostream &Out, const clang::PrintingPolicy &Policy,
+              const clang::ASTContext &Context, unsigned Indentation = 0)
+      : Out(Out), Policy(Policy), Context(Context), Indentation(Indentation) {
+      
+      }
+
+  llvm::raw_ostream& Indent() { return Indent(Indentation); }
+  llvm::raw_ostream& Indent(unsigned Indentation) {
+    for (unsigned i = 0; i != Indentation; ++i)
+      Out << "  ";
+    return Out;
+  }
+
+  void VisitTranslationUnitDecl(clang::TranslationUnitDecl *D) {
+    VisitDeclContext(D, false);
+  }
+  void VisitDeclContext(clang::DeclContext *DC, bool Indent) {
+    if (Policy.TerseOutput)
+      return;
+
+    if (Indent)
+      Indentation += Policy.Indentation;
+
+    clang::SmallVector<clang::Decl*, 2> Decls;
+    for (clang::DeclContext::decl_iterator D = DC->decls_begin(), DEnd = DC->decls_end();
+        D != DEnd; ++D) {
+
+      // Skip over implicit declarations in pretty-printing mode.
+      if (D->isImplicit())
+        continue;
+
+      // Don't print implicit specializations, as they are printed when visiting
+      // corresponding templates.
+      if (auto FD = clang::dyn_cast<clang::FunctionDecl>(*D))
+        if (FD->getTemplateSpecializationKind() == clang::TSK_ImplicitInstantiation &&
+            !clang::isa<clang::ClassTemplateSpecializationDecl>(DC))
+          continue;
+
+      // The next bits of code handle stuff like "struct {int x;} a,b"; we're
+      // forced to merge the declarations because there's no other way to
+      // refer to the struct in question.  When that struct is named instead, we
+      // also need to merge to avoid splitting off a stand-alone struct
+      // declaration that produces the warning ext_no_declarators in some
+      // contexts.
+      //
+      // This limited merging is safe without a bunch of other checks because it
+      // only merges declarations directly referring to the tag, not typedefs.
+      //
+      // Check whether the current declaration should be grouped with a previous
+      // non-free-standing tag declaration.
+      clang::QualType CurDeclType = getDeclType(*D);
+      if (!Decls.empty() && !CurDeclType.isNull()) {
+        clang::QualType BaseType = GetBaseType(CurDeclType);
+        if (!BaseType.isNull() && clang::isa<clang::ElaboratedType>(BaseType))
+          BaseType = clang::cast<clang::ElaboratedType>(BaseType)->getNamedType();
+        if (!BaseType.isNull() && clang::isa<clang::TagType>(BaseType) &&
+            clang::cast<clang::TagType>(BaseType)->getDecl() == Decls[0]) {
+          Decls.push_back(*D);
+          continue;
+        }
+      }
+
+      // If we have a merged group waiting to be handled, handle it now.
+      if (!Decls.empty())
+        ProcessDeclGroup(Decls);
+
+      // If the current declaration is not a free standing declaration, save it
+      // so we can merge it with the subsequent declaration(s) using it.
+      if (clang::isa<clang::TagDecl>(*D) && !clang::cast<clang::TagDecl>(*D)->isFreeStanding()) {
+        Decls.push_back(*D);
+        continue;
+      }
+
+
+      this->Indent();
+      if (clang::isa<clang::FunctionDecl>(*D)){
+        clang::PrintingPolicy SubPolicy(Policy);
+        llvm::raw_os_ostream funcdecl_ostream(api_dot_pxd);
+        funcdecl_printer FuncDeclPrinter(funcdecl_ostream, SubPolicy, Context, Indentation);
+        FuncDeclPrinter.Visit(clang::cast<clang::FunctionDecl>(*D));
+        continue;
+      }
+
+      if (clang::isa<clang::TypedefDecl>(*D)){
+        clang::PrintingPolicy SubPolicy(Policy);
+        llvm::raw_os_ostream typedef_ostream(types_dot_pxi);
+        typedef_printer TypedefPrinter(typedef_ostream, SubPolicy, Context, Indentation);
+        TypedefPrinter.Visit(*D);
+        continue;
+      }
+    } // end of in-declcontext iteration
+
+    if (!Decls.empty())
+      ProcessDeclGroup(Decls);
+
+    if (Indent)
+      Indentation -= Policy.Indentation;
+  }
+
+  void ProcessDeclGroup(clang::SmallVectorImpl<clang::Decl*>& Decls) {
+    this->Indent();
+    clang::Decl::printGroup(Decls.data(), Decls.size(), Out, Policy, Indentation);
+    Out << ";\n";
+    Decls.clear();
+  }
 };
 
 namespace registrar{
 
 class ast_consumer : public clang::ASTConsumer{
-  std::unique_ptr<decl_printer> visit;
+  std::unique_ptr<general_decl_visitor> visit;
  public:
-  explicit ast_consumer(clang::CompilerInstance& ci) : visit{new decl_printer{llvm::outs(), ci.getASTContext().getPrintingPolicy(), ci.getASTContext()}}{
-    ci.getPreprocessor().addPPCallbacks(llvm::make_unique<preprocessor>());
+  explicit ast_consumer(clang::CompilerInstance& ci) : visit{
+    new general_decl_visitor{
+      not_handled_ostream,
+        ci.getASTContext().getPrintingPolicy(),
+        ci.getASTContext()
+    }
+  } // initializer
+  { // body
+    // ci.getPreprocessor().addPPCallbacks(llvm::make_unique<preprocessor>());
   }
   virtual void HandleTranslationUnit(clang::ASTContext& context)override{
     visit->Visit(context.getTranslationUnitDecl());
@@ -496,5 +520,14 @@ int main(int argc, const char** argv){
   params.emplace_back("-Wno-narrowing");
   clang::tooling::CommonOptionsParser options_parser(argc = static_cast<int>(params.size()), params.data(), tool_category);
   clang::tooling::ClangTool tool(options_parser.getCompilations(), options_parser.getSourcePathList());
-  return tool.run(clang::tooling::newFrontendActionFactory<headercvt::registrar::ast_frontend_action>().get());
+  auto const result_value = tool.run(clang::tooling::newFrontendActionFactory<headercvt::registrar::ast_frontend_action>().get());
+
+  std::cout << "\n\n api.pxd ---------------------------------------------------\n";
+  std::cout << headercvt::api_dot_pxd.str() << std::endl;
+  std::cout << "\n\n types.pxi ---------------------------------------------------\n";
+  std::cout << headercvt::types_dot_pxi.str() << std::endl;
+  std::cout << "\n\n not handled ---------------------------------------------------\n";
+  std::cout << headercvt::not_handled.str() << std::endl;
+
+  return result_value;
 }
