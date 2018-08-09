@@ -183,6 +183,11 @@ public:
   }
 
   void VisitTypedefDecl(clang::TypedefDecl* D) {
+    if (D->getTypeSourceInfo()->getType().getTypePtr()->isUnionType()){
+      Out << "# union reference ignored\n";
+      return;
+    }
+
     Indent();
     if (!Policy.SuppressSpecifiers) {
       Out << "ctypedef ";
@@ -198,12 +203,38 @@ public:
 
     if (auto attrtyptr = clang::dyn_cast<clang::VectorType>(Typtr)){
       Out << attrtyptr->getElementType().getAsString();
-    } else{
+    } else {
       Out << Ty.getAsString();
     }
 
     Out << " " << D->getName();
     Out << "\n";
+  }
+
+  void VisitRecordDecl(clang::RecordDecl *D) {
+    if (D->isUnion()) {
+      Out << "# union declaration(" << D->getName() << ") ignored\n";
+      return;
+    }
+
+    Indent();
+    Out << "cdef " << D->getKindName() << " " << D->getName() << ":\n";
+    Indentation++;
+
+    if( D->field_empty() ){
+      Indent() << "pass\n";
+    }else{
+      for(auto itr = D->field_begin(); itr != D->field_end(); ++itr){
+        VisitFieldDecl(*itr);
+        Out << "\n";
+      }
+    }
+  }
+
+  void VisitFieldDecl(clang::FieldDecl *D) {
+    Indent()
+      << D->getASTContext().getUnqualifiedObjCPointerType(D->getType()).
+      stream(Policy, D->getName(), Indentation);
   }
 
 };
@@ -223,6 +254,15 @@ class grouped_typedef_struct_printer : public clang::DeclVisitor<grouped_typedef
 		}
 
   void visit_group_struct_decl(clang::RecordDecl *RD, clang::TypedefDecl *TDD){
+    std::regex pthread_detector(R"(.*pthread.*)");
+    if(std::regex_match(RD->getNameAsString(), pthread_detector)
+        || std::regex_match(TDD->getNameAsString(), pthread_detector)) {
+      Out << "# pthread type ignored\n";
+      return;
+    }
+
+
+
     if(!RD->isCompleteDefinition()){
       Indent()
         << "cdef struct "
@@ -256,10 +296,11 @@ class grouped_typedef_struct_printer : public clang::DeclVisitor<grouped_typedef
       }
     }
   }
-	void VisitFieldDecl(clang::FieldDecl *D) {
-		Indent() << D->getASTContext().getUnqualifiedObjCPointerType(D->getType()).
-			stream(Policy, D->getName(), Indentation);
-	}
+  void VisitFieldDecl(clang::FieldDecl *D) {
+    Indent()
+      << D->getASTContext().getUnqualifiedObjCPointerType(D->getType()).
+      stream(Policy, D->getName(), Indentation);
+  }
 
 	llvm::raw_ostream& Indent() { return Indent(Indentation); }
 	llvm::raw_ostream& Indent(unsigned Indentation) {
@@ -545,7 +586,7 @@ class general_decl_visitor : public clang::DeclVisitor<general_decl_visitor>{
         func_decl_ostream.flush();
       }
 
-      if (clang::isa<clang::TypedefDecl>(*D)){
+      if (clang::isa<clang::TypedefDecl>(*D) || clang::isa<clang::RecordDecl>(*D)){
         typedef_printer TypedefPrinter(types_ostream, Policy, Context, types_indentation);
         TypedefPrinter.Visit(*D);
         types_ostream.flush();
