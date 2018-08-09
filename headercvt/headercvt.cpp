@@ -80,7 +80,7 @@ public:
       unsigned Indentation = 0
       ): Indentation(Indentation), Out(Out){
 
-    Indent() << "cdef extern from \"CL/cl.h\"\n";
+    Indent() << "cdef extern from \"CL/cl.h\":\n";
     this->Indentation++;
     Indent() << "cdef enum:\n";
     this->Indentation++;
@@ -657,11 +657,11 @@ int main(int argc, const char** argv){
   clang::tooling::ClangTool tool(options_parser.getCompilations(), options_parser.getSourcePathList());
 
   {
-    headercvt::func_decl_ostream << "cdef extern from \"CL/cl.h\"\n";
+    headercvt::func_decl_ostream << "cdef extern from \"CL/cl.h\":\n";
     headercvt::func_decl_indentation ++;
   }
   {
-    headercvt::types_ostream << "cdef extern from \"CL/cl.h\"\n";
+    headercvt::types_ostream << "cdef extern from \"CL/cl.h\":\n";
     headercvt::types_indentation ++;
   }
 
