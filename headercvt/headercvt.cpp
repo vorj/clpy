@@ -180,6 +180,88 @@ public:
 
 };
 
+
+
+class tagdecl_printer : public clang::DeclVisitor<tagdecl_printer>{
+  llvm::raw_ostream &Out;
+  clang::PrintingPolicy Policy;
+  const clang::ASTContext &Context;
+  unsigned Indentation;
+
+public:
+  tagdecl_printer(llvm::raw_ostream &Out, const clang::PrintingPolicy &Policy,
+              const clang::ASTContext &Context, unsigned Indentation = 0)
+      : Out(Out), Policy(Policy), Context(Context), Indentation(Indentation) {}
+
+  llvm::raw_ostream& Indent() { return Indent(Indentation); }
+  llvm::raw_ostream& Indent(unsigned Indentation) {
+    for (unsigned i = 0; i != Indentation; ++i)
+      Out << "  ";
+    return Out;
+  }
+
+};
+
+class grouped_typedef_struct_printer : public clang::DeclVisitor<grouped_typedef_struct_printer>{
+	llvm::raw_ostream &Out;
+	clang::PrintingPolicy Policy;
+	const clang::ASTContext &Context;
+	unsigned Indentation;
+
+	public:
+	grouped_typedef_struct_printer(llvm::raw_ostream &Out, const clang::PrintingPolicy &Policy,
+			const clang::ASTContext &Context, unsigned Indentation = 0)
+		: Out(Out), Policy(Policy), Context(Context), Indentation(Indentation) {
+		}
+
+  void visit_group_struct_decl(clang::RecordDecl *RD, clang::TypedefDecl *TDD){
+    if(!RD->isCompleteDefinition()){
+      Indent()
+        << "cdef struct "
+        << RD->getName()
+        << ":\n"
+        ;
+      Indentation++;
+      Indent() << "pass\n";
+      Indentation--;
+      Indent() 
+        << "ctypedef "
+        << TDD->getTypeSourceInfo()->getType().getUnqualifiedType().getAsString()
+        << " "
+        << TDD->getName()
+        << "\n";
+    }
+    else{
+      Indent()
+        << "ctypedef struct "
+        << TDD->getName()
+        << ":\n"
+        ;
+      Indentation++;
+      if( RD->field_empty() ){
+        Indent() << "pass\n";
+      }else{
+        for(auto itr = RD->field_begin(); itr != RD->field_end(); ++itr){
+          VisitFieldDecl(*itr);
+          Out << "\n";
+        }
+      }
+    }
+  }
+	void VisitFieldDecl(clang::FieldDecl *D) {
+		Indent() << D->getASTContext().getUnqualifiedObjCPointerType(D->getType()).
+			stream(Policy, D->getName(), Indentation);
+	}
+
+	llvm::raw_ostream& Indent() { return Indent(Indentation); }
+	llvm::raw_ostream& Indent(unsigned Indentation) {
+		for (unsigned i = 0; i != Indentation; ++i)
+			Out << "  ";
+		return Out;
+	}
+
+};
+
 class funcdecl_printer : public clang::DeclVisitor<funcdecl_printer>{
   llvm::raw_ostream &Out;
   clang::PrintingPolicy Policy;
@@ -371,12 +453,12 @@ class general_decl_visitor : public clang::DeclVisitor<general_decl_visitor>{
   const clang::ASTContext &Context;
   unsigned Indentation;
 
-public:
+  public:
   general_decl_visitor(llvm::raw_ostream &Out, const clang::PrintingPolicy &Policy,
-              const clang::ASTContext &Context, unsigned Indentation = 0)
-      : Out(Out), Policy(Policy), Context(Context), Indentation(Indentation) {
-      
-      }
+      const clang::ASTContext &Context, unsigned Indentation = 0)
+    : Out(Out), Policy(Policy), Context(Context), Indentation(Indentation) {
+
+    }
 
   llvm::raw_ostream& Indent() { return Indent(Indentation); }
   llvm::raw_ostream& Indent(unsigned Indentation) {
@@ -425,8 +507,9 @@ public:
       clang::QualType CurDeclType = getDeclType(*D);
       if (!Decls.empty() && !CurDeclType.isNull()) {
         clang::QualType BaseType = GetBaseType(CurDeclType);
-        if (!BaseType.isNull() && clang::isa<clang::ElaboratedType>(BaseType))
+        if (!BaseType.isNull() && clang::isa<clang::ElaboratedType>(BaseType)){
           BaseType = clang::cast<clang::ElaboratedType>(BaseType)->getNamedType();
+        }
         if (!BaseType.isNull() && clang::isa<clang::TagType>(BaseType) &&
             clang::cast<clang::TagType>(BaseType)->getDecl() == Decls[0]) {
           Decls.push_back(*D);
@@ -448,20 +531,25 @@ public:
 
       this->Indent();
       if (clang::isa<clang::FunctionDecl>(*D)){
-        clang::PrintingPolicy SubPolicy(Policy);
         llvm::raw_os_ostream funcdecl_ostream(api_dot_pxd);
-        funcdecl_printer FuncDeclPrinter(funcdecl_ostream, SubPolicy, Context, Indentation);
+        funcdecl_printer FuncDeclPrinter(funcdecl_ostream, Policy, Context, Indentation);
         FuncDeclPrinter.Visit(clang::cast<clang::FunctionDecl>(*D));
-        continue;
       }
 
       if (clang::isa<clang::TypedefDecl>(*D)){
-        clang::PrintingPolicy SubPolicy(Policy);
         llvm::raw_os_ostream typedef_ostream(types_dot_pxi);
-        typedef_printer TypedefPrinter(typedef_ostream, SubPolicy, Context, Indentation);
+        typedef_printer TypedefPrinter(typedef_ostream, Policy, Context, Indentation);
         TypedefPrinter.Visit(*D);
-        continue;
       }
+
+      /*
+         if (clang::isa<clang::TagDecl>(*D)){
+         llvm::raw_os_ostream typedef_ostream(types_dot_pxi);
+         tagdecl_printer TagDeclPrinter(typedef_ostream, Policy, Context, Indentation);
+         TagDeclPrinter.Visit(*D);
+         std::cout << "TagDecl" << std::endl;
+         }
+         */
     } // end of in-declcontext iteration
 
     if (!Decls.empty())
@@ -473,9 +561,53 @@ public:
 
   void ProcessDeclGroup(clang::SmallVectorImpl<clang::Decl*>& Decls) {
     this->Indent();
-    clang::Decl::printGroup(Decls.data(), Decls.size(), Out, Policy, Indentation);
-    Out << ";\n";
+    llvm::raw_os_ostream declgroup_ostream(types_dot_pxi);
+    printTypedefStructDeclGroup(Decls.data(), Decls.size(), declgroup_ostream);
     Decls.clear();
+  }
+
+  void printTypedefStructDeclGroup(clang::Decl** Begin, unsigned NumDecls, llvm::raw_ostream &Out) {
+    if(NumDecls == 1) return;
+
+    clang::TagDecl* TD = clang::dyn_cast<clang::TagDecl>(*Begin);
+    clang::TypedefDecl* TDD = clang::dyn_cast<clang::TypedefDecl>(*(Begin+1));
+    if (TD && TDD){
+      clang::TagTypeKind const kind = TD -> getTagKind();
+      switch (kind){
+        case clang::TagTypeKind::TTK_Struct:
+          // Group は `typedef struct {field_name, ...} type_name;` 宣言グループ
+/*
+|-RecordDecl struct definition      <- Begin, TD
+| `-FieldDecl field_name 'int [2]'
+|-TypedefDecl referenced type_name 'struct type_name':'type_name'  <- TDD
+| `-ElaboratedType 'struct type_name' sugar
+|   `-RecordType 'type_name'
+|     `-Record ''
+*/
+          // または `typedef _hoge* hoge_t;` (_tag宣言なし) 宣言グループ
+/*
+|-RecordDecl struct _hoge               <- Begin, TD
+|-TypedefDecl hoge_t 'struct _hoge *'   <- TDD
+| `-PointerType 0x5536680 'struct _hoge *'
+|   `-ElaboratedType 0x5536620 'struct _hoge' sugar
+|     `-RecordType 0x5536600 'struct _hoge'
+|       `-Record 0x54dd690 '_hoge'
+*/
+          {
+            auto tdp = grouped_typedef_struct_printer(Out, Policy, Context, Indentation);
+            clang::RecordDecl* RD = clang::dyn_cast<clang::RecordDecl>(TD);
+            tdp.visit_group_struct_decl( RD, TDD );
+            return;
+          }
+        case clang::TagTypeKind::TTK_Union :
+          Out << "# union declaration ignored\n";
+          return;
+        case clang::TagTypeKind::TTK_Interface :
+        case clang::TagTypeKind::TTK_Class :
+        case clang::TagTypeKind::TTK_Enum :
+					return;
+      }
+    }
   }
 };
 
