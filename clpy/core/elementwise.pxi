@@ -14,26 +14,24 @@ import clpy.backend.opencl.types
 cimport clpy.backend.opencl.utility
 
 cpdef _get_simple_elementwise_kernel(
-        params, operation, name, preamble, ndim,
-        loop_prep='', after_loop='', options=()):
+        params, operation, name, preamble,
+        loop_prep='', after_loop='', options=(),
+        clpy_variables_declaration=''):
     if loop_prep != '' or after_loop != '':
         raise NotImplementedError("clpy does not support this")
-
-    # Workaround for reduction kernel by Chainer
-    # TODO(LWisteria): More neat and generic solution
-    #  C++ style cast -> C style cast
-    operation = operation .replace('T(', '(T)(')
-    #  _ind.size() -> _ind_size
-    operation = operation .replace('_ind.size()', '_ind_size')
 
     module_code = string.Template('''
     ${preamble}
     __kernel void ${name}(${params}) {
+      ${clpy_variables_declaration}
       ${loop_prep};
-      set_CIndexer_${ndim}(&_ind, get_global_id(0));
-      const size_t i = get_global_id(0); // TODO: Add offset and/or stride
-      const size_t _ind_size = size_CIndexer_${ndim}(&_ind);
+      // TODO: Add offset and/or stride
+      const size_t i = get_global_id(0);
+      __attribute__((annotate("clpy_elementwise_tag"))) \
+        void __clpy_elementwise_preprocess();
       ${operation};
+      __attribute__((annotate("clpy_elementwise_tag"))) \
+        void __clpy_elementwise_postprocess();
       ${after_loop};
     }
     ''').substitute(
@@ -41,9 +39,9 @@ cpdef _get_simple_elementwise_kernel(
         operation=operation,
         name=name,
         preamble=preamble,
-        ndim=ndim,
         loop_prep=loop_prep,
-        after_loop=after_loop)
+        after_loop=after_loop,
+        clpy_variables_declaration=clpy_variables_declaration)
     module = compile_with_cache(module_code, options)
     return module.get_function(name)
 
@@ -181,8 +179,9 @@ cpdef _get_kernel_params(tuple params, tuple args_info):
         p = params[i]
         type, dtype, ndim = <tuple>(args_info[i])
         name = p.name
+        is_array = type is ndarray
         if type is Indexer:
-            t = 'CIndexer_%d' % ndim
+            t = 'CIndexer<%d>' % ndim
             ndims[name] = ndim
         elif type is Size_t:
             t = 'kernel_arg_size_t'
@@ -190,18 +189,20 @@ cpdef _get_kernel_params(tuple params, tuple args_info):
             t = '__local _type_reduce* const __restrict__'
         else:
             t = _get_typename(dtype)
-            # TODO(LWisteria): add "const" if p.is_const
-            if type is ndarray:
-                t = '__global %s* const __restrict__' % (t)
+            if is_array:
+                # TODO(LWisteria): add "const" if p.is_const
+                # if p.is_const:
+                #     t = 'const ' + t
+                t = 'CArray<%s, %d>' % (t, ndim)
                 if p.raw:
-                    fmt = '%s'
+                    t = '__attribute__((annotate("clpy_arg:raw %s%s"))) ' % (
+                        p.name, " const" if p.is_const else "") + t
                 else:
-                    fmt = '%s_data'
-                name = fmt % (name)
-        ret.append('%s %s' % (t, name))
-
-        if type is ndarray:
-            ret.append('const CArray_%d %s_info' % (ndim, p.name))
+                    t = '__attribute__((annotate("clpy_arg:ind %s%s"))) ' % (
+                        p.name, " const" if p.is_const else "") + t
+        ret.append('%s %s%s' % (t,
+                                '_raw_' if is_array and not p.raw else '',
+                                p.name))
     return ', '.join(ret), ndims
 
 
@@ -454,58 +455,10 @@ cdef list _get_out_args_with_params(
             raise ValueError('Out shape is mismatched')
     return out_args
 
-cdef tuple _get_raw_indexers_params(tuple params, operation):
-    # raw_indexers_params has tuple of
-    # ( name of raw array , index to access raw array)
-    # when operation is 'x[i] + x[n+i-1] + y[i];',
-    # raw_indexers_params has (('x', 'i'), ('x', 'n+i-1'), (y, 'i')).
-    raw_indexers_params = ()
-    cdef list raw_names = []
-    for p in params:
-        if p.raw:
-            raw_names.append(p.name)
-    for op in operation.split(';'):
-        for p_name in raw_names:
-            target = p_name
-            target_len = len(target)
-            # TODO(tomoya.sakai): Cannot find array name with white space,
-            #                     e.g. 'y = x [i]'
-            last_matched = op.find(target + '[')
-            while last_matched != -1:
-                left_pos = last_matched + target_len
-                # TODO(tomoya.sakai): Nesting of '[' is not implemented.
-                #                     Wrong ']' is found if nested.
-                right_pos = op.find(']', left_pos)
-                if right_pos == -1:
-                    raise RuntimeError('Cannot find \']\'')
-                index = op[(left_pos+1):(right_pos)]
-                raw_indexers_params = raw_indexers_params + ((p_name, index), )
-                last_matched = op.find(target + '[', last_matched + target_len)
-    return raw_indexers_params
-
-
-def _get_raw_replaced_operation(operation, params, args_info,
-                                raw_indexers_params):
-    ndims={}
-    for i in range(len(params)):
-        if (params[i].raw):
-            type, dtype, ndim = <tuple>(args_info[i])
-            ndims[params[i].name] = ndim
-    for t in raw_indexers_params:
-        p_name, target_index = t
-        target = p_name + '[' + target_index + ']'
-        if operation.find(target) != -1:
-            replace_str = '{n}[get_CArrayIndexRaw_{ndim}' \
-                          '(&{n}_info, {target_index})]' \
-                          .format(n=p_name, ndim=ndims[p_name],
-                                  target_index=target_index)
-            operation = operation.replace(target, replace_str)
-    return operation
-
 
 @util.memoize(for_each_device=True)
 def _get_elementwise_kernel(args_info, types, params, operation, name,
-                            preamble, raw_indexers_params, kwargs):
+                            preamble, kwargs):
     kernel_params, ndims = _get_kernel_params(params, args_info)
     ndim = ndims['_ind']
     types_preamble = '\n'.join(
@@ -513,24 +466,23 @@ def _get_elementwise_kernel(args_info, types, params, operation, name,
     preamble = types_preamble + '\n' + preamble
 
     op = []
+    clvd = []
     for p, a in zip(params, args_info):
-        if not p.raw and a[0] == ndarray:
-            fmt = '{t} {n} = {n}_data[get_CArrayIndex_{ndim}' \
-                  '(&{n}_info, &_ind)];'
-            if p.is_const:
-                fmt = 'const ' + fmt
-            op.append(fmt.format(t=p.ctype, n=p.name, ndim=ndim))
-    operation = _get_raw_replaced_operation(operation, params, args_info,
-                                            raw_indexers_params)
-    op.append(operation + ';')
-    for p, a in zip(params, args_info):
-        if not p.raw and a[0] == ndarray and not p.is_const:
-            fmt = '{n}_data[get_CArrayIndex_{ndim}(&{n}_info, &_ind)] = {n};'
-            op.append(fmt.format(n=p.name, ndim=ndim))
-    operation = '\n'.join(op)
+        if a[0] == ndarray:
+            if not p.raw:
+                fmt = '__attribute__((annotate("clpy_elementwise_tag")))' \
+                      '{t} {n};'
+                op.append(fmt.format(t=p.ctype, n=p.name))
+                clvd.append('__attribute__((annotate("clpy_ignore"))) '
+                            '{t}* {n}_data;'.format(t=p.ctype, n=p.name))
+            clvd.append('__attribute__((annotate("clpy_ignore"))) '
+                        'CArray_{ndim} {n}_info;'.format(n=p.name, ndim=a[2]))
+    operation = '\n'.join(op) + operation
+    clpy_variables_declaration = '\n'.join(clvd)
     return _get_simple_elementwise_kernel(
         kernel_params, operation, name,
-        preamble, ndim, **dict(kwargs))
+        preamble, **dict(kwargs),
+        clpy_variables_declaration=clpy_variables_declaration)
 
 
 cdef class ElementwiseKernel:
@@ -581,7 +533,6 @@ cdef class ElementwiseKernel:
         readonly bint reduce_dims
         readonly str preamble
         readonly object kwargs
-        readonly tuple raw_indexers_params
 
     def __init__(self, in_params, out_params, operation,
                  name='kernel', reduce_dims=True, preamble='', **kwargs):
@@ -597,8 +548,6 @@ cdef class ElementwiseKernel:
         param_rest = _get_param_info('CIndexer _ind', False)
         self.params = self.in_params + self.out_params + param_rest
 
-        self.raw_indexers_params = _get_raw_indexers_params(self.params,
-                                                            operation)
         self.operation = operation
         self.name = name
         self.reduce_dims = reduce_dims
@@ -681,7 +630,7 @@ cdef class ElementwiseKernel:
 
         kern = _get_elementwise_kernel(
             args_info, types, self.params, self.operation,
-            self.name, self.preamble, self.raw_indexers_params, self.kwargs)
+            self.name, self.preamble, self.kwargs)
         kern.linear_launch(indexer.size, inout_args)
         return ret
 
@@ -690,35 +639,42 @@ cdef class ElementwiseKernel:
 def _get_ufunc_kernel(
         in_types, out_types, routine, args_info, params, name, preamble):
     kernel_params, ndims = _get_kernel_params(params, args_info)
-    ndim = ndims['_ind']
 
     types = []
     op = []
+    clvd = []
     for i, x in enumerate(in_types):
         types.append('typedef %s in%d_type;' % (_get_typename(x), i))
         if args_info[i][0] is ndarray:
-            op.append('const in{0}_type in{0} = in{0}_data[get_CArrayIndex_{1}'
-                      '(&in{0}_info, &_ind)];'.format(i, ndim))
+            op.append('__attribute__((annotate("clpy_elementwise_tag"))) '
+                      'in{0}_type in{0};'.format(i))
+            clvd.append('__attribute__((annotate("clpy_ignore")))'
+                        'in{0}_type* in{0}_data;'
+                        '__attribute__((annotate("clpy_ignore")))'
+                        'CArray_{1} in{0}_info;'.format(i, args_info[i][2]))
 
     for i, x in enumerate(out_types):
         types.append('typedef %s out%d_type;' % (
             _get_typename(args_info[i + len(in_types)][1]), i))
-        op.append('out{0}_type out{0} = out{0}_data[get_CArrayIndex_{1}'
-                  '(&out{0}_info, &_ind)];'.format(i, ndim))
+        op.append('__attribute__((annotate("clpy_elementwise_tag")))'
+                  'out{0}_type out{0};'.format(i))
+        if args_info[i + len(in_types)][0] is ndarray:
+            clvd.append('__attribute__((annotate("clpy_ignore")))'
+                        'out{0}_type* out{0}_data;'
+                        '__attribute__((annotate("clpy_ignore")))'
+                        'CArray_{1} out{0}_info;'
+                        .format(i, args_info[i + len(in_types)][2]))
 
-    op.append(routine + ';')
-
-    for i, x in enumerate(out_types):
-        op.append('out{0}_data[get_CArrayIndex_{1}'
-                  '(&out{0}_info, &_ind)] = out{0};'.format(i, ndim))
-
-    operation = '\n'.join(op)
+    operation = '\n'.join(op) + routine
 
     types.append(preamble)
     preamble = '\n'.join(types)
 
+    clpy_variables_declaration = '\n'.join(clvd)
+
     return _get_simple_elementwise_kernel(
-        kernel_params, operation, name, preamble, ndim)
+        kernel_params, operation, name, preamble,
+        clpy_variables_declaration=clpy_variables_declaration)
 
 
 cdef tuple _guess_routine_from_in_types(list ops, tuple in_types):

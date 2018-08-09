@@ -6,6 +6,7 @@ import six
 import clpy
 # from clpy import backend
 from clpy.backend.opencl.exceptions import OpenCLProgramBuildError
+from clpy.backend.ultima.exceptions import UltimaRuntimeError
 # from clpy import core
 from clpy import testing
 
@@ -593,14 +594,14 @@ class TestClpyElementwiseKernelwithChunk(unittest.TestCase):
                 'raw T x',
                 'T z',
                 "z = x[i * y;",     # second operation
-                'vector_mul_add')
+                'vector_mul_add')(x, dummy)
 
 
 @testing.gpu
 class TestElementwiseRaiseExceptions(unittest.TestCase):
 
     def test_undeclared_identifier(self):
-        with six.assertRaisesRegex(self, OpenCLProgramBuildError,
+        with six.assertRaisesRegex(self, UltimaRuntimeError,
                                    'undeclared identifier'):
             x = clpy.core.array(numpy.array([1], dtype="float32"))
             clpy.ElementwiseKernel(

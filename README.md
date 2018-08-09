@@ -55,9 +55,21 @@ export LIBRARY_PATH=${LIBRARY_PATH}:${AMDAPPSDKROOT}/lib/x86_64
 
 and add ldconfig on `/etc/ldconf.so.d/` and `$ sudo ldconfig`.
 
-After OpenCL is successfully installed, install ClPy.
+Second, install LLVM/Clang.
+Current ClPy requires LLVM/Clang 4.0, 5.0, or 6.0.
+We **strongly** recommend that you build LLVM/Clang from the source codes and install it.
+However, at least in Ubuntu 16.04, you can use the LLVM/Clang from the Ubuntu official package repository.
+In that case, you need to set `PATH` and `CPLUS_INCLUDE_PATH` environment variables like below.
 
-```sh
+```console
+# apt install clang-6.0 libclang-6.0-dev
+$ export PATH=/usr/lib/llvm-6.0/bin:$PATH
+$ export CPLUS_INCLUDE_PATH=/usr/lib/llvm-6.0/include:$CPLUS_INCLUDE_PATH
+```
+
+After OpenCL and LLVM/Clang is successfully installed, install ClPy.
+
+```console
 $ pip install cython
 $ python setup.py install
 ```
@@ -77,12 +89,10 @@ Or you don't need to replace any codes, if you run your python code with `-m clp
 ### Woking with Chainer
 
 It's confirmed that ClPy works with [Chainer v3.3.0](https://github.com/chainer/chainer/tree/v3.3.0).
-There are a few patches required on Chainer codes for working with **the current version of** ClPy.
-Please install [Chainer v3.3.0](https://github.com/chainer/chainer/tree/v3.3.0) along [the patching instructions](https://github.com/fixstars/clpy/blob/clpy/patch/chainer/README.md).
 
 ### Tests
 
-```sh
+```console
 $ pip install pytest
 $ cd tests/you/want
 $ python -m pytest test_you_want.py

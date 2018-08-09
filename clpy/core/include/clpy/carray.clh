@@ -339,6 +339,7 @@ CREATE_CINDXER(13)
 CREATE_CINDXER(14)
 CREATE_CINDXER(15)
 
+#undef CREATE_CINDEXER
 
 #define CREATE_CARRAY(_NDIM) \
 typedef struct { \
@@ -346,16 +347,6 @@ typedef struct { \
   size_t shape_[_NDIM]; \
   size_t strides_[_NDIM]; \
 } CArray_##_NDIM; \
-static size_t get_CArrayIndexRaw_##_NDIM(const CArray_##_NDIM* const __restrict__ info, const ptrdiff_t idx[_NDIM]) { \
-  size_t offset = info->offset; \
-  for (size_t dim = 0; dim < _NDIM; dim++) { \
-    offset += info->strides_[dim] * (size_t)idx[dim]; \
-  } \
-  return offset; \
-} \
-static size_t get_CArrayIndex_##_NDIM(const CArray_##_NDIM* const __restrict__ info, const CIndexer_##_NDIM* const __restrict__ _ind) { \
-  return get_CArrayIndexRaw_##_NDIM(info, _ind->index_); \
-} \
 size_t get_CArrayIndexI_##_NDIM(const CArray_##_NDIM* const __restrict__ info, const size_t i) { \
   size_t offset = info->offset; \
   size_t ii = i; \
@@ -412,6 +403,44 @@ CREATE_CARRAY(13)
 CREATE_CARRAY(14)
 CREATE_CARRAY(15)
 
+#undef CREATE_CARRAY
+
+#ifdef __ULTIMA
+#define CREATE_CARRAY_FUNCTION(_NDIM) \
+template<typename T>\
+static size_t get_CArrayIndexRaw_##_NDIM(const CArray_##_NDIM* const __restrict__ info, const T* idx) { \
+  size_t offset = info->offset; \
+  for (size_t dim = 0; dim < _NDIM; dim++) { \
+    offset += info->strides_[dim] * idx[dim]; \
+  } \
+  return offset; \
+}\
+static size_t get_CArrayIndex_##_NDIM(const CArray_##_NDIM* const __restrict__ info, const CIndexer_##_NDIM* const __restrict__ _ind) { \
+  return get_CArrayIndexRaw_##_NDIM(info, _ind->index_); \
+}\
+template size_t get_CArrayIndexRaw_##_NDIM(const CArray_##_NDIM* const __restrict__ info, const unsigned long* idx);\
+template size_t get_CArrayIndexRaw_##_NDIM(const CArray_##_NDIM* const __restrict__ info, const long* idx);\
+template size_t get_CArrayIndexRaw_##_NDIM(const CArray_##_NDIM* const __restrict__ info, const unsigned int* idx);\
+template size_t get_CArrayIndexRaw_##_NDIM(const CArray_##_NDIM* const __restrict__ info, const int* idx);
+static void __clpy_begin_print_out() __attribute__((annotate("clpy_begin_print_out")));
+CREATE_CARRAY_FUNCTION(2)
+CREATE_CARRAY_FUNCTION(3)
+CREATE_CARRAY_FUNCTION(4)
+CREATE_CARRAY_FUNCTION(5)
+CREATE_CARRAY_FUNCTION(6)
+CREATE_CARRAY_FUNCTION(7)
+CREATE_CARRAY_FUNCTION(8)
+CREATE_CARRAY_FUNCTION(9)
+CREATE_CARRAY_FUNCTION(10)
+CREATE_CARRAY_FUNCTION(11)
+CREATE_CARRAY_FUNCTION(12)
+CREATE_CARRAY_FUNCTION(13)
+CREATE_CARRAY_FUNCTION(14)
+CREATE_CARRAY_FUNCTION(15)
+static void __clpy_end_print_out() __attribute__((annotate("clpy_end_print_out")));
+#endif
+
+#undef CREATE_CARRAY_FUNCTION
 
 static char _floor_divide_c(const char x, const char y) {
   if (y == 0) return 0;

@@ -15,34 +15,9 @@ cpdef _get_simple_reduction_kernel(
         name, local_size, reduce_type, params, identity,
         pre_map_expr, reduce_expr, post_map_expr,
         type_preamble, input_expr, output_expr, output_store, preamble,
-        options, ndim_in, ndim_out):
+        options, clpy_variables_declaration):
     if identity is None:
         identity = '0'
-
-    # Workaround for reduction kernel by Chainer
-    # TODO(LWisteria): More neat and generic solution
-    #  C++ style cast -> C style cast
-    pre_map_expr = pre_map_expr .replace('T(', '(T)(') \
-                                .replace('_type_reduce(', '(_type_reduce)(')
-    reduce_expr = reduce_expr  .replace('T(', '(T)(') \
-                               .replace('_type_reduce(', '(_type_reduce)(')
-    post_map_expr = post_map_expr.replace('T(', '(T)(') \
-                                 .replace('_type_reduce(', '(_type_reduce)(')
-    input_expr = input_expr   .replace('T(', '(T)(') \
-                              .replace('_type_reduce(', '(_type_reduce)(')
-    output_expr = output_expr  .replace('T(', '(T)(') \
-                               .replace('_type_reduce(', '(_type_reduce)(')
-    #  _ind.size() -> _in_size
-    pre_map_expr = pre_map_expr .replace('_in_ind.size()', '_in_size') \
-                                .replace('_out_ind.size()', '_out_size')
-    reduce_expr = reduce_expr  .replace('_in_ind.size()', '_in_size') \
-                               .replace('_out_ind.size()', '_out_size')
-    post_map_expr = post_map_expr.replace('_in_ind.size()', '_in_size') \
-                                 .replace('_out_ind.size()', '_out_size')
-    input_expr = input_expr   .replace('_in_ind.size()', '_in_size') \
-                              .replace('_out_ind.size()', '_out_size')
-    output_expr = output_expr  .replace('_in_ind.size()', '_in_size') \
-                               .replace('_out_ind.size()', '_out_size')
 
     module_code = string.Template(string.Template('''
     typedef ${typeof_size} kernel_arg_size_t;
@@ -58,23 +33,25 @@ cpdef _get_simple_reduction_kernel(
     typedef ${reduce_type} _type_reduce;
     __kernel void ${name}(${params}) {
       const size_t lid = get_local_id(0);
-      const size_t _in_size = size_CIndexer_${ndim_in}(&_in_ind);
-      const size_t _out_size = size_CIndexer_${ndim_out}(&_out_ind);
+      ${clpy_variables_declaration}
+      __attribute__((annotate("clpy_reduction_tag"))) \
+        void __clpy_reduction_preprocess();
 
       const size_t _J_offset = lid / _local_stride;
-      const size_t  _j_offset = _J_offset * _out_size;
+      const size_t  _j_offset = _J_offset * _out_ind.size();
       const size_t  _J_stride = ${local_size};
-      const size_t  _j_stride = ${local_size} * _out_size;
+      const size_t  _j_stride = ${local_size} * _out_ind.size();
 
       for (size_t _i_base = get_group_id(0) * _local_stride;
-           _i_base < _out_size;
+           _i_base < _out_ind.size();
            _i_base += get_num_groups(0) * _local_stride) {
         _type_reduce _s = (_type_reduce)${identity};
         const size_t  _i = _i_base + lid % _local_stride;
         size_t  _J = _J_offset;
-        for (size_t _j = _i + _j_offset; _j < _in_size;
+        for (size_t _j = _i + _j_offset; _j < _in_ind.size();
              _j += _j_stride, _J += _J_stride) {
-          set_CIndexer_${ndim_in}(&_in_ind, _j);
+          __attribute__((annotate("clpy_reduction_tag"))) \
+            void __clpy_reduction_set_cindex_in();
           ${input_expr}
           _type_reduce _a = ${pre_map_expr};
           _s = REDUCE(_s, _a);
@@ -91,8 +68,9 @@ cpdef _get_simple_reduction_kernel(
           _s = _sdata[lid];
           barrier(CLK_LOCAL_MEM_FENCE);
         }
-        if (_J_offset == 0 && _i < _out_size) {
-          set_CIndexer_${ndim_out}(&_out_ind, _i);
+        if (_J_offset == 0 && _i < _out_ind.size()) {
+          __attribute__((annotate("clpy_reduction_tag"))) \
+            void __clpy_reduction_set_cindex_out();
           ${output_expr}
           POST_MAP(_s);
           ${output_store}
@@ -111,9 +89,8 @@ cpdef _get_simple_reduction_kernel(
         output_expr=output_expr,
         output_store=output_store,
         preamble=preamble,
-        ndim_in=ndim_in,
-        ndim_out=ndim_out,
-        typeof_size=clpy.backend.opencl.types.device_typeof_size)
+        typeof_size=clpy.backend.opencl.types.device_typeof_size,
+        clpy_variables_declaration=clpy_variables_declaration)
     module = compile_with_cache(module_code, options)
     return module.get_function(name)
 
@@ -178,7 +155,7 @@ cpdef list _get_inout_args(
 def _get_simple_reduction_function(
         routine, params, args_info, in_arg_dtype, out_arg_dtype, out_types,
         name, local_size, identity, input_expr, output_expr, output_store,
-        _preamble, options):
+        _preamble, options, clpy_variables_declaration=''):
     reduce_type = routine[3]
     if reduce_type is None:
         reduce_type = _get_typename(out_types[0])
@@ -189,14 +166,16 @@ def _get_simple_reduction_function(
     params, ndims = _get_kernel_params(params, args_info)
     ndim_in = ndims['_in_ind']
     ndim_out = ndims['_out_ind']
-    input_expr = input_expr.format(ndim=ndim_in)
-    output_expr = output_expr.format(ndim=ndim_out)
-    output_store = output_store.format(ndim=ndim_out)
+    input_expr = input_expr
+    output_expr = output_expr
+    output_store = output_store
+    clpy_variables_declaration = clpy_variables_declaration.format(
+        ndim_in=ndim_in, ndim_out=ndim_out)
     return _get_simple_reduction_kernel(
         name, local_size, reduce_type, params, identity,
         routine[0], routine[1], routine[2],
         type_preamble, input_expr, output_expr, output_store, _preamble,
-        options, ndim_in, ndim_out)
+        options, clpy_variables_declaration)
 
 
 class simple_reduction_function(object):
@@ -221,12 +200,20 @@ class simple_reduction_function(object):
                 'CIndexer _in_ind, CIndexer _out_ind', False) +
             _get_param_info('kernel_arg_size_t _local_stride', True) +
             _get_param_info('LocalMem _sdata', True))
-        self._input_expr = 'const type_in0_data in0 = in0_data' \
-                           '[get_CArrayIndex_{ndim}(&in0_info, &_in_ind)];'
-        self._output_expr = 'type_out0_data out0 = out0_data' \
-                            '[get_CArrayIndex_{ndim}(&out0_info, &_out_ind)];'
-        self._output_store = 'out0_data[get_CArrayIndex_{ndim}' \
-                             '(&out0_info, &_out_ind)] = out0;'
+        self._input_expr = \
+            '__attribute__((annotate("clpy_simple_reduction_tag:in"))) ' \
+            'type_in0_data in0;'
+        self._output_expr = \
+            '__attribute__((annotate("clpy_simple_reduction_tag:out"))) ' \
+            'type_out0_data out0;'
+        self._clpy_variables_declaration = \
+            '__attribute__((annotate("clpy_ignore"))) type_in0_data* in0_data;' \
+            '__attribute__((annotate("clpy_ignore"))) CArray_{ndim_in} in0_info;' \
+            '__attribute__((annotate("clpy_ignore"))) type_out0_data* out0_data;' \
+            '__attribute__((annotate("clpy_ignore"))) CArray_{ndim_out} ' \
+            'out0_info;'
+        self._output_store = '__attribute__((annotate("clpy_simple_reduction_tag")))' \
+                             'void __clpy_reduction_postprocess();'
         self._routine_cache = {}
         # default is True when identity for the kernel is None in clpy
         self.default = default
@@ -284,7 +271,7 @@ class simple_reduction_function(object):
             in_args[0].dtype.type, out_args[0].dtype.type, out_types,
             self.name, local_size, self.identity,
             self._input_expr, self._output_expr, self._output_store,
-            self._preamble, ())
+            self._preamble, (), self._clpy_variables_declaration)
 
         # TODO(okuta) set actual size
         shared_mem = 32 * local_size
@@ -302,7 +289,7 @@ class simple_reduction_function(object):
 def _get_reduction_kernel(
         params, args_info, types,
         name, local_size, reduce_type, identity, map_expr, reduce_expr,
-        post_map_expr, preamble, options, raw_indexers_params):
+        post_map_expr, preamble, options):
     kernel_params, ndims = _get_kernel_params(params, args_info)
     ndim_in = ndims['_in_ind']
     ndim_out = ndims['_out_ind']
@@ -312,29 +299,25 @@ def _get_reduction_kernel(
         'typedef %s %s;' % (_get_typename(v), k)
         for k, v in types)
     input_expr = '\n'.join(
-        ['const {type} {name} = '
-         '{name}_data[get_CArrayIndexI_{ndim}(&{name}_info, _j)];'
-         .format(type=p.ctype, name=p.name, ndim=ndim_in)
+        ['__attribute__((annotate("clpy_standard_reduction_tag:j"))) '
+         '{type} {name};'.format(type=p.ctype, name=p.name)
          for p in arrays if p.is_const])
     output_expr = '\n'.join(
-        ['{type} {name} = '
-         '{name}_data[get_CArrayIndexI_{ndim}(&{name}_info, _i)];'
-         .format(type=p.ctype, name=p.name, ndim=ndim_out)
+        ['__attribute__((annotate("clpy_standard_reduction_tag:i"))) '
+         '{type} {name};'.format(type=p.ctype, name=p.name)
          for p in arrays if not p.is_const])
-    output_store = '\n'.join(
-        ['{name}_data[get_CArrayIndexI_{ndim}(&{name}_info, _i)] = {name};'
-         .format(name=p.name, ndim=ndim_out)
-         for p in arrays if not p.is_const])
-    map_expr = _get_raw_replaced_operation(map_expr, params, args_info,
-                                           raw_indexers_params)
-    post_map_expr = _get_raw_replaced_operation(post_map_expr, params,
-                                                args_info,
-                                                raw_indexers_params)
+    output_store = '__attribute__((annotate("clpy_standard_reduction_tag"))) ' \
+                   'void __clpy_reduction_postprocess();'
+    clpy_variables_declaration = '\n'.join(
+        ['__attribute__((annotate("clpy_ignore"))) {type}* {name}_data;'
+         '__attribute__((annotate("clpy_ignore"))) CArray_{ndim} {name}_info;'
+         .format(type=p.ctype, name=p.name, ndim=a[2])
+         for p, a in zip(params, args_info) if a[0] is ndarray])
     return _get_simple_reduction_kernel(
         name, local_size, reduce_type, kernel_params, identity,
         map_expr, reduce_expr, post_map_expr,
         type_preamble, input_expr, output_expr, output_store, preamble,
-        options, ndim_in, ndim_out)
+        options, clpy_variables_declaration)
 
 
 class ReductionKernel(object):
@@ -386,8 +369,6 @@ class ReductionKernel(object):
             _get_param_info('CIndexer _in_ind, CIndexer _out_ind', False) +
             _get_param_info('kernel_arg_size_t _local_stride', True) +
             _get_param_info('LocalMem _sdata', True))
-        self.raw_indexers_params = _get_raw_indexers_params(
-            self.in_params + self.out_params, map_expr + post_map_expr)
         self.identity = identity
         self.reduce_expr = reduce_expr
         self.map_expr = map_expr
@@ -489,7 +470,7 @@ class ReductionKernel(object):
             self.params, args_info, types,
             self.name, local_size, self.reduce_type, self.identity,
             self.map_expr, self.reduce_expr, self.post_map_expr,
-            self.preamble, self.options, self.raw_indexers_params)
+            self.preamble, self.options)
 
         # TODO(okuta) set actual size
         shared_mem = 32 * local_size
