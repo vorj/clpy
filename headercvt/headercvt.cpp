@@ -32,10 +32,16 @@
 namespace headercvt{
 
 std::stringstream
-  types_dot_pxi,
-  api_dot_pxd,
+  types,
+  func_decl,
+  preprocessor_defines,
   not_handled;
-llvm::raw_os_ostream not_handled_ostream(not_handled), types_dot_pxi_ostream(types_dot_pxi);
+llvm::raw_os_ostream
+  types_ostream(types),
+  func_decl_ostream(func_decl),
+  preprocessor_defines_ostream(preprocessor_defines),
+  not_handled_ostream(not_handled);
+unsigned types_indentation = 0, func_decl_indentation = 0;
 
 struct ostreams{
   std::vector<llvm::raw_ostream*> oss;
@@ -70,7 +76,12 @@ public:
   preprocessor_defines_extractor(
       llvm::raw_ostream& Out,
       unsigned Indentation = 0
-      ): Out(Out), Indentation(Indentation){
+      ): Indentation(Indentation), Out(Out){
+
+    Indent() << "cdef extern from \"CL/cl.h\"\n";
+    this->Indentation++;
+    Indent() << "cdef enum:\n";
+    this->Indentation++;
   }
 
   void MacroDefined(const clang::Token& MacroNameTok, const clang::MacroDirective *MD) override{
@@ -170,6 +181,7 @@ public:
   }
 
   void VisitTypedefDecl(clang::TypedefDecl* D) {
+    Indent();
     if (!Policy.SuppressSpecifiers) {
       Out << "ctypedef ";
 
@@ -196,24 +208,6 @@ public:
 
 
 
-class tagdecl_printer : public clang::DeclVisitor<tagdecl_printer>{
-  llvm::raw_ostream &Out;
-  clang::PrintingPolicy Policy;
-  unsigned Indentation;
-
-public:
-  tagdecl_printer(llvm::raw_ostream &Out, const clang::PrintingPolicy &Policy,
-              const clang::ASTContext &, unsigned Indentation = 0)
-      : Out(Out), Policy(Policy), Indentation(Indentation) {}
-
-  llvm::raw_ostream& Indent() { return Indent(Indentation); }
-  llvm::raw_ostream& Indent(unsigned Indentation) {
-    for (unsigned i = 0; i != Indentation; ++i)
-      Out << "  ";
-    return Out;
-  }
-
-};
 
 class grouped_typedef_struct_printer : public clang::DeclVisitor<grouped_typedef_struct_printer>{
 	llvm::raw_ostream &Out;
@@ -335,6 +329,7 @@ public:
     clang::PrintingPolicy SubPolicy(Policy);
     SubPolicy.SuppressSpecifiers = false;
     std::string Proto;
+    Indent();
 
     if (Policy.FullyQualifiedName) {
       Proto += D->getQualifiedNameAsString();
@@ -543,25 +538,17 @@ class general_decl_visitor : public clang::DeclVisitor<general_decl_visitor>{
 
       this->Indent();
       if (clang::isa<clang::FunctionDecl>(*D)){
-        llvm::raw_os_ostream funcdecl_ostream(api_dot_pxd);
-        funcdecl_printer FuncDeclPrinter(funcdecl_ostream, Policy, Context, Indentation);
+        funcdecl_printer FuncDeclPrinter(func_decl_ostream, Policy, Context, func_decl_indentation);
         FuncDeclPrinter.Visit(clang::cast<clang::FunctionDecl>(*D));
+        func_decl_ostream.flush();
       }
 
       if (clang::isa<clang::TypedefDecl>(*D)){
-        llvm::raw_os_ostream typedef_ostream(types_dot_pxi);
-        typedef_printer TypedefPrinter(typedef_ostream, Policy, Context, Indentation);
+        typedef_printer TypedefPrinter(types_ostream, Policy, Context, types_indentation);
         TypedefPrinter.Visit(*D);
+        types_ostream.flush();
       }
 
-      /*
-         if (clang::isa<clang::TagDecl>(*D)){
-         llvm::raw_os_ostream typedef_ostream(types_dot_pxi);
-         tagdecl_printer TagDeclPrinter(typedef_ostream, Policy, Context, Indentation);
-         TagDeclPrinter.Visit(*D);
-         std::cout << "TagDecl" << std::endl;
-         }
-         */
     } // end of in-declcontext iteration
 
     if (!Decls.empty())
@@ -573,7 +560,7 @@ class general_decl_visitor : public clang::DeclVisitor<general_decl_visitor>{
 
   void ProcessDeclGroup(clang::SmallVectorImpl<clang::Decl*>& Decls) {
     this->Indent();
-    llvm::raw_os_ostream declgroup_ostream(types_dot_pxi);
+    llvm::raw_os_ostream declgroup_ostream(types);
     printTypedefStructDeclGroup(Decls.data(), Decls.size(), declgroup_ostream);
     Decls.clear();
   }
@@ -606,7 +593,7 @@ class general_decl_visitor : public clang::DeclVisitor<general_decl_visitor>{
 |       `-Record 0x54dd690 '_hoge'
 */
           {
-            auto tdp = grouped_typedef_struct_printer(Out, Policy, Context, Indentation);
+            auto tdp = grouped_typedef_struct_printer(Out, Policy, Context, types_indentation);
             clang::RecordDecl* RD = clang::dyn_cast<clang::RecordDecl>(TD);
             tdp.visit_group_struct_decl( RD, TDD );
             return;
@@ -637,7 +624,7 @@ class ast_consumer : public clang::ASTConsumer{
   } // initializer
   { // body
     ci.getPreprocessor().addPPCallbacks(llvm::make_unique<preprocessor_defines_extractor>(
-            types_dot_pxi_ostream
+            preprocessor_defines_ostream
           ));
   }
   virtual void HandleTranslationUnit(clang::ASTContext& context)override{
@@ -666,12 +653,28 @@ int main(int argc, const char** argv){
   params.emplace_back("-Wno-narrowing");
   clang::tooling::CommonOptionsParser options_parser(argc = static_cast<int>(params.size()), params.data(), tool_category);
   clang::tooling::ClangTool tool(options_parser.getCompilations(), options_parser.getSourcePathList());
+
+  {
+    headercvt::func_decl_ostream << "cdef extern from \"CL/cl.h\"\n";
+    headercvt::func_decl_indentation ++;
+  }
+  {
+    headercvt::types_ostream << "cdef extern from \"CL/cl.h\"\n";
+    headercvt::types_indentation ++;
+  }
+
   auto const result_value = tool.run(clang::tooling::newFrontendActionFactory<headercvt::registrar::ast_frontend_action>().get());
 
-  std::cout << "\n\n api.pxd ---------------------------------------------------\n";
-  std::cout << headercvt::api_dot_pxd.str() << std::endl;
-  std::cout << "\n\n types.pxi ---------------------------------------------------\n";
-  std::cout << headercvt::types_dot_pxi.str() << std::endl;
+  headercvt::func_decl_ostream.flush();
+  headercvt::types_ostream.flush();
+  headercvt::not_handled_ostream.flush();
+  headercvt::preprocessor_defines_ostream.flush();
+  std::cout << "\n\n func_decl ---------------------------------------------------\n";
+  std::cout << headercvt::func_decl.str() << std::endl;
+  std::cout << "\n\n preprocessor_defines ---------------------------------------------------\n";
+  std::cout << headercvt::preprocessor_defines.str() << std::endl;
+  std::cout << "\n\n types ---------------------------------------------------\n";
+  std::cout << headercvt::types.str() << std::endl;
   std::cout << "\n\n not handled ---------------------------------------------------\n";
   std::cout << headercvt::not_handled.str() << std::endl;
 
