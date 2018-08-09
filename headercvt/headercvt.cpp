@@ -35,7 +35,7 @@ std::stringstream
   types_dot_pxi,
   api_dot_pxd,
   not_handled;
-llvm::raw_os_ostream not_handled_ostream(not_handled);
+llvm::raw_os_ostream not_handled_ostream(not_handled), types_dot_pxi_ostream(types_dot_pxi);
 
 struct ostreams{
   std::vector<llvm::raw_ostream*> oss;
@@ -54,9 +54,24 @@ struct ostreams{
   auto_popper scoped_push(llvm::raw_ostream& os){return {*this, os};}
 };
 
-class preprocessor : public clang::PPCallbacks{
- public:
-  constexpr preprocessor() = default;
+class preprocessor_defines_extractor : public clang::PPCallbacks{
+private:
+  unsigned Indentation;
+  llvm::raw_ostream& Out;
+
+  llvm::raw_ostream& Indent() { return Indent(Indentation); }
+  llvm::raw_ostream& Indent(unsigned Indentation) {
+    for (unsigned i = 0; i != Indentation; ++i)
+      Out << "  ";
+    return Out;
+  }
+
+public:
+  preprocessor_defines_extractor(
+      llvm::raw_ostream& Out,
+      unsigned Indentation = 0
+      ): Out(Out), Indentation(Indentation){
+  }
 
   void MacroDefined(const clang::Token& MacroNameTok, const clang::MacroDirective *MD) override{
     const clang::MacroDirective::Kind kind = MD->getKind();
@@ -67,7 +82,7 @@ class preprocessor : public clang::PPCallbacks{
     std::regex cl_macro_detector(R"(CL_.*)"); 
     if (!std::regex_match(identifier, cl_macro_detector))
       return;
-    std::cout << identifier << std::endl;
+    Indent() << identifier << "\n";
   }
 };
 
@@ -624,7 +639,9 @@ class ast_consumer : public clang::ASTConsumer{
     }
   } // initializer
   { // body
-    // ci.getPreprocessor().addPPCallbacks(llvm::make_unique<preprocessor>());
+    ci.getPreprocessor().addPPCallbacks(llvm::make_unique<preprocessor_defines_extractor>(
+            types_dot_pxi_ostream
+          ));
   }
   virtual void HandleTranslationUnit(clang::ASTContext& context)override{
     visit->Visit(context.getTranslationUnitDecl());
