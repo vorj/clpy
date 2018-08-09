@@ -45,6 +45,23 @@ unsigned types_indentation = 0, func_decl_indentation = 0;
 
 static constexpr char const* indent_str = "    ";
 
+static std::string clean_type_string(clang::QualType const& type){
+
+  if (auto attrtype_ptr = clang::dyn_cast<clang::VectorType>(type)){
+    return attrtype_ptr->getElementType().getAsString();
+  }
+
+  if (auto ptrtype_ptr = clang::dyn_cast<clang::PointerType>(type)){
+    if (auto elaboratedtype_ptr = clang::dyn_cast<clang::ElaboratedType>(ptrtype_ptr->getPointeeType())){
+      if (auto recordtype_ptr = clang::dyn_cast<clang::RecordType>(elaboratedtype_ptr->desugar())){
+        return recordtype_ptr -> getDecl() -> getNameAsString() + " *";
+      }
+    }
+  }
+
+  return type.getAsString();
+}
+
 struct ostreams{
   std::vector<llvm::raw_ostream*> oss;
   ostreams(llvm::raw_ostream& os):oss{&os}{}
@@ -204,16 +221,8 @@ public:
     clang::PrintingPolicy SubPolicy(Policy);
     SubPolicy.PolishForDeclaration = 1;
     auto Ty = D->getTypeSourceInfo()->getType().getUnqualifiedType();
-    auto Typtr = Ty.getTypePtr();
 
-    if (auto attrtyptr = clang::dyn_cast<clang::VectorType>(Typtr)){
-      // __attribute__((vector)) を剥がす
-      Out << attrtyptr->getElementType().getAsString();
-    }else if(){
-      // typedef struct _hoge* hoge; の struct を剥がす
-    } else {
-      Out << Ty.getAsString();
-    }
+    Out << clean_type_string(Ty);
 
     Out << " " << D->getName();
     Out << "\n";
@@ -282,7 +291,7 @@ class grouped_typedef_struct_printer : public clang::DeclVisitor<grouped_typedef
       Indentation--;
       Indent() 
         << "ctypedef "
-        << TDD->getTypeSourceInfo()->getType().getUnqualifiedType().getAsString()
+        << clean_type_string(TDD->getTypeSourceInfo()->getType())
         << " "
         << TDD->getName()
         << "\n";
