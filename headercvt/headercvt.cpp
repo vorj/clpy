@@ -31,11 +31,11 @@
 
 namespace headercvt{
 
-std::stringstream
-  types,
-  func_decl,
-  preprocessor_defines,
-  not_handled;
+std::ofstream
+  types("types.pxi"),
+  func_decl("func_decl.pxi"),
+  preprocessor_defines("preprocessor_defines.pxi"),
+  not_handled("not_handled.txt");
 llvm::raw_os_ostream
   types_ostream(types),
   func_decl_ostream(func_decl),
@@ -671,6 +671,7 @@ int main(int argc, const char** argv){
   headercvt::types_ostream.flush();
   headercvt::not_handled_ostream.flush();
   headercvt::preprocessor_defines_ostream.flush();
+  /*
   std::cout << "\n\n func_decl ---------------------------------------------------\n";
   std::cout << headercvt::func_decl.str() << std::endl;
   std::cout << "\n\n preprocessor_defines ---------------------------------------------------\n";
@@ -679,6 +680,7 @@ int main(int argc, const char** argv){
   std::cout << headercvt::types.str() << std::endl;
   std::cout << "\n\n not handled ---------------------------------------------------\n";
   std::cout << headercvt::not_handled.str() << std::endl;
+  */
 
   return result_value;
 }
