@@ -187,6 +187,11 @@ public:
       Out << "# union reference ignored\n";
       return;
     }
+    
+    if (D->getTypeSourceInfo()->getType()->isFunctionPointerType()){
+      Out << "# function pointer ignored\n";
+      return;
+    }
 
     Indent();
     if (!Policy.SuppressSpecifiers) {
@@ -202,7 +207,10 @@ public:
     auto Typtr = Ty.getTypePtr();
 
     if (auto attrtyptr = clang::dyn_cast<clang::VectorType>(Typtr)){
+      // __attribute__((vector)) を剥がす
       Out << attrtyptr->getElementType().getAsString();
+    }else if(){
+      // typedef struct _hoge* hoge; の struct を剥がす
     } else {
       Out << Ty.getAsString();
     }
