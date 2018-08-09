@@ -155,13 +155,12 @@ public:
 class typedef_printer : public clang::DeclVisitor<typedef_printer>{
   llvm::raw_ostream &Out;
   clang::PrintingPolicy Policy;
-  const clang::ASTContext &Context;
   unsigned Indentation;
 
 public:
   typedef_printer(llvm::raw_ostream &Out, const clang::PrintingPolicy &Policy,
-              const clang::ASTContext &Context, unsigned Indentation = 0)
-      : Out(Out), Policy(Policy), Context(Context), Indentation(Indentation) {}
+              const clang::ASTContext &, unsigned Indentation = 0)
+      : Out(Out), Policy(Policy), Indentation(Indentation) {}
 
   llvm::raw_ostream& Indent() { return Indent(Indentation); }
   llvm::raw_ostream& Indent(unsigned Indentation) {
@@ -200,13 +199,12 @@ public:
 class tagdecl_printer : public clang::DeclVisitor<tagdecl_printer>{
   llvm::raw_ostream &Out;
   clang::PrintingPolicy Policy;
-  const clang::ASTContext &Context;
   unsigned Indentation;
 
 public:
   tagdecl_printer(llvm::raw_ostream &Out, const clang::PrintingPolicy &Policy,
-              const clang::ASTContext &Context, unsigned Indentation = 0)
-      : Out(Out), Policy(Policy), Context(Context), Indentation(Indentation) {}
+              const clang::ASTContext &, unsigned Indentation = 0)
+      : Out(Out), Policy(Policy), Indentation(Indentation) {}
 
   llvm::raw_ostream& Indent() { return Indent(Indentation); }
   llvm::raw_ostream& Indent(unsigned Indentation) {
@@ -220,13 +218,12 @@ public:
 class grouped_typedef_struct_printer : public clang::DeclVisitor<grouped_typedef_struct_printer>{
 	llvm::raw_ostream &Out;
 	clang::PrintingPolicy Policy;
-	const clang::ASTContext &Context;
 	unsigned Indentation;
 
 	public:
 	grouped_typedef_struct_printer(llvm::raw_ostream &Out, const clang::PrintingPolicy &Policy,
-			const clang::ASTContext &Context, unsigned Indentation = 0)
-		: Out(Out), Policy(Policy), Context(Context), Indentation(Indentation) {
+			const clang::ASTContext &, unsigned Indentation = 0)
+		: Out(Out), Policy(Policy), Indentation(Indentation) {
 		}
 
   void visit_group_struct_decl(clang::RecordDecl *RD, clang::TypedefDecl *TDD){
