@@ -43,6 +43,8 @@ llvm::raw_os_ostream
   not_handled_ostream(not_handled);
 unsigned types_indentation = 0, func_decl_indentation = 0;
 
+static constexpr char const* indent_str = "    ";
+
 struct ostreams{
   std::vector<llvm::raw_ostream*> oss;
   ostreams(llvm::raw_ostream& os):oss{&os}{}
@@ -68,7 +70,7 @@ private:
   llvm::raw_ostream& Indent() { return Indent(Indentation); }
   llvm::raw_ostream& Indent(unsigned Indentation) {
     for (unsigned i = 0; i != Indentation; ++i)
-      Out << "  ";
+      Out << indent_str;
     return Out;
   }
 
@@ -176,7 +178,7 @@ public:
   llvm::raw_ostream& Indent() { return Indent(Indentation); }
   llvm::raw_ostream& Indent(unsigned Indentation) {
     for (unsigned i = 0; i != Indentation; ++i)
-      Out << "  ";
+      Out << indent_str;
     return Out;
   }
 
@@ -262,7 +264,7 @@ class grouped_typedef_struct_printer : public clang::DeclVisitor<grouped_typedef
 	llvm::raw_ostream& Indent() { return Indent(Indentation); }
 	llvm::raw_ostream& Indent(unsigned Indentation) {
 		for (unsigned i = 0; i != Indentation; ++i)
-			Out << "  ";
+			Out << indent_str;
 		return Out;
 	}
 
@@ -283,7 +285,7 @@ public:
   llvm::raw_ostream& Indent() { return Indent(Indentation); }
   llvm::raw_ostream& Indent(unsigned Indentation) {
     for (unsigned i = 0; i != Indentation; ++i)
-      Out << "  ";
+      Out << indent_str;
     return Out;
   }
 
@@ -470,7 +472,7 @@ class general_decl_visitor : public clang::DeclVisitor<general_decl_visitor>{
   llvm::raw_ostream& Indent() { return Indent(Indentation); }
   llvm::raw_ostream& Indent(unsigned Indentation) {
     for (unsigned i = 0; i != Indentation; ++i)
-      Out << "  ";
+      Out << indent_str;
     return Out;
   }
 
