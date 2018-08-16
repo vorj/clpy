@@ -283,6 +283,10 @@ public:
     }
   }
   void VisitFieldDecl(clang::FieldDecl *D) {
+    if (D->isAnonymousStructOrUnion()){
+      return;
+    }
+
     Indent()
       << D->getASTContext().getUnqualifiedObjCPointerType(D->getType()).
       stream(Policy, D->getName(), Indentation);
