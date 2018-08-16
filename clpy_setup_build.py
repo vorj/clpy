@@ -14,6 +14,7 @@ from install import build
 from install import utils
 
 import subprocess
+import locale
 
 print("building ultima")
 if subprocess.Popen(
@@ -27,6 +28,43 @@ if subprocess.Popen(
         cwd=os.path.dirname(__file__)+"/ultima",
         shell=True).wait() != 0:
     raise RuntimeError('Build ultima is failed.')
+
+print("building headercvt")
+if subprocess.Popen(
+        'make',
+        cwd=os.path.join(os.path.dirname(__file__), 'headercvt'),
+        shell=True).wait() != 0:
+    raise RuntimeError('Building headercvt has been failed.')
+
+def launch_headercvt():
+    print("launching headercvt (converting cl.h)...")
+    include_dirs_list = []
+
+    # Attempt to get clang's default include directory (without this, headercvt fails to find stddef.h)
+    lib_clang_include =\
+        subprocess.run('clang stub.c -v 2>&1 | grep -E \'/lib/clang/[^/]+/include\' | tail -n 1',
+        cwd=os.path.join(os.path.dirname(__file__), 'headercvt'), shell=True,
+        stdout=subprocess.PIPE).stdout.decode(locale.getpreferredencoding()).replace('\n', '')
+
+    if lib_clang_include:
+        include_dirs_list.append(lib_clang_include)
+
+    # Attempt to get cuda path
+    cuda_path = build.get_cuda_path()
+    if cuda_path:
+        include_dirs_list.append(os.path.join(cuda_path, 'include'))
+
+    include_dirs_arg = ''.join([f' -I{elem}' for elem in include_dirs_list])
+    include_dirs_arg = f'CLPY_HEADERCVT_INCLUDE_DIRS="{include_dirs_arg}"'
+
+    if subprocess.Popen(
+            'make run ' + include_dirs_arg,
+            cwd=os.path.join(os.path.dirname(__file__), 'headercvt'),
+            shell=True).wait() != 0:
+        raise RuntimeError('Header conversion has been failed.')
+
+launch_headercvt()
+
 
 required_cython_version = pkg_resources.parse_version('0.24.0')
 ignore_cython_versions = [
