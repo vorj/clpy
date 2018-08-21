@@ -1165,10 +1165,17 @@ public:
         return;
       }
       else if(base_type->getDecl()->getName() == "CArray"){
+        auto ind = dig_expr(base);
         if(member_expr->getMemberNameInfo().getAsString() == "size")
           throw std::runtime_error("Current ultima doesn't support CArray::size().");
-        else if(member_expr->getMemberNameInfo().getAsString() == "shape")
-          throw std::runtime_error("Current ultima doesn't support CArray::shape().");
+        else if(member_expr->getMemberNameInfo().getAsString() == "shape"){
+          if(clang::dyn_cast<clang::DeclRefExpr>(ind) == nullptr)
+            throw std::runtime_error("Current ultima only support calling CArray::shape() with a CArray object.");
+          os << "(const size_t*)(";
+          Visit(ind);
+          os << "_info.shape_)";
+          return;
+        }
         else if(member_expr->getMemberNameInfo().getAsString() == "strides")
           throw std::runtime_error("Current ultima doesn't support CArray::strides().");
       }

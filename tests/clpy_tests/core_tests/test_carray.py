@@ -19,16 +19,12 @@ class TestCArray(unittest.TestCase):
             )(x, size=1)
             self.assertEqual(int(y[0]), 3)
 
-    def test_shape(self):  # TODO(vorj): support CArray::shape()
-        with six.assertRaisesRegex(self, UltimaRuntimeError,
-                                   "Current ultima doesn't support "
-                                   "CArray::shape()"):
-            x = clpy.arange(6).reshape((2, 3)).astype('i')
-            y = clpy.ElementwiseKernel(
-                'raw int32 x', 'int32 y', 'y = x.shape()[i]',
-                'test_carray_shape',
-            )(x, size=2)
-            testing.assert_array_equal(y, (2, 3))
+    def test_shape(self):
+        x = clpy.arange(6).reshape((2, 3)).astype('i')
+        y = clpy.ElementwiseKernel(
+            'raw int32 x', 'int32 y', 'y = x.shape()[i]', 'test_carray_shape',
+        )(x, size=2)
+        testing.assert_array_equal(y, (2, 3))
 
     def test_strides(self):  # TODO(vorj): support CArray::strides()
         with six.assertRaisesRegex(self, UltimaRuntimeError,
