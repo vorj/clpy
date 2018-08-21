@@ -19,7 +19,8 @@ import subprocess
 print("building ultima")
 
 is_clang_built_with_cxx11_abi = subprocess.Popen(
-    'nm `which clang++` | grep __cxx11 > /dev/null',
+    'nm $(dirname $(readlink -f `which clang++`))/../lib/libclangTooling.a'
+    ' | grep -q __cxx11',
     shell=True).wait() == 0
 
 if subprocess.Popen(
