@@ -2622,7 +2622,7 @@ public:
         else if(parameter && x.find(clpy_arg_tag) == 0){
           static constexpr std::size_t clpy_arg_tag_length = sizeof(clpy_arg_tag)-1;
           static constexpr std::size_t tag_prefix_length = clpy_arg_tag_length + 3/*"ind" or "raw"*/ + 1/*space*/;
-          const bool is_raw = x.find("ind", clpy_arg_tag_length) == std::string::npos;
+          const bool is_raw = x.find("raw ", clpy_arg_tag_length) == clpy_arg_tag_length;
           const auto name_end = std::min(x.find(' ', tag_prefix_length), x.size());
           const auto var_name = x.substr(tag_prefix_length, name_end - tag_prefix_length);
           const bool is_input = x.find("const", name_end) != std::string::npos;
