@@ -43,6 +43,7 @@ tests/clpy_tests/binary_tests/
 "
 
 TEST_FILES="
+tests/clpy_tests/core_tests/test_carray.py
 tests/clpy_tests/core_tests/test_core.py
 tests/clpy_tests/core_tests/test_elementwise.py
 tests/clpy_tests/core_tests/test_flags.py

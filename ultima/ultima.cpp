@@ -1109,14 +1109,18 @@ public:
         });
         if(var_info == func_arg_info.back().end())
           throw std::runtime_error("only 'raw' CArray can subscript");
-        os << name << "[get_CArrayIndexRaw_" << var_info->ndim;
+        os << name << "[get_CArrayIndex";
         if(var_info->ndim > 1){
           const auto type = Node->getArg(1)->getType();
           if(auto array = type->getAsArrayTypeUnsafe())
-            os << '_' << to_identifier(array->getElementType()->getUnqualifiedDesugaredType()->getLocallyUnqualifiedSingleStepDesugaredType().getAsString());
+            os << "Raw_" << var_info->ndim << '_' << to_identifier(array->getElementType()->getUnqualifiedDesugaredType()->getLocallyUnqualifiedSingleStepDesugaredType().getAsString());
           else if(auto pointer = type->getAs<clang::PointerType>())
-            os << '_' << to_identifier(pointer->getPointeeType()->getUnqualifiedDesugaredType()->getLocallyUnqualifiedSingleStepDesugaredType().getAsString());
+            os << "Raw_" << var_info->ndim << '_' << to_identifier(pointer->getPointeeType()->getUnqualifiedDesugaredType()->getLocallyUnqualifiedSingleStepDesugaredType().getAsString());
+          else
+            os << "I_" << var_info->ndim;
         }
+        else
+          os << "Raw_" << var_info->ndim;
         os << "(&" << name << "_info, ";
         PrintExpr(Node->getArg(1));
         os << ")]";
