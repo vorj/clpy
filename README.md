@@ -112,19 +112,17 @@ $ python -m pytest test_you_want.py
 
 ## Future plan
 
-We are developing v0.2.1beta for next release.
+We are developing v0.2.1beta1 for next release.
 
-* Support Chainer's ImageNet example
-* OpenCL version check and auto generated `api.pxd` from `cl.h` in the system
 * Map buffer for host memory
-* Support all BLAS API
-* Improve `cupy` aliasing mechanism
-* Update recommended system (Vega and Volta)
+* Support all BLAS APIs and accelerate them
+* Multiple devices
+* Multiple CommandQueue (Stream)
 * -- and other functions and/or bug fixes that someone develops and/or requests..
 
-We also plan to update CuPy's base version to v4 or v5 after above beta release.
+We also plan to update CuPy's base version to v4 or v5 after beta release.
 
-Check github's issues and pull requests to get latest status.
+Check [github's issues and pull requests ](https://github.com/fixstars/clpy/issues) to get latest status.
 
 ## License
 
