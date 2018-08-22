@@ -5,7 +5,7 @@ In other words, ClPy enables softwares written in CuPy to work also on OpenCL de
 
 ## Current status
 
-Current ClPy is alpha version, forked from [CuPy v2.1.0](https://github.com/cupy/cupy/releases/tag/v2.1.0).
+Current ClPy is beta version, forked from [CuPy v2.1.0](https://github.com/cupy/cupy/releases/tag/v2.1.0).
 ClPy is still under development and works on only limited APIs.
 
 * Basic [ndarray](https://docs-cupy.chainer.org/en/stable/reference/ndarray.html) are supported, but not perfectly
