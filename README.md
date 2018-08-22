@@ -21,7 +21,7 @@ ClPy is still under development and works on only limited APIs.
 Original CuPy's tests are not passed perfectly. See current [CuPy's test and example results](https://github.com/fixstars/ClPy/wiki/cupy_test_example_results).
 
 [Chainer](https://chainer.org/) works with limited situation.
-Very simple and small examples are confirmed to work. See current [Chainer's test and example results](https://github.com/fixstars/ClPy/wiki/chainer_test_example_results).
+Some examples are confirmed to work. See current [Chainer's test and example results](https://github.com/fixstars/ClPy/wiki/chainer_test_example_results).
 
 ## Recommended system
 
