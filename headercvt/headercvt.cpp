@@ -325,11 +325,7 @@ public:
     std::string Proto;
     Indent();
 
-    if (Policy.FullyQualifiedName) {
-      Proto += D->getQualifiedNameAsString();
-    } else {
-      Proto += D->getNameInfo().getAsString();
-    }
+    Proto += D->getNameInfo().getAsString();
 
     clang::QualType Ty = D->getType();
     while (const clang::ParenType *PT = clang::dyn_cast<clang::ParenType>(Ty)) {
