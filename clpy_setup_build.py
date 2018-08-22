@@ -76,7 +76,7 @@ def launch_headercvt():
     include_dirs_arg = 'CLPY_HEADERCVT_INCLUDE_DIRS="' + include_dirs_arg + '"'
 
     if subprocess.Popen(
-            'make run ' + include_dirs_arg,
+            'make deploy ' + include_dirs_arg,
             cwd=os.path.join(os.path.dirname(__file__), 'headercvt'),
             shell=True).wait() != 0:
         raise RuntimeError('Header conversion has been failed.')
