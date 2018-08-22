@@ -42,7 +42,10 @@ We recommend those environments to all ClPy users. However, reports on other env
 
 ## Installation
 
-First, install and setup OpenCL environment.
+### Setup OpenCL
+
+Install and setup OpenCL environment.
+
 `cl.h` and OpenCL libs (`libOpenCL.so`) must be able to be included and linked without any special path settings.
 
 For example with AMD APP SDK, you should set following environment variables:
@@ -55,7 +58,8 @@ export LIBRARY_PATH=${LIBRARY_PATH}:${AMDAPPSDKROOT}/lib/x86_64
 
 and add ldconfig on `/etc/ldconf.so.d/` and `$ sudo ldconfig`.
 
-Second, install LLVM/Clang.
+### Install LLVM/Clang
+
 Current ClPy requires LLVM/Clang 4.0, 5.0, or 6.0.
 We **strongly** recommend that you build LLVM/Clang from the source codes and install it.
 However, at least in Ubuntu 16.04, you can use the LLVM/Clang from the Ubuntu official package repository.
@@ -66,6 +70,8 @@ In that case, you need to set `PATH` and `CPLUS_INCLUDE_PATH` environment variab
 $ export PATH=/usr/lib/llvm-6.0/bin:$PATH
 $ export CPLUS_INCLUDE_PATH=/usr/lib/llvm-6.0/include:$CPLUS_INCLUDE_PATH
 ```
+
+### Install ClPy
 
 After OpenCL and LLVM/Clang is successfully installed, install ClPy.
 
