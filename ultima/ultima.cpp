@@ -1153,16 +1153,25 @@ public:
   void VisitCXXMemberCallExpr(clang::CXXMemberCallExpr *Node) {
     auto member_expr = clang::dyn_cast<clang::MemberExpr>(Node->getCallee());
     auto base = member_expr->getBase();
-    auto CIndexer = base->getType()->getUnqualifiedDesugaredType()->getAs<clang::RecordType>();
-    if(CIndexer
-    && CIndexer->getDecl()->getName() == "CIndexer"
-    && member_expr->getMemberNameInfo().getAsString() == "size"){
-      auto ind = dig_expr(base);
-      if(clang::dyn_cast<clang::DeclRefExpr>(ind) == nullptr)
-        throw std::runtime_error("Current ultima only support calling CIndexer::size() with a CIndexer object.");
-      Visit(ind);
-      os << "_size";
-      return;
+    auto base_type = base->getType()->getUnqualifiedDesugaredType()->getAs<clang::RecordType>();
+    if(base_type){
+      if(base_type->getDecl()->getName() == "CIndexer"
+      && member_expr->getMemberNameInfo().getAsString() == "size"){
+        auto ind = dig_expr(base);
+        if(clang::dyn_cast<clang::DeclRefExpr>(ind) == nullptr)
+          throw std::runtime_error("Current ultima only support calling CIndexer::size() with a CIndexer object.");
+        Visit(ind);
+        os << "_size";
+        return;
+      }
+      else if(base_type->getDecl()->getName() == "CArray"){
+        if(member_expr->getMemberNameInfo().getAsString() == "size")
+          throw std::runtime_error("Current ultima doesn't support CArray::size().");
+        else if(member_expr->getMemberNameInfo().getAsString() == "shape")
+          throw std::runtime_error("Current ultima doesn't support CArray::shape().");
+        else if(member_expr->getMemberNameInfo().getAsString() == "strides")
+          throw std::runtime_error("Current ultima doesn't support CArray::strides().");
+      }
     }
     // If we have a conversion operator call only print the argument.
     auto *MD = Node->getMethodDecl();
