@@ -10,7 +10,7 @@ ClPy is still under development and works on only limited APIs.
 
 * Basic [ndarray](https://docs-cupy.chainer.org/en/stable/reference/ndarray.html) are supported, but not perfectly
 * Basic [universal functions](https://docs-cupy.chainer.org/en/stable/reference/ufunc.html) are supported, but not perfectly
-* Simple [custom kernels](https://docs-cupy.chainer.org/en/stable/reference/kernel.html) are supported, but some custom kernel codes might be fail to compile and/or run
+* Most of [custom kernels](https://docs-cupy.chainer.org/en/stable/reference/kernel.html) are supported, but some custom kernel codes might be fail to compile and/or run
 * Only SGEMM is supported in BLAS library
 * Sparse matrix, dnn, rand libraries are not supported
 * half and complex are not supported
