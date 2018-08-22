@@ -82,15 +82,15 @@ $ python setup.py install
 
 ## How to use
 
-Just replace `cupy` to `clpy` in your python codes and run it (e.g. `import cupy` -> `import clpy`).
+Run your CuPy code with `-m clpy` option ( e.g. `python -m clpy /path/to/chainer/examples/mnist/train_mnist.py -g0`).
+This option adds aliases to CuPy by hooking `import cupy` and call ClPy through `cupy.foobar`.
+You don't need to modify any your codes.
 
-You don't need to replace all cuda imports, if you add `import clpy` before `import cupy` in your python codes.
-(`import clpy` add import hook. The hook will import clpy when `imoprt cupy` is called.)
-If you want to switch clpy and cupy without changing source code,
-set `export CLPY_NOT_HOOK_CUPY=1` before execution and disable hook.
+If you don't want to run with `-m` option, you must add `import clpy` before `import cupy` in your codes.
+`import clpy` adds the aliases same as `-m clpy`.
 
-Or you don't need to replace any codes, if you run your python code with `-m clpy` option ( e.g. `python -m clpy /path/to/chainer/examples/mnist/train_mnist.py -g0`).
-
+If you want to disable such aliases, set `export CLPY_NOT_HOOK_CUPY=1` before execution.
+Then, you need to replace `cupy` to `clpy` in your all codes (e.g. `import cupy` -> `import clpy`).
 
 ### Woking with Chainer
 
