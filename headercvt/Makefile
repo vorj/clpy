@@ -5,8 +5,10 @@ headercvt: headercvt.cpp
 
 
 
-%.pxi: headercvt
+func_decl.pxi: headercvt
 	./headercvt stub.c -- $(CLPY_HEADERCVT_INCLUDE_DIRS)
+preprocessor_defines.pxi:
+types.pxi:
 
 
 
