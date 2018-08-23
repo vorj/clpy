@@ -1171,9 +1171,21 @@ public:
         else if(member_expr->getMemberNameInfo().getAsString() == "shape"){
           if(raw == nullptr)
             throw std::runtime_error("Current ultima only support calling CArray::shape() with a CArray object.");
-          os << "(const size_t*)(";
-          Visit(raw);
-          os << "_info.shape_)";
+          const auto name = raw->getNameInfo().getAsString();
+          auto var_info = std::find_if(func_arg_info.back().begin(), func_arg_info.back().end(), [name](const function_special_argument_info& t){
+            return t.name == name && t.arg_flag == function_special_argument_info::raw;
+          });
+          if(var_info == func_arg_info.back().end())
+            throw std::runtime_error("only 'raw' CArray can be used to call member function");
+          os << "((const size_t*)";
+          if(var_info->ndim == 0)
+            os << "NULL)";
+          else{
+            if(var_info->ndim == 1)
+              os << '&';
+            Visit(raw);
+            os << "_info.shape_)";
+          }
           return;
         }
         else if(member_expr->getMemberNameInfo().getAsString() == "strides")
