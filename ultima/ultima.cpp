@@ -1158,21 +1158,21 @@ public:
       if(base_type->getDecl()->getName() == "CIndexer"
       && member_expr->getMemberNameInfo().getAsString() == "size"){
         auto ind = dig_expr(base);
-        if(clang::dyn_cast<clang::DeclRefExpr>(ind) == nullptr)
+        if(!clang::isa<clang::DeclRefExpr>(ind))
           throw std::runtime_error("Current ultima only support calling CIndexer::size() with a CIndexer object.");
         Visit(ind);
         os << "_size";
         return;
       }
       else if(base_type->getDecl()->getName() == "CArray"){
-        auto ind = dig_expr(base);
+        auto raw = clang::dyn_cast<clang::DeclRefExpr>(dig_expr(base));
         if(member_expr->getMemberNameInfo().getAsString() == "size")
           throw std::runtime_error("Current ultima doesn't support CArray::size().");
         else if(member_expr->getMemberNameInfo().getAsString() == "shape"){
-          if(clang::dyn_cast<clang::DeclRefExpr>(ind) == nullptr)
+          if(raw == nullptr)
             throw std::runtime_error("Current ultima only support calling CArray::shape() with a CArray object.");
           os << "(const size_t*)(";
-          Visit(ind);
+          Visit(raw);
           os << "_info.shape_)";
           return;
         }
