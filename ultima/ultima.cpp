@@ -1803,12 +1803,25 @@ public:
     return os;
   }
 
+  static const clang::AttrVec& get_attrs(const clang::Decl* d){
+    if(d->hasAttrs())
+      return d->getAttrs();
+    else{
+      static clang::AttrVec dummy(0);
+      return dummy;
+    }
+  }
+
+  static llvm::ArrayRef<const clang::Attr*> get_attrs(const clang::AttributedStmt* s){
+    return s->getAttrs();
+  }
+
   template<typename T>
   void prettyPrintAttributes(T* D){
     if (policy.PolishForDeclaration)
       return;
 
-    for (auto *x : D->getAttrs()) {
+    for (auto *x : get_attrs(D)) {
       if (x->isInherited() || x->isImplicit())
         continue;
       if(auto aa = clang::dyn_cast<clang::AnnotateAttr>(x))
@@ -1832,7 +1845,7 @@ public:
     if (policy.PolishForDeclaration)
       return annons;
 
-    for (auto* x : D->getAttrs()) {
+    for (auto* x : get_attrs(D)) {
       if(auto aa = clang::dyn_cast<clang::AnnotateAttr>(x)){
         auto an = aa->getAnnotation();
         if(an == "cl_global")
