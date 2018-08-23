@@ -1,7 +1,7 @@
 import unittest
 
 import clpy
-from clpy.backend.opencl.exceptions import OpenCLProgramBuildError
+from clpy.backend.ultima.exceptions import UltimaRuntimeError
 from clpy import testing
 
 import six
@@ -10,27 +10,26 @@ import six
 class TestCArray(unittest.TestCase):
 
     def test_size(self):  # TODO(vorj): support CArray::size()
-        with six.assertRaisesRegex(self, OpenCLProgramBuildError,
-                                   "not a structure or union"):
+        with six.assertRaisesRegex(self, UltimaRuntimeError,
+                                   "Current ultima doesn't support "
+                                   "CArray::size()"):
             x = clpy.arange(3).astype('i')
             y = clpy.ElementwiseKernel(
                 'raw int32 x', 'int32 y', 'y = x.size()', 'test_carray_size',
             )(x, size=1)
             self.assertEqual(int(y[0]), 3)
 
-    def test_shape(self):  # TODO(vorj): support CArray::shape()
-        with six.assertRaisesRegex(self, OpenCLProgramBuildError,
-                                   "not a structure or union"):
-            x = clpy.arange(6).reshape((2, 3)).astype('i')
-            y = clpy.ElementwiseKernel(
-                'raw int32 x', 'int32 y', 'y = x.shape()[i]',
-                'test_carray_shape',
-            )(x, size=2)
-            testing.assert_array_equal(y, (2, 3))
+    def test_shape(self):
+        x = clpy.arange(6).reshape((2, 3)).astype('i')
+        y = clpy.ElementwiseKernel(
+            'raw int32 x', 'int32 y', 'y = x.shape()[i]', 'test_carray_shape',
+        )(x, size=2)
+        testing.assert_array_equal(y, (2, 3))
 
     def test_strides(self):  # TODO(vorj): support CArray::strides()
-        with six.assertRaisesRegex(self, OpenCLProgramBuildError,
-                                   "not a structure or union"):
+        with six.assertRaisesRegex(self, UltimaRuntimeError,
+                                   "Current ultima doesn't support "
+                                   "CArray::strides()"):
             x = clpy.arange(6).reshape((2, 3)).astype('i')
             y = clpy.ElementwiseKernel(
                 'raw int32 x', 'int32 y', 'y = x.strides()[i]',

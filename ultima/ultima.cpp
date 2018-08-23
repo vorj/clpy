@@ -1153,16 +1153,44 @@ public:
   void VisitCXXMemberCallExpr(clang::CXXMemberCallExpr *Node) {
     auto member_expr = clang::dyn_cast<clang::MemberExpr>(Node->getCallee());
     auto base = member_expr->getBase();
-    auto CIndexer = base->getType()->getUnqualifiedDesugaredType()->getAs<clang::RecordType>();
-    if(CIndexer
-    && CIndexer->getDecl()->getName() == "CIndexer"
-    && member_expr->getMemberNameInfo().getAsString() == "size"){
-      auto ind = dig_expr(base);
-      if(clang::dyn_cast<clang::DeclRefExpr>(ind) == nullptr)
-        throw std::runtime_error("Current ultima only support calling CIndexer::size() with a CIndexer object.");
-      Visit(ind);
-      os << "_size";
-      return;
+    auto base_type = base->getType()->getUnqualifiedDesugaredType()->getAs<clang::RecordType>();
+    if(base_type){
+      if(base_type->getDecl()->getName() == "CIndexer"
+      && member_expr->getMemberNameInfo().getAsString() == "size"){
+        auto ind = dig_expr(base);
+        if(!clang::isa<clang::DeclRefExpr>(ind))
+          throw std::runtime_error("Current ultima only support calling CIndexer::size() with a CIndexer object.");
+        Visit(ind);
+        os << "_size";
+        return;
+      }
+      else if(base_type->getDecl()->getName() == "CArray"){
+        auto raw = clang::dyn_cast<clang::DeclRefExpr>(dig_expr(base));
+        if(member_expr->getMemberNameInfo().getAsString() == "size")
+          throw std::runtime_error("Current ultima doesn't support CArray::size().");
+        else if(member_expr->getMemberNameInfo().getAsString() == "shape"){
+          if(raw == nullptr)
+            throw std::runtime_error("Current ultima only support calling CArray::shape() with a CArray object.");
+          const auto name = raw->getNameInfo().getAsString();
+          auto var_info = std::find_if(func_arg_info.back().begin(), func_arg_info.back().end(), [name](const function_special_argument_info& t){
+            return t.name == name && t.arg_flag == function_special_argument_info::raw;
+          });
+          if(var_info == func_arg_info.back().end())
+            throw std::runtime_error("only 'raw' CArray can be used to call member function");
+          os << "((const size_t*)";
+          if(var_info->ndim == 0)
+            os << "NULL)";
+          else{
+            if(var_info->ndim == 1)
+              os << '&';
+            Visit(raw);
+            os << "_info.shape_)";
+          }
+          return;
+        }
+        else if(member_expr->getMemberNameInfo().getAsString() == "strides")
+          throw std::runtime_error("Current ultima doesn't support CArray::strides().");
+      }
     }
     // If we have a conversion operator call only print the argument.
     auto *MD = Node->getMethodDecl();
