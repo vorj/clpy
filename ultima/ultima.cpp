@@ -1123,7 +1123,7 @@ public:
           os << "Raw_" << var_info->ndim;
         os << "(&" << name << "_info, ";
         PrintExpr(Node->getArg(1));
-        os << ")]";
+        os << ")/sizeof(" << var_info->type << ")]";
         return;
       }
       PrintExpr(Node->getArg(0));
@@ -1188,8 +1188,26 @@ public:
           }
           return;
         }
-        else if(member_expr->getMemberNameInfo().getAsString() == "strides")
-          throw std::runtime_error("Current ultima doesn't support CArray::strides().");
+        else if(member_expr->getMemberNameInfo().getAsString() == "strides"){
+          if(raw == nullptr)
+            throw std::runtime_error("Current ultima only support calling CArray::strides() with a CArray object.");
+          const auto name = raw->getNameInfo().getAsString();
+          auto var_info = std::find_if(func_arg_info.back().begin(), func_arg_info.back().end(), [name](const function_special_argument_info& t){
+            return t.name == name && t.arg_flag == function_special_argument_info::raw;
+          });
+          if(var_info == func_arg_info.back().end())
+            throw std::runtime_error("only 'raw' CArray can be used to call member function");
+          os << "((const size_t*)";
+          if(var_info->ndim == 0)
+            os << "NULL)";
+          else{
+            if(var_info->ndim == 1)
+              os << '&';
+            Visit(raw);
+            os << "_info.strides_)";
+          }
+          return;
+        }
       }
     }
     // If we have a conversion operator call only print the argument.
@@ -2249,7 +2267,7 @@ public:
               os << ";\n";
               indent();
             }
-            os << x.name << "_data[get_CArrayIndex_" << x.ndim << "(&" << x.name << "_info, &_ind)] = " << x.name << ";\n";
+            os << x.name << "_data[get_CArrayIndex_" << x.ndim << "(&" << x.name << "_info, &_ind)/sizeof(" << x.type << ")] = " << x.name << ";\n";
           }
         }
         return;
@@ -2311,9 +2329,9 @@ public:
             indent();
           }
           if(is_simple)
-            os << x.name << "_data[get_CArrayIndex_" << _out_ind->ndim << "(&" << x.name << "_info, &_out_ind)] = " << x.name;
+            os << x.name << "_data[get_CArrayIndex_" << _out_ind->ndim << "(&" << x.name << "_info, &_out_ind)/sizeof(" << x.type << ")] = " << x.name;
           else
-            os << x.name << "_data[get_CArrayIndexI_" << _out_ind->ndim << "(&" << x.name << "_info, _i)] = " << x.name;
+            os << x.name << "_data[get_CArrayIndexI_" << _out_ind->ndim << "(&" << x.name << "_info, _i)/sizeof(" << x.type << ")] = " << x.name;
         }
         return;
       }
@@ -2679,7 +2697,7 @@ public:
           if(var_info == func_arg_info.back().end())
             throw std::runtime_error("invalid \"clpy_elementwise_tag\" annotation (there is no related argument)");
           is_const = var_info->is_input;
-          init_str = " = " + var_info->name + "_data[get_CArrayIndex_" + std::to_string(var_info->ndim) + "(&" + var_info->name + "_info, &_ind)]";
+          init_str = " = " + var_info->name + "_data[get_CArrayIndex_" + std::to_string(var_info->ndim) + "(&" + var_info->name + "_info, &_ind)/sizeof(" + var_info->type + ")]";
         }
         else if(!parameter && x.find(clpy_simple_reduction_tag) == 0){
           static constexpr std::size_t tag_length = sizeof(clpy_simple_reduction_tag)-1;
@@ -2690,7 +2708,7 @@ public:
             throw std::runtime_error("invalid \"clpy_simple_reduction_tag\" annotation (there is no related argument)");
           const auto& name = var_info->name;
           is_const = var_info->is_input;
-          init_str = " = " + name + "_data[get_CArrayIndex_" + std::to_string(var_info->ndim) + "(&" + name + "_info, &_" + x.substr(tag_length) + "_ind)]";
+          init_str = " = " + name + "_data[get_CArrayIndex_" + std::to_string(var_info->ndim) + "(&" + name + "_info, &_" + x.substr(tag_length) + "_ind)/sizeof(" + var_info->type + ")]";
         }
         else if(!parameter && x.find(clpy_standard_reduction_tag) == 0){
           static constexpr std::size_t tag_length = sizeof(clpy_standard_reduction_tag)-1;
@@ -2701,7 +2719,7 @@ public:
             throw std::runtime_error("invalid \"clpy_simple_reduction_tag\" annotation (there is no related argument)");
           const auto& name = var_info->name;
           is_const = var_info->is_input;
-          init_str = " = " + name + "_data[get_CArrayIndexI_" + std::to_string(var_info->ndim) + "(&" + name + "_info, _" + x.substr(tag_length) + ")]";
+          init_str = " = " + name + "_data[get_CArrayIndexI_" + std::to_string(var_info->ndim) + "(&" + name + "_info, _" + x.substr(tag_length) + ")/sizeof(" + var_info->type + ")]";
         }
     }
 

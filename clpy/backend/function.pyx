@@ -68,9 +68,8 @@ cdef void _launch(clpy.backend.opencl.types.cl_kernel kernel, global_work_size,
                                      " but item size is {2}"
                                      .format(d, a.strides[d], a.itemsize))
                 arrayInfo.shape_and_index[d] = a.shape[d]
-                arrayInfo.shape_and_index[d + ndim] = a.strides[d] \
-                    // a.itemsize
-            arrayInfo.offset = a.data.cl_mem_offset() // a.itemsize
+                arrayInfo.shape_and_index[d + ndim] = a.strides[d]
+            arrayInfo.offset = a.data.cl_mem_offset()
             clpy.backend.opencl.api.SetKernelArg(
                 kernel, i, cython.sizeof(Py_ssize_t)*(2*ndim+1),
                 <void*>&arrayInfo)
