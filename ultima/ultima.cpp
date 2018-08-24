@@ -1166,8 +1166,14 @@ public:
       }
       else if(base_type->getDecl()->getName() == "CArray"){
         auto raw = clang::dyn_cast<clang::DeclRefExpr>(dig_expr(base));
-        if(member_expr->getMemberNameInfo().getAsString() == "size")
-          throw std::runtime_error("Current ultima doesn't support CArray::size().");
+        if(member_expr->getMemberNameInfo().getAsString() == "size"){
+          if(raw == nullptr)
+            throw std::runtime_error("Current ultima only support calling CArray::size() with a CArray object.");
+          os << "((const size_t)";
+          Visit(raw);
+          os << "_info.size_)";
+          return;
+        }
         else if(member_expr->getMemberNameInfo().getAsString() == "shape"){
           if(raw == nullptr)
             throw std::runtime_error("Current ultima only support calling CArray::shape() with a CArray object.");

@@ -1,23 +1,17 @@
 import unittest
 
 import clpy
-from clpy.backend.ultima.exceptions import UltimaRuntimeError
 from clpy import testing
-
-import six
 
 
 class TestCArray(unittest.TestCase):
 
-    def test_size(self):  # TODO(vorj): support CArray::size()
-        with six.assertRaisesRegex(self, UltimaRuntimeError,
-                                   "Current ultima doesn't support "
-                                   "CArray::size()"):
-            x = clpy.arange(3).astype('i')
-            y = clpy.ElementwiseKernel(
-                'raw int32 x', 'int32 y', 'y = x.size()', 'test_carray_size',
-            )(x, size=1)
-            self.assertEqual(int(y[0]), 3)
+    def test_size(self):
+        x = clpy.arange(3).astype('i')
+        y = clpy.ElementwiseKernel(
+            'raw int32 x', 'int32 y', 'y = x.size()', 'test_carray_size',
+        )(x, size=1)
+        self.assertEqual(int(y[0]), 3)
 
     def test_shape(self):
         x = clpy.arange(6).reshape((2, 3)).astype('i')
