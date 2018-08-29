@@ -2386,7 +2386,7 @@ public:
     clang::QualType Ty = D->getType();
 
     if(std::find(annons.begin(), annons.end(), "clpy_no_mangle") == annons.end()){
-      const bool conflicted = std::any_of(func_name.cbegin(), func_name.cend(), [&](const std::pair<clang::FunctionDecl*, std::string>& t){return t.second == D->getNameInfo().getAsString();});
+      const bool conflicted = std::any_of(func_name.cbegin(), func_name.cend(), [&](const std::pair<clang::FunctionDecl*, std::string>& t){return t.second == name;});
       if(conflicted){
         if(auto AFT = Ty->getAs<clang::FunctionType>()) {
           const clang::FunctionProtoType *FT = nullptr;
