@@ -2394,19 +2394,14 @@ public:
             FT = clang::dyn_cast<clang::FunctionProtoType>(AFT);
 
           name += '(';
-          auto backup = policy;
-          policy.SuppressSpecifiers = false;
-          llvm::raw_string_ostream Pos(name);
-          auto _ = os.scoped_push(Pos);
           for (unsigned i = 0, e = D->getNumParams(); i != e; ++i) {
-            if (i) Pos << ", ";
-            Pos << D->getParamDecl(i)->getType().getAsString();
+            if (i) name += ", ";
+            name += D->getParamDecl(i)->getType().getAsString();
           }
-          backup = policy;
 
           if (FT && FT->isVariadic()) {
-            if (D->getNumParams()) Pos << ", ";
-            Pos << "...";
+            if (D->getNumParams()) name += ", ";
+            name += "...";
           }
 
           name += ')';
