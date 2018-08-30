@@ -40,6 +40,7 @@ fi
 TEST_DIRS="
 tests/clpy_tests/opencl_tests/
 tests/clpy_tests/binary_tests/
+tests/clpy_tests/ext_tests/
 "
 
 TEST_FILES="
