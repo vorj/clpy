@@ -16,6 +16,19 @@ from install import utils
 import locale
 import subprocess
 
+print("Checking OpenCL Version")
+verassert_path = os.path.join(
+        os.path.dirname(__file__),
+        "clpy", "backend", "opencl", "verassert"
+        )
+version_to_assert = "1.2"
+if subprocess.run(
+        "make run CL_VERSION=" + version_to_assert,
+        shell=True,
+        cwd=verassert_path).returncode != 0:
+    raise RuntimeError("Version check failed.")
+
+
 print("building ultima")
 
 is_clang_built_with_cxx11_abi = subprocess.Popen(

@@ -9,7 +9,7 @@ $(PROG): $(PROG).o
 	$(CXX) -o $@ $< $(LDFLAGS)
 
 run: $(PROG)
-	./$(PROG) 1.2
+	./$(PROG) ${CL_VERSION}
 
 clean:
 	-rm $(PROG)
