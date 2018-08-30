@@ -24,14 +24,7 @@ is_clang_built_with_cxx11_abi = subprocess.Popen(
     shell=True).wait() == 0
 
 if subprocess.Popen(
-        'clang++ -std=c++11 -D_GLIBCXX_USE_CXX11_ABI={} -Wall -Wextra '
-        '-O3 -pedantic-errors ultima.cpp -lclangTooling -lclangFrontendTool '
-        '-lclangFrontend -lclangDriver -lclangSerialization -lclangCodeGen '
-        '-lclangParse -lclangSema -lclangStaticAnalyzerFrontend '
-        '-lclangStaticAnalyzerCheckers -lclangStaticAnalyzerCore '
-        '-lclangAnalysis -lclangARCMigrate -lclangRewrite -lclangEdit '
-        '-lclangAST -lclangLex -lclangBasic -lclang '
-        '`llvm-config --libs --system-libs` -fno-rtti -o ultima'
+        'make use_cxx11_abi:={}'
         .format(1 if is_clang_built_with_cxx11_abi else 0),
         cwd=os.path.dirname(__file__)+"/ultima",
         shell=True).wait() != 0:
