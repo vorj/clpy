@@ -18,9 +18,9 @@ import subprocess
 
 print("Checking OpenCL Version")
 verassert_path = os.path.join(
-        os.path.dirname(__file__),
-        "clpy", "backend", "opencl", "verassert"
-        )
+    os.path.dirname(__file__),
+    "clpy", "backend", "opencl", "verassert"
+)
 if subprocess.run(
         "make run",
         shell=True,

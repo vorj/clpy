@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 import atexit
 import logging
-import subprocess
 import os
+import subprocess
 
 from clpy.backend.opencl cimport api
 ##########################################
@@ -49,16 +49,14 @@ def get_clpy_path():
     return clpy.__path__[0]
 verassert_path = os.path.join(get_clpy_path(), "..", "verassert")
 verassert_sp = subprocess.run("./verassert 0",
-        shell=True,
-        stdout=subprocess.PIPE,
-        cwd=verassert_path)
+                              shell=True,
+                              stdout=subprocess.PIPE,
+                              cwd=verassert_path)
 if verassert_sp.returncode != 0:
     raise RuntimeError(
-            "Device #0 version does not meet the requirement."
-            + verassert_sp.stdout)
+        "Device #0 version does not meet the requirement."
+        + verassert_sp.stdout)
 logging.info("Device #0 version check OK.")
-
-
 
 
 logging.info("Create context...", end='')
