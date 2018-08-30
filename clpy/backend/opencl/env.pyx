@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 import atexit
 import logging
+import subprocess
+import os
 
 from clpy.backend.opencl cimport api
 ##########################################
@@ -40,6 +42,24 @@ api.GetDeviceIDs(
 num_devices = __num_devices     # provide as pure python interface
 cdef cl_device_id __primary_device = __devices_ptr[0]
 logging.info("SUCCESS")
+
+
+def get_clpy_path():
+    import clpy
+    return clpy.__path__[0]
+verassert_path = os.path.join(get_clpy_path(), "..", "verassert")
+verassert_sp = subprocess.run("./verassert 0",
+        shell=True,
+        stdout=subprocess.PIPE,
+        cwd=verassert_path)
+if verassert_sp.returncode != 0:
+    raise RuntimeError(
+            "Device #0 version does not meet the requirement."
+            + verassert_sp.stdout)
+logging.info("Device #0 version check OK.")
+
+
+
 
 logging.info("Create context...", end='')
 cdef cl_context __context = api.CreateContext(

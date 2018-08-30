@@ -132,6 +132,7 @@ setup(
     },
     data_files=[
         ('ultima', ['ultima/ultima']),
+        ('verassert', ['clpy/backend/opencl/verassert/verassert']),
     ],
     zip_safe=False,
     setup_requires=setup_requires,
