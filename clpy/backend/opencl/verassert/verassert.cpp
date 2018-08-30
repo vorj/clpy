@@ -33,25 +33,31 @@ version_t parse_version_str(std::string const& str){
   return version_t(major_version, minor_version);
 }
 
+std::string to_string(version_t const& v){
+  return std::to_string(v.first) + "." + std::to_string(v.second);
+}
+
 
 int main(int argc, char const** argv){
   int specified_device_index = -1;
 
-  if (argc < 2 || 3 < argc) {
+  version_t constexpr capable_version{1, 2};  // Change this if the condition is updated.
+
+
+  if (3 <= argc) {
     std::cerr << "Usage: \n  " <<
-      argv[0] << " <Version>\n  " <<
-      argv[0] << " <Version> <Device Index>\n" <<
-      "Example: " << argv[0] << "  1.2       Checks Platform#0 >= 1.2\n" <<
-      "         " << argv[0] << "  1.2  2    Checks Platform#0 and Device#2 >= 1.2" <<
+      argv[0] << " \n  " <<
+      argv[0] << " <Device Index>\n" <<
+      "Example: " << argv[0] << "       Checks OpenCL C and Platform#0 >= " << to_string(capable_version) << "\n" <<
+      "         " << argv[0] << "  2    Checks OpenCL C, Platform#0 and Device#2 >= " << to_string(capable_version) <<
       std::endl;
 
     std::cerr << "\nReturns 0 if the conditions are satisfied, else returns 1." << std::endl;
     exit (1);
   }
-  auto const capable_version_str = std::string("OpenCL ") + argv[1];
-  version_t const capable_version = parse_version_str(capable_version_str);
-  if (argc == 3){
-    specified_device_index = std::atoi(argv[2]);
+
+  if (argc == 2){
+    specified_device_index = std::atoi(argv[1]);
   }
 
   // OpenCL C Version Check
@@ -62,7 +68,7 @@ int main(int argc, char const** argv){
   if (CL_VERSION_1_2 == 1){
     std::cout << " OK" << std::endl;
   }else{
-    std::cout << " must be >= 1.2" << std::endl;
+    std::cout << " must be >= " << to_string(capable_version) << std::endl;
     return 1;
   }
 
