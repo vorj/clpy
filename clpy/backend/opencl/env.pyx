@@ -47,7 +47,9 @@ logging.info("SUCCESS")
 def get_clpy_path():
     import clpy
     return clpy.__path__[0]
-verassert_path = os.path.join(get_clpy_path(), "..", "verassert")
+verassert_path = os.path.join(
+    get_clpy_path(),
+    "backend", "opencl", "verassert")
 verassert_sp = subprocess.run("./verassert 0",
                               shell=True,
                               stdout=subprocess.PIPE,
