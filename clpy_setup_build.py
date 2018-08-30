@@ -26,7 +26,7 @@ is_clang_built_with_cxx11_abi = subprocess.Popen(
 ultima_build_process = subprocess.Popen(
     'make use_cxx11_abi:={}'
     .format(1 if is_clang_built_with_cxx11_abi else 0),
-    cwd=os.path.dirname(__file__)+"/ultima",
+    cwd=os.path.join(os.path.dirname(__file__), "ultima"),
     shell=True)
 
 print("building headercvt")
