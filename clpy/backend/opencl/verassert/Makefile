@@ -9,7 +9,7 @@ $(PROG): $(PROG).o
 	$(CXX) -o $@ $< $(LDFLAGS)
 
 run: $(PROG)
-	./$(PROG) ${CL_VERSION}
+	./$(PROG) ${CL_VERSION} ${DEVICE_INDEX}
 
 clean:
 	-rm $(PROG)
