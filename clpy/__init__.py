@@ -86,7 +86,7 @@ from clpy import padding  # NOQA
 from clpy import random  # NOQA
 # from clpy import sorting  # NOQA
 from clpy import sparse  # NOQA
-# from clpy import statistics  # NOQA
+from clpy import statistics  # NOQA
 from clpy import testing  # NOQA  # NOQA
 from clpy import util  # NOQA
 
@@ -500,8 +500,8 @@ from clpy.sorting.search import argmax  # NOQA
 # from clpy.core.fusion import amax as max  # NOQA
 # from clpy.core.fusion import amin  # NOQA
 # from clpy.core.fusion import amin as min  # NOQA
-# from clpy.statistics.order import nanmax  # NOQA
-# from clpy.statistics.order import nanmin  # NOQA
+from clpy.statistics.order import nanmax  # NOQA
+from clpy.statistics.order import nanmin  # NOQA
 
 # from clpy.statistics.meanvar import mean  # NOQA
 # from clpy.statistics.meanvar import std  # NOQA
