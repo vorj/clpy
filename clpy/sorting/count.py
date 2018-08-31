@@ -28,4 +28,4 @@ _count_nonzero = core.create_reduction_func(
     'clpy_count_nonzero',
     ('?->l', 'B->l', 'h->l', 'H->l', 'i->l', 'I->l', 'l->l', 'L->l',
      'q->l', 'Q->l', 'f->l', 'd->l', 'F->l', 'D->l'),
-    ('in0 != type_in0_raw(0)', 'a + b', 'out0 = a', None), 0)
+    ('in0 != type_in0_data(0)', 'a + b', 'out0 = a', None), 0)
