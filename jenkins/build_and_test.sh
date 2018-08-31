@@ -75,6 +75,7 @@ tests/clpy_tests/manipulation_tests/test_shape.py
 tests/clpy_tests/manipulation_tests/test_split.py
 tests/clpy_tests/manipulation_tests/test_tiling.py
 tests/clpy_tests/manipulation_tests/test_transpose.py
+tests/clpy_tests/statics_tests/test_order.py
 "
 
 ERROR_HAS_OCCURRED=0
