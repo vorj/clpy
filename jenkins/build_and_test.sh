@@ -42,6 +42,7 @@ tests/clpy_tests/opencl_tests/
 tests/clpy_tests/binary_tests/
 tests/clpy_tests/testing_tests/
 tests/clpy_tests/io_tests/
+tests/clpy_tests/padding_tests/
 "
 
 TEST_FILES="
