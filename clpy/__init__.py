@@ -369,10 +369,10 @@ def isscalar(num):
     return numpy.isscalar(num)
 
 
-# from clpy.core.fusion import logical_and  # NOQA
-# from clpy.core.fusion import logical_not  # NOQA
-# from clpy.core.fusion import logical_or  # NOQA
-# from clpy.core.fusion import logical_xor  # NOQA
+from clpy.core.fusion import logical_and  # NOQA
+from clpy.core.fusion import logical_not  # NOQA
+from clpy.core.fusion import logical_or  # NOQA
+from clpy.core.fusion import logical_xor  # NOQA
 
 # from clpy.core.fusion import equal  # NOQA
 # from clpy.core.fusion import greater  # NOQA
