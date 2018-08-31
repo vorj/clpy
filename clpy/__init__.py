@@ -84,7 +84,7 @@ from clpy import linalg  # NOQA
 from clpy import manipulation  # NOQA
 # from clpy import padding  # NOQA
 from clpy import random  # NOQA
-# from clpy import sorting  # NOQA
+from clpy import sorting  # NOQA
 from clpy import sparse  # NOQA
 # from clpy import statistics  # NOQA
 # from clpy import testing  # NOQA  # NOQA
@@ -478,7 +478,7 @@ from clpy.core.fusion import maximum  # NOQA
 # -----------------------------------------------------------------------------
 # Sorting, searching, and counting
 # -----------------------------------------------------------------------------
-# from clpy.sorting.count import count_nonzero  # NOQA
+from clpy.sorting.count import count_nonzero  # NOQA
 # from clpy.sorting.search import flatnonzero  # NOQA
 # from clpy.sorting.search import nonzero  # NOQA
 
