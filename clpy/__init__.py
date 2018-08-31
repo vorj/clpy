@@ -79,7 +79,7 @@ from clpy import binary  # NOQA
 from clpy.core import fusion  # NOQA
 from clpy import creation  # NOQA
 from clpy import indexing  # NOQA
-# from clpy import io  # NOQA
+from clpy import io  # NOQA
 from clpy import linalg  # NOQA
 from clpy import manipulation  # NOQA
 # from clpy import padding  # NOQA
@@ -321,13 +321,13 @@ from clpy.indexing.insert import fill_diagonal  # NOQA
 # -----------------------------------------------------------------------------
 # Input and output
 # -----------------------------------------------------------------------------
-# from clpy.io.npz import load  # NOQA
-# from clpy.io.npz import save  # NOQA
-# from clpy.io.npz import savez  # NOQA
-# from clpy.io.npz import savez_compressed  # NOQA
+from clpy.io.npz import load  # NOQA
+from clpy.io.npz import save  # NOQA
+from clpy.io.npz import savez  # NOQA
+from clpy.io.npz import savez_compressed  # NOQA
 
-# from clpy.io.formatting import array_repr  # NOQA
-# from clpy.io.formatting import array_str  # NOQA
+from clpy.io.formatting import array_repr  # NOQA
+from clpy.io.formatting import array_str  # NOQA
 
 
 def base_repr(number, base=2, padding=0):  # NOQA (needed to avoid redefinition of `number`)
