@@ -87,7 +87,7 @@ from clpy import random  # NOQA
 # from clpy import sorting  # NOQA
 from clpy import sparse  # NOQA
 # from clpy import statistics  # NOQA
-# from clpy import testing  # NOQA  # NOQA
+from clpy import testing  # NOQA  # NOQA
 from clpy import util  # NOQA
 
 
