@@ -206,39 +206,39 @@ from clpy.creation.matrix import diagflat  # NOQA
 # -----------------------------------------------------------------------------
 # from clpy.manipulation.basic import copyto  # NOQA
 
-# from clpy.manipulation.shape import ravel  # NOQA
-# from clpy.manipulation.shape import reshape  # NOQA
+from clpy.manipulation.shape import ravel  # NOQA
+from clpy.manipulation.shape import reshape  # NOQA
 
 from clpy.manipulation.transpose import rollaxis  # NOQA
 from clpy.manipulation.transpose import swapaxes  # NOQA
-# from clpy.manipulation.transpose import transpose  # NOQA
+from clpy.manipulation.transpose import transpose  # NOQA
 
-# from clpy.manipulation.dims import atleast_1d  # NOQA
-# from clpy.manipulation.dims import atleast_2d  # NOQA
-# from clpy.manipulation.dims import atleast_3d  # NOQA
+from clpy.manipulation.dims import atleast_1d  # NOQA
+from clpy.manipulation.dims import atleast_2d  # NOQA
+from clpy.manipulation.dims import atleast_3d  # NOQA
 from clpy.manipulation.dims import broadcast  # NOQA
 from clpy.manipulation.dims import broadcast_arrays  # NOQA
-# from clpy.manipulation.dims import broadcast_to  # NOQA
+from clpy.manipulation.dims import broadcast_to  # NOQA
 from clpy.manipulation.dims import expand_dims  # NOQA
-# from clpy.manipulation.dims import squeeze  # NOQA
+from clpy.manipulation.dims import squeeze  # NOQA
 
-# from clpy.manipulation.join import column_stack  # NOQA
+from clpy.manipulation.join import column_stack  # NOQA
 from clpy.manipulation.join import concatenate  # NOQA
-# from clpy.manipulation.join import dstack  # NOQA
-# from clpy.manipulation.join import hstack  # NOQA
-# from clpy.manipulation.join import stack  # NOQA
-# from clpy.manipulation.join import vstack  # NOQA
+from clpy.manipulation.join import dstack  # NOQA
+from clpy.manipulation.join import hstack  # NOQA
+from clpy.manipulation.join import stack  # NOQA
+from clpy.manipulation.join import vstack  # NOQA
 
 from clpy.manipulation.kind import asfortranarray  # NOQA
 
-# from clpy.manipulation.split import array_split  # NOQA
-# from clpy.manipulation.split import dsplit  # NOQA
-# from clpy.manipulation.split import hsplit  # NOQA
-# from clpy.manipulation.split import split  # NOQA
-# from clpy.manipulation.split import vsplit  # NOQA
+from clpy.manipulation.split import array_split  # NOQA
+from clpy.manipulation.split import dsplit  # NOQA
+from clpy.manipulation.split import hsplit  # NOQA
+from clpy.manipulation.split import split  # NOQA
+from clpy.manipulation.split import vsplit  # NOQA
 
-# from clpy.manipulation.tiling import repeat  # NOQA
-# from clpy.manipulation.tiling import tile  # NOQA
+from clpy.manipulation.tiling import repeat  # NOQA
+from clpy.manipulation.tiling import tile  # NOQA
 
 # from clpy.manipulation.rearrange import flip  # NOQA
 # from clpy.manipulation.rearrange import fliplr  # NOQA
