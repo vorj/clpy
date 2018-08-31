@@ -63,6 +63,7 @@ tests/clpy_tests/core_tests/test_reduction.py
 tests/clpy_tests/creation_tests/test_basic.py
 tests/clpy_tests/creation_tests/test_matrix.py
 tests/clpy_tests/creation_tests/test_ranges.py
+tests/clpy_tests/indexing_tests/test_insert.py
 "
 
 ERROR_HAS_OCCURRED=0
