@@ -374,12 +374,12 @@ from clpy.core.fusion import logical_not  # NOQA
 from clpy.core.fusion import logical_or  # NOQA
 from clpy.core.fusion import logical_xor  # NOQA
 
-# from clpy.core.fusion import equal  # NOQA
-# from clpy.core.fusion import greater  # NOQA
-# from clpy.core.fusion import greater_equal  # NOQA
-# from clpy.core.fusion import less  # NOQA
-# from clpy.core.fusion import less_equal  # NOQA
-# from clpy.core.fusion import not_equal  # NOQA
+from clpy.core.fusion import equal  # NOQA
+from clpy.core.fusion import greater  # NOQA
+from clpy.core.fusion import greater_equal  # NOQA
+from clpy.core.fusion import less  # NOQA
+from clpy.core.fusion import less_equal  # NOQA
+from clpy.core.fusion import not_equal  # NOQA
 
 # from clpy.core.fusion import all  # NOQA
 # from clpy.core.fusion import any  # NOQA
