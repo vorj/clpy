@@ -82,7 +82,7 @@ from clpy import indexing  # NOQA
 from clpy import io  # NOQA
 from clpy import linalg  # NOQA
 from clpy import manipulation  # NOQA
-# from clpy import padding  # NOQA
+from clpy import padding  # NOQA
 from clpy import random  # NOQA
 # from clpy import sorting  # NOQA
 from clpy import sparse  # NOQA
@@ -472,7 +472,7 @@ from clpy.core.fusion import maximum  # NOQA
 # -----------------------------------------------------------------------------
 # Padding
 # -----------------------------------------------------------------------------
-# pad = padding.pad.pad
+pad = padding.pad.pad
 
 
 # -----------------------------------------------------------------------------
