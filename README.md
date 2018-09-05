@@ -74,6 +74,7 @@ $ export CPLUS_INCLUDE_PATH=/usr/lib/llvm-6.0/include:$CPLUS_INCLUDE_PATH
 ### Install ClPy
 
 After OpenCL and LLVM/Clang is successfully installed, install ClPy.
+ClPy uses `make` command in build process, so if you do not have `make` , please install it before install ClPy.
 
 ```console
 $ pip install cython
