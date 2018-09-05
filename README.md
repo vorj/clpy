@@ -38,7 +38,7 @@ We develop and test ClPy in following environments.
 	* GPU: NVIDIA TITAN V
 	* SDK: CUDA 9.2
 
-We develop ClPy with Python 3.6.4. Currently, we do not check the behavior on other versions of Python.
+We develop ClPy with Python 3.6.5. Currently, we do not check the behavior on other versions of Python.
 We recommend those environments to all ClPy users. However, reports on other environments are welcome.
 
 ## Installation
