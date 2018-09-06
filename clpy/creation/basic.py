@@ -144,7 +144,6 @@ def zeros(shape, dtype=float, order='C'):
 
     """
     a = clpy.ndarray(shape, dtype, order=order)
-    # TODO(LWisteria): Use clEnqueueFillBuffer for OpenCL 1.2
     a.fill(a.dtype.type(0))
     return a
 
@@ -168,8 +167,7 @@ def zeros_like(a, dtype=None):
     if dtype is None:
         dtype = a.dtype
     a = clpy.ndarray(a.shape, dtype)
-    # TODO(LWisteria): Use clEnqueueFillBuffer for OpenCL 1.2
-    a.fill(a.dtype.type(0))
+    a.fill(dtype.type(0))
     return a
 
 
