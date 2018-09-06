@@ -144,12 +144,14 @@ class stmt_visitor : public clang::StmtVisitor<stmt_visitor> {
   clang::PrintingPolicy& Policy;
   clang::DeclVisitor<decl_visitor>& dv;
   const std::vector<std::vector<function_special_argument_info>>& func_arg_info;
+  const std::unordered_map<clang::FunctionDecl*, std::string>& func_name;
 public:
   stmt_visitor(ostreams& os,
               clang::PrintingPolicy &Policy,
               unsigned& Indentation, clang::DeclVisitor<decl_visitor>& dv,
-              const std::vector<std::vector<function_special_argument_info>>& func_arg_info)
-    : os(os), IndentLevel(Indentation), Policy(Policy), dv{dv}, func_arg_info{func_arg_info} {}
+              const std::vector<std::vector<function_special_argument_info>>& func_arg_info,
+              const std::unordered_map<clang::FunctionDecl*, std::string>& func_name)
+    : os(os), IndentLevel(Indentation), Policy(Policy), dv{dv}, func_arg_info{func_arg_info}, func_name{func_name} {}
 
   void PrintStmt(clang::Stmt *S) {
     PrintStmt(S, Policy.Indentation);
@@ -735,6 +737,7 @@ public:
     case '(': ss << "__left_paren__"; break;
     case ')': ss << "__right_paren__"; break;
     case ',': ss << "__comma__"; break;
+    case '.': ss << "__dot__"; break;
     case ' ': break;
     case '*': ss << "__pointer__"; break;
     case '[': ss << "__left_square__"; break;
@@ -772,8 +775,9 @@ public:
 
   void print_template_arguments(const clang::TemplateArgumentList* tal){
     for(auto&& x : tal->asArray()){
-      os << '_';
+      os << to_identifier("<");
       print_template_argument(x);
+      os << to_identifier(">");
     }
   }
 
@@ -790,10 +794,20 @@ public:
   }
 
   void VisitCallExpr(clang::CallExpr *Call) {
-    PrintExpr(Call->getCallee());
-    if(auto f = clang::dyn_cast<clang::FunctionDecl>(Call->getCalleeDecl()))
-    if(auto list = f->getTemplateSpecializationArgs())
-      print_template_arguments(list);
+    if(auto f = clang::dyn_cast<clang::FunctionDecl>(Call->getCalleeDecl())){
+      auto it = func_name.find(f);
+      if(it != func_name.end())
+        os << it->second;
+      else{
+        PrintExpr(Call->getCallee());
+        if(auto list = f->getTemplateSpecializationArgs()){
+          os << '_';
+          print_template_arguments(list);
+        }
+      }
+    }
+    else
+      PrintExpr(Call->getCallee());
     os << '(';
     PrintCallArgs(Call);
     os << ')';
@@ -1113,9 +1127,9 @@ public:
         if(var_info->ndim > 1){
           const auto type = Node->getArg(1)->getType();
           if(auto array = type->getAsArrayTypeUnsafe())
-            os << "Raw_" << var_info->ndim << '_' << to_identifier(array->getElementType()->getUnqualifiedDesugaredType()->getLocallyUnqualifiedSingleStepDesugaredType().getAsString());
+            os << "Raw_" << var_info->ndim << '_' << to_identifier('<'+array->getElementType()->getUnqualifiedDesugaredType()->getLocallyUnqualifiedSingleStepDesugaredType().getAsString()+'>');
           else if(auto pointer = type->getAs<clang::PointerType>())
-            os << "Raw_" << var_info->ndim << '_' << to_identifier(pointer->getPointeeType()->getUnqualifiedDesugaredType()->getLocallyUnqualifiedSingleStepDesugaredType().getAsString());
+            os << "Raw_" << var_info->ndim << '_' << to_identifier('<'+pointer->getPointeeType()->getUnqualifiedDesugaredType()->getLocallyUnqualifiedSingleStepDesugaredType().getAsString()+'>');
           else
             os << "I_" << var_info->ndim;
         }
@@ -1820,6 +1834,7 @@ class decl_visitor : public clang::DeclVisitor<decl_visitor>{
   unsigned indentation;
   bool PrintInstantiation;
   std::vector<std::vector<function_special_argument_info>> func_arg_info;
+  std::unordered_map<clang::FunctionDecl*, std::string> func_name;
   stmt_visitor sv;
   int print_out_counter = 0;
 
@@ -1828,7 +1843,7 @@ public:
                unsigned indentation = 0, bool PrintInstantiation = false)
     : os(os), policy(policy), indentation(indentation),
       PrintInstantiation(PrintInstantiation),
-      sv{this->os, this->policy, this->indentation, *this, this->func_arg_info} { }
+      sv{this->os, this->policy, this->indentation, *this, this->func_arg_info, this->func_name} { }
 
   llvm::raw_ostream& indent(unsigned indentation) {
     for (unsigned i = 0; i != indentation; ++i)
@@ -2226,9 +2241,9 @@ public:
   }
 
   void VisitFunctionDecl(clang::FunctionDecl *D) {
+    const auto annons = prettyPrintPragmas(D);
     if (!D->getDescribedFunctionTemplate() &&
         !D->isFunctionTemplateSpecialization()){
-      const auto annons = prettyPrintPragmas(D);
       for(auto&& x : annons) if(x == "clpy_elementwise_tag"){
         auto _ind = std::find_if(func_arg_info.back().begin(), func_arg_info.back().end(), [](const function_special_argument_info& x){
           return x.arg_flag == function_special_argument_info::cindex && x.name == "_ind";
@@ -2359,19 +2374,49 @@ public:
         NS->print(OS, policy);
       }
     }
-    Proto += D->getNameInfo().getAsString();
+
+    auto name = D->getNameInfo().getAsString();
 
     if(auto TArgs = D->getTemplateSpecializationArgs()) {
       auto backup = policy;
       policy.SuppressSpecifiers = false;
-      llvm::raw_string_ostream Pos(Proto);
+      llvm::raw_string_ostream Pos(name);
       auto _ = os.scoped_push(Pos);
+      os << '_';
       sv.print_template_arguments(TArgs);
       Pos.flush();
       policy = backup;
     }
 
     clang::QualType Ty = D->getType();
+
+    if(std::find(annons.begin(), annons.end(), "clpy_no_mangle") == annons.end()){
+      const bool conflicted = std::any_of(func_name.cbegin(), func_name.cend(), [&](const std::pair<clang::FunctionDecl*, std::string>& t){return t.second == name;});
+      if(conflicted){
+        if(auto AFT = Ty->getAs<clang::FunctionType>()) {
+          const clang::FunctionProtoType *FT = nullptr;
+          if (D->hasWrittenPrototype())
+            FT = clang::dyn_cast<clang::FunctionProtoType>(AFT);
+
+          name += '(';
+          for (unsigned i = 0, e = D->getNumParams(); i != e; ++i) {
+            if (i) name += ", ";
+            name += D->getParamDecl(i)->getType().getAsString();
+          }
+
+          if (FT && FT->isVariadic()) {
+            if (D->getNumParams()) name += ", ";
+            name += "...";
+          }
+
+          name += ')';
+        }
+        name = sv.to_identifier(name);
+      }
+    }
+    func_name[D] = name;
+    Proto += name;
+
     while(auto PT = clang::dyn_cast<clang::ParenType>(Ty)) {
       Proto = '(' + Proto + ')';
       Ty = PT->getInnerType();
