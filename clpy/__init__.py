@@ -466,7 +466,7 @@ from clpy.core import real  # NOQA
 from clpy.core.fusion import maximum  # NOQA
 # from clpy.core.fusion import minimum  # NOQA
 # from clpy.core.fusion import sign  # NOQA
-# from clpy.core.fusion import sqrt  # NOQA
+from clpy.core.fusion import sqrt  # NOQA
 # from clpy.core.fusion import square  # NOQA
 
 # -----------------------------------------------------------------------------
