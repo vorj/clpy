@@ -455,6 +455,9 @@ cdef class ndarray:
         cdef size_t offset = self.data.cl_mem_offset()
         cdef cl_mem buffer_object = self.data.buf.ptr
 
+        if fill_size == 0:
+            return
+
         if self._c_contiguous:
             api.EnqueueFillBuffer(
                 command_queue=env.get_command_queue(),
