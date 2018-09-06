@@ -55,9 +55,9 @@ class TestCArraywithChunk(unittest.TestCase):
         expected = numpy.zeros(actual.shape, dtype=dtype)
         for i in range(expected.shape[0]):
             for j in range(expected.shape[1]):
-                # data.mem.offset divided by size of int32 (= 4 byte)
-                expected[i][j] = x.data.mem.offset / \
-                    4 + i * expected.shape[1] + j
+                # shapes multiplied by size of int32 (= 4 byte)
+                expected[i][j] = x.data.mem.offset \
+                    + (i * expected.shape[1] + j) * 4
 
         self.assertTrue(numpy.allclose(actual, expected))
 

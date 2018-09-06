@@ -30,6 +30,7 @@ cdef struct _CIndexer:
 
 cdef struct _CArray:
     Py_ssize_t offset
+    Py_ssize_t size
     Py_ssize_t shape_and_index[MAX_NDIM * 2]
 
 cdef struct _CArray0:
@@ -68,11 +69,11 @@ cdef void _launch(clpy.backend.opencl.types.cl_kernel kernel, global_work_size,
                                      " but item size is {2}"
                                      .format(d, a.strides[d], a.itemsize))
                 arrayInfo.shape_and_index[d] = a.shape[d]
-                arrayInfo.shape_and_index[d + ndim] = a.strides[d] \
-                    // a.itemsize
-            arrayInfo.offset = a.data.cl_mem_offset() // a.itemsize
+                arrayInfo.shape_and_index[d + ndim] = a.strides[d]
+            arrayInfo.offset = a.data.cl_mem_offset()
+            arrayInfo.size = a.size
             clpy.backend.opencl.api.SetKernelArg(
-                kernel, i, cython.sizeof(Py_ssize_t)*(2*ndim+1),
+                kernel, i, cython.sizeof(Py_ssize_t)*(1+1+2*ndim),
                 <void*>&arrayInfo)
         elif isinstance(a, clpy.core.core.LocalMem):
             clpy.backend.opencl.utility.SetKernelArgLocalMemory(kernel, i,
