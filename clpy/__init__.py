@@ -503,9 +503,9 @@ from clpy.sorting.search import argmax  # NOQA
 # from clpy.statistics.order import nanmax  # NOQA
 # from clpy.statistics.order import nanmin  # NOQA
 
-# from clpy.statistics.meanvar import mean  # NOQA
-# from clpy.statistics.meanvar import std  # NOQA
-# from clpy.statistics.meanvar import var  # NOQA
+from clpy.statistics.meanvar import mean  # NOQA
+from clpy.statistics.meanvar import std  # NOQA
+from clpy.statistics.meanvar import var  # NOQA
 
 # from clpy.statistics.histogram import bincount  # NOQA
 
