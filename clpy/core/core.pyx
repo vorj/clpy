@@ -456,6 +456,7 @@ cdef class ndarray:
         cdef cl_mem buffer_object = self.data.buf.ptr
 
         if fill_size == 0:
+            # cl_mem with size==0 causes CL_INVALID_MEM_OBJECT error.
             return
 
         if self._c_contiguous:
