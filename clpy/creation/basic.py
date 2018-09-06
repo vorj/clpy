@@ -144,7 +144,7 @@ def zeros(shape, dtype=float, order='C'):
 
     """
     a = clpy.ndarray(shape, dtype, order=order)
-    a.fill(a.dtype.type(0))
+    a.fill(0)
     return a
 
 
@@ -167,7 +167,7 @@ def zeros_like(a, dtype=None):
     if dtype is None:
         dtype = a.dtype
     a = clpy.ndarray(a.shape, dtype)
-    a.fill(dtype.type(0))
+    a.fill(0)
     return a
 
 
