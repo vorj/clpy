@@ -4,6 +4,7 @@ from __future__ import division
 import sys
 
 import numpy
+import ctypes
 import six
 
 import clpy
@@ -25,6 +26,9 @@ from clpy.backend cimport function
 # from clpy.backend cimport pinned_memory
 # from clpy.backend cimport runtime
 from clpy.backend cimport memory
+from clpy.backend.opencl cimport api
+from clpy.backend.opencl cimport env
+from clpy.backend.opencl.types cimport *
 
 DEF MAX_NDIM = 25
 
@@ -441,12 +445,30 @@ cdef class ndarray:
             if value.shape != ():
                 raise ValueError(
                     'non-scalar numpy.ndarray cannot be used for fill')
-            value = value.item()
+            np_scalar = value
+        else:
+            np_scalar = numpy.asarray(value, dtype=self.dtype)
 
-#        if value == 0 and self._c_contiguous:
-#            self.data.memset_async(0, self.nbytes, stream.Stream(True))
-#        else:
-        elementwise_copy(value, self, dtype=self.dtype)
+        cdef size_t data_pointer = np_scalar.ctypes.data
+        cdef size_t element_size = self.dtype.itemsize
+        cdef size_t fill_size = self.nbytes
+        cdef size_t offset = self.data.cl_mem_offset()
+        cdef cl_mem buffer_object = self.data.buf.ptr
+
+        if self._c_contiguous:
+            api.EnqueueFillBuffer(
+                command_queue=env.get_command_queue(),
+                buffer=buffer_object,
+                pattern=<void*>data_pointer,
+                pattern_size=element_size,
+                offset=offset,
+                size=fill_size,
+                num_events_in_wait_list=0,
+                event_wait_list=NULL,
+                event=NULL)
+        else:
+            elementwise_copy(value, self, dtype=self.dtype)
+
 
     # -------------------------------------------------------------------------
     # Shape manipulation

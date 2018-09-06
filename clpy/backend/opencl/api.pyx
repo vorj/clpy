@@ -255,6 +255,28 @@ cdef void ReleaseContext(cl_context context) except *:
 cdef void WaitForEvents(size_t num_events, cl_event* event_list) except *:
     exceptions.check_status(clWaitForEvents(<cl_uint>num_events, event_list))
 
+cdef void EnqueueFillBuffer(
+        cl_command_queue command_queue,
+        cl_mem buffer,
+        void* pattern,
+        size_t pattern_size,
+        size_t offset,
+        size_t size,
+        cl_uint num_events_in_wait_list,
+        cl_event* event_wait_list,
+        cl_event* event) except *:
+    exceptions.check_status(clEnqueueFillBuffer(
+        command_queue,
+        buffer,
+        <const void*>pattern,
+        pattern_size,
+        offset,
+        size,
+        num_events_in_wait_list,
+        <const cl_event*>event_wait_list,
+        event))
+
+
 TRUE = CL_TRUE
 FALSE = CL_FALSE
 BLOCKING = CL_BLOCKING

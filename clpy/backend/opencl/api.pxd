@@ -96,3 +96,13 @@ cdef void ReleaseMemObject(cl_mem memobj) except *
 cdef void ReleaseCommandQueue(cl_command_queue command_queue) except *
 cdef void ReleaseContext(cl_context context) except *
 cdef void WaitForEvents(size_t num_events, cl_event* event_list) except *
+cdef void EnqueueFillBuffer(
+        cl_command_queue command_queue,
+        cl_mem buffer,
+        void* pattern,
+        size_t pattern_size,
+        size_t offset,
+        size_t size,
+        cl_uint num_events_in_wait_list,
+        cl_event* event_wait_list,
+        cl_event* event) except *
