@@ -68,8 +68,8 @@ In that case, you need to set `PATH` and `CPLUS_INCLUDE_PATH` environment variab
 
 ```console
 # apt install clang-6.0 libclang-6.0-dev
-$ export PATH=/usr/lib/llvm-6.0/bin:$PATH
-$ export CPLUS_INCLUDE_PATH=/usr/lib/llvm-6.0/include:$CPLUS_INCLUDE_PATH
+$ export PATH=/usr/lib/llvm-6.0/bin:${PATH}
+$ export CPLUS_INCLUDE_PATH=/usr/lib/llvm-6.0/include:${CPLUS_INCLUDE_PATH}
 ```
 
 ### Install ClPy
