@@ -75,6 +75,7 @@ tests/clpy_tests/manipulation_tests/test_shape.py
 tests/clpy_tests/manipulation_tests/test_split.py
 tests/clpy_tests/manipulation_tests/test_tiling.py
 tests/clpy_tests/manipulation_tests/test_transpose.py
+tests/clpy_tests/sorting_tests/test_count.py
 tests/clpy_tests/statics_tests/test_order.py
 "
 
