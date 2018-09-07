@@ -5,6 +5,22 @@ import clpy.backend.opencl.types
 cimport clpy.backend.opencl.types
 from clpy.backend.opencl.types cimport *
 
+cdef CLBlastLayout translate_str_layout(str_layout) except *:
+    if (str_layout == 'R'):
+        return CLBlastLayoutRowMajor
+    elif (str_layout == 'C'):
+        return CLBlastLayoutColMajor
+    else:
+        raise ValueError("layout should be \'R\' or \'c\'")
+
+cdef CLBlastTranspose translate_transpose(trans) except *:
+    if (trans == 'n' or trans == 0):
+        return CLBlastTransposeNo
+    elif (trans == 't' or trans == 1):
+        return CLBlastTransposeYes
+    else:
+        raise ValueError("transpose should be n(0) or t(1)")
+
 cdef void clblast_sgemm(CLBlastLayout layout, CLBlastTranspose a_transpose, CLBlastTranspose b_transpose,
                    size_t m, size_t n, size_t k,
                    float alpha,
@@ -37,40 +53,17 @@ cpdef sgemm(str_layout, transa, transb,
             B, ldb,
             beta,
 	    C, ldc):
-    cdef CLBlastLayout layout
-    cdef a_transpose
-    cdef b_transpose
-    if (str_layout == 'R'):
-        layout = CLBlastLayoutRowMajor
-    elif (str_layout == 'C'):
-        layout = CLBlastLayoutColMajor
-    else:
-        raise ValueError("layout should be \'R\' or \'c\'")
-
-    if (transa == 'n' or transa == 0):
-        a_transpose = CLBlastTransposeNo
-    elif (transa == 't' or transa == 1):
-        a_transpose = CLBlastTransposeYes
-    else:
-        raise ValueError("transa should be n(0) or t(1)")
-
-    if (transb == 'n' or transb == 0):
-        b_transpose = CLBlastTransposeNo
-    elif (transb == 't' or transb == 1):
-        b_transpose = CLBlastTransposeYes
-    else:
-        raise ValueError("transb should be n(0) or t(1)")
+    cdef CLBlastLayout layout = translate_str_layout(str_layout)
+    cdef CLBlastTranspose a_transpose = translate_transpose(transa)
+    cdef CLBlastTranspose b_transpose = translate_transpose(transb)
 
     cdef size_t a_buffer = A.data.buf.get()
     cdef size_t b_buffer = B.data.buf.get()
     cdef size_t c_buffer = C.data.buf.get()
 
     clblast_sgemm(
-        layout,
-        a_transpose,
-        b_transpose,
-        m, n, k,
-        alpha,
+        layout, a_transpose, b_transpose,
+        m, n, k, alpha,
         <cl_mem>a_buffer, A.data.cl_mem_offset() // A.itemsize, lda,
         <cl_mem>b_buffer, B.data.cl_mem_offset() // B.itemsize, ldb,
         beta,
