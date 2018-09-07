@@ -46,7 +46,7 @@ packages_clpy = [
     'clpy.backend',
     'clpy.backend.ultima',
     #   'clpy.backend.memory_hooks',
-    #   'clpy.ext',
+    'clpy.ext',
     'clpy.indexing',
     'clpy.io',
     'clpy.linalg',

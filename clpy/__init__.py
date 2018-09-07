@@ -519,7 +519,7 @@ from clpy.util import memoize  # NOQA
 from clpy.core import ElementwiseKernel  # NOQA
 from clpy.core import ReductionKernel  # NOQA
 
-# from clpy.ext.scatter import scatter_add  # NOQA
+from clpy.ext.scatter import scatter_add  # NOQA
 
 
 def asnumpy(a, stream=None):
