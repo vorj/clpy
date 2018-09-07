@@ -156,9 +156,16 @@ cpdef function.Module compile_with_cache(
     filename = tempfile.gettempdir() + "/" + str(time.monotonic()) + ".cpp"
 
     with TempFile(filename, source) as tf:
-        proc = subprocess.Popen('{0}/ultima/ultima {1} -- '
-                                '-I {0}/clpy/core/include'
-                                .format(clpy.__path__[0]+"/../", filename)
+        root_dir = os.path.join(clpy.__path__[0], "..")
+        proc = subprocess.Popen('{} {} -- -I {}'
+                                .format(os.path.join(root_dir,
+                                                     "ultima",
+                                                     "ultima"),
+                                        filename,
+                                        os.path.join(root_dir,
+                                                     "clpy",
+                                                     "core",
+                                                     "include"))
                                 .strip().split(" "),
                                 stdout=subprocess.PIPE,
                                 stderr=subprocess.PIPE,
