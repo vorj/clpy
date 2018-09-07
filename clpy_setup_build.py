@@ -116,6 +116,7 @@ MODULES = [
             'clpy.backend.opencl.types',
             'clpy.backend.opencl.utility',
             'clpy.backend.opencl.exceptions',
+            'clpy.backend.opencl.clblast.clblast',
             'clpy.util',
             'clpy.testing.bufio',
         ],
