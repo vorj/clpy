@@ -3,6 +3,7 @@ import unittest
 
 import numpy
 
+import clpy  # NOQA
 import cupy
 from cupy import backend
 from cupy import core

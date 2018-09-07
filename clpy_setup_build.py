@@ -16,26 +16,18 @@ from install import utils
 import locale
 import subprocess
 
-print("building ultima")
+print("building ultima started")
 
 is_clang_built_with_cxx11_abi = subprocess.Popen(
     'nm $(dirname $(readlink -f `which clang++`))/../lib/libclangTooling.a'
     ' | grep -q __cxx11',
     shell=True).wait() == 0
 
-if subprocess.Popen(
-        'clang++ -std=c++11 -D_GLIBCXX_USE_CXX11_ABI={} -Wall -Wextra '
-        '-O3 -pedantic-errors ultima.cpp -lclangTooling -lclangFrontendTool '
-        '-lclangFrontend -lclangDriver -lclangSerialization -lclangCodeGen '
-        '-lclangParse -lclangSema -lclangStaticAnalyzerFrontend '
-        '-lclangStaticAnalyzerCheckers -lclangStaticAnalyzerCore '
-        '-lclangAnalysis -lclangARCMigrate -lclangRewrite -lclangEdit '
-        '-lclangAST -lclangLex -lclangBasic -lclang '
-        '`llvm-config --libs --system-libs` -fno-rtti -o ultima'
-        .format(1 if is_clang_built_with_cxx11_abi else 0),
-        cwd=os.path.dirname(__file__)+"/ultima",
-        shell=True).wait() != 0:
-    raise RuntimeError('Build ultima is failed.')
+ultima_build_process = subprocess.Popen(
+    'make use_cxx11_abi:={}'
+    .format(1 if is_clang_built_with_cxx11_abi else 0),
+    cwd=os.path.join(os.path.dirname(__file__), "ultima"),
+    shell=True)
 
 print("building headercvt")
 if subprocess.Popen(
@@ -84,6 +76,8 @@ def launch_headercvt():
 
 launch_headercvt()
 
+if ultima_build_process.wait() != 0:
+    raise RuntimeError('Build ultima is failed.')
 
 required_cython_version = pkg_resources.parse_version('0.24.0')
 ignore_cython_versions = [
