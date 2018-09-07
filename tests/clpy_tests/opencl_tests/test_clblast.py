@@ -47,7 +47,6 @@ class TestBlas3Sgemm(unittest.TestCase):
 
         actualC = clpC.get().T  # as row-major
         expectedC = numpy.dot(npA, npB)  # row-major caluculation
-        # TODO: Not passed. ActualC is filled with nan
         self.assertTrue(numpy.allclose(expectedC, actualC))
 
     def test_row_matrix_row_vector(self):
@@ -683,59 +682,6 @@ class TestBlas3Sgemm(unittest.TestCase):
                    )
 
         actualC = clpC.get().T  # as row-major
-
-        self.assertTrue(numpy.allclose(expectedC, actualC))
-
-    def test_alpha_0_matrix_matrix(self):
-        npC = numpy.array([[19, 20, 21], [22, 23, 24], [
-                          25, 26, 27]], dtype='float32')  # row-major
-
-        npA = numpy.ndarray(npC.shape, dtype=numpy.dtype('float32'))
-        npA.fill(numpy.nan)
-        npB = numpy.ndarray(npC.shape, dtype=numpy.dtype('float32'))
-        npB.fill(numpy.nan)
-        transa = 0  # A is not transposed in c-style(row-major)
-        transb = 0  # B is not transposed in c-style(row-major)
-
-        alpha = 0.0
-        beta = 2.0
-
-        m = npA.shape[0]
-        n = npB.shape[1]
-        k = npA.shape[1]
-
-        clpA = clpy.ndarray(npA.shape, dtype=numpy.dtype(
-            'float32'))  # col-major in clpy
-        clpA.set(npA)
-        clpB = clpy.ndarray(npB.shape, dtype=numpy.dtype(
-            'float32'))  # col-major in clpy
-        clpB.set(npB)
-
-        clpC = clpy.ndarray(npC.shape, dtype=numpy.dtype(
-            'float32'))  # col-major in clpy
-        clpC.set(npC.T)  # transpose C
-
-        clpA, transa, lda = core._mat_to_cublas_contiguous(
-            clpA, transa)  # as cublas-style
-        clpB, transb, ldb = core._mat_to_cublas_contiguous(
-            clpB, transb)  # as cublas-style
-        ldc = clpC.shape[1]
-
-        # AxB + beta*C
-        expectedC = beta * npC
-
-        # (A^T x B^T) + C^T in col-major = A x B + C in row-major
-        clblast.sgemm('C',transa, transb,
-                   m, n, k, alpha,
-                   clpA, lda,
-                   clpB, ldb,
-                   beta, clpC, ldc
-                   )
-
-        actualC = clpC.get().T  # as row-major
-
-        print("actualC", actualC)
-        print("expectedC", expectedC)
 
         self.assertTrue(numpy.allclose(expectedC, actualC))
 
