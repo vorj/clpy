@@ -79,15 +79,15 @@ from clpy import binary  # NOQA
 from clpy.core import fusion  # NOQA
 from clpy import creation  # NOQA
 from clpy import indexing  # NOQA
-# from clpy import io  # NOQA
+from clpy import io  # NOQA
 from clpy import linalg  # NOQA
 from clpy import manipulation  # NOQA
-# from clpy import padding  # NOQA
+from clpy import padding  # NOQA
 from clpy import random  # NOQA
 from clpy import sorting  # NOQA
 from clpy import sparse  # NOQA
-# from clpy import statistics  # NOQA
-# from clpy import testing  # NOQA  # NOQA
+from clpy import statistics  # NOQA
+from clpy import testing  # NOQA  # NOQA
 from clpy import util  # NOQA
 
 
@@ -206,39 +206,39 @@ from clpy.creation.matrix import diagflat  # NOQA
 # -----------------------------------------------------------------------------
 # from clpy.manipulation.basic import copyto  # NOQA
 
-# from clpy.manipulation.shape import ravel  # NOQA
-# from clpy.manipulation.shape import reshape  # NOQA
+from clpy.manipulation.shape import ravel  # NOQA
+from clpy.manipulation.shape import reshape  # NOQA
 
 from clpy.manipulation.transpose import rollaxis  # NOQA
 from clpy.manipulation.transpose import swapaxes  # NOQA
-# from clpy.manipulation.transpose import transpose  # NOQA
+from clpy.manipulation.transpose import transpose  # NOQA
 
-# from clpy.manipulation.dims import atleast_1d  # NOQA
-# from clpy.manipulation.dims import atleast_2d  # NOQA
-# from clpy.manipulation.dims import atleast_3d  # NOQA
+from clpy.manipulation.dims import atleast_1d  # NOQA
+from clpy.manipulation.dims import atleast_2d  # NOQA
+from clpy.manipulation.dims import atleast_3d  # NOQA
 from clpy.manipulation.dims import broadcast  # NOQA
 from clpy.manipulation.dims import broadcast_arrays  # NOQA
-# from clpy.manipulation.dims import broadcast_to  # NOQA
+from clpy.manipulation.dims import broadcast_to  # NOQA
 from clpy.manipulation.dims import expand_dims  # NOQA
-# from clpy.manipulation.dims import squeeze  # NOQA
+from clpy.manipulation.dims import squeeze  # NOQA
 
-# from clpy.manipulation.join import column_stack  # NOQA
+from clpy.manipulation.join import column_stack  # NOQA
 from clpy.manipulation.join import concatenate  # NOQA
-# from clpy.manipulation.join import dstack  # NOQA
-# from clpy.manipulation.join import hstack  # NOQA
-# from clpy.manipulation.join import stack  # NOQA
-# from clpy.manipulation.join import vstack  # NOQA
+from clpy.manipulation.join import dstack  # NOQA
+from clpy.manipulation.join import hstack  # NOQA
+from clpy.manipulation.join import stack  # NOQA
+from clpy.manipulation.join import vstack  # NOQA
 
 from clpy.manipulation.kind import asfortranarray  # NOQA
 
-# from clpy.manipulation.split import array_split  # NOQA
-# from clpy.manipulation.split import dsplit  # NOQA
-# from clpy.manipulation.split import hsplit  # NOQA
-# from clpy.manipulation.split import split  # NOQA
-# from clpy.manipulation.split import vsplit  # NOQA
+from clpy.manipulation.split import array_split  # NOQA
+from clpy.manipulation.split import dsplit  # NOQA
+from clpy.manipulation.split import hsplit  # NOQA
+from clpy.manipulation.split import split  # NOQA
+from clpy.manipulation.split import vsplit  # NOQA
 
-# from clpy.manipulation.tiling import repeat  # NOQA
-# from clpy.manipulation.tiling import tile  # NOQA
+from clpy.manipulation.tiling import repeat  # NOQA
+from clpy.manipulation.tiling import tile  # NOQA
 
 # from clpy.manipulation.rearrange import flip  # NOQA
 # from clpy.manipulation.rearrange import fliplr  # NOQA
@@ -317,17 +317,17 @@ from clpy.indexing.generate import indices  # NOQA
 # from clpy.indexing.indexing import diagonal  # NOQA
 # from clpy.indexing.indexing import take  # NOQA
 
-# from clpy.indexing.insert import fill_diagonal  # NOQA
+from clpy.indexing.insert import fill_diagonal  # NOQA
 # -----------------------------------------------------------------------------
 # Input and output
 # -----------------------------------------------------------------------------
-# from clpy.io.npz import load  # NOQA
-# from clpy.io.npz import save  # NOQA
-# from clpy.io.npz import savez  # NOQA
-# from clpy.io.npz import savez_compressed  # NOQA
+from clpy.io.npz import load  # NOQA
+from clpy.io.npz import save  # NOQA
+from clpy.io.npz import savez  # NOQA
+from clpy.io.npz import savez_compressed  # NOQA
 
-# from clpy.io.formatting import array_repr  # NOQA
-# from clpy.io.formatting import array_str  # NOQA
+from clpy.io.formatting import array_repr  # NOQA
+from clpy.io.formatting import array_str  # NOQA
 
 
 def base_repr(number, base=2, padding=0):  # NOQA (needed to avoid redefinition of `number`)
@@ -369,17 +369,17 @@ def isscalar(num):
     return numpy.isscalar(num)
 
 
-# from clpy.core.fusion import logical_and  # NOQA
-# from clpy.core.fusion import logical_not  # NOQA
-# from clpy.core.fusion import logical_or  # NOQA
-# from clpy.core.fusion import logical_xor  # NOQA
+from clpy.core.fusion import logical_and  # NOQA
+from clpy.core.fusion import logical_not  # NOQA
+from clpy.core.fusion import logical_or  # NOQA
+from clpy.core.fusion import logical_xor  # NOQA
 
-# from clpy.core.fusion import equal  # NOQA
-# from clpy.core.fusion import greater  # NOQA
-# from clpy.core.fusion import greater_equal  # NOQA
-# from clpy.core.fusion import less  # NOQA
-# from clpy.core.fusion import less_equal  # NOQA
-# from clpy.core.fusion import not_equal  # NOQA
+from clpy.core.fusion import equal  # NOQA
+from clpy.core.fusion import greater  # NOQA
+from clpy.core.fusion import greater_equal  # NOQA
+from clpy.core.fusion import less  # NOQA
+from clpy.core.fusion import less_equal  # NOQA
+from clpy.core.fusion import not_equal  # NOQA
 
 # from clpy.core.fusion import all  # NOQA
 # from clpy.core.fusion import any  # NOQA
@@ -472,7 +472,7 @@ from clpy.core.fusion import maximum  # NOQA
 # -----------------------------------------------------------------------------
 # Padding
 # -----------------------------------------------------------------------------
-# pad = padding.pad.pad
+pad = padding.pad.pad
 
 
 # -----------------------------------------------------------------------------
@@ -500,8 +500,8 @@ from clpy.sorting.search import argmax  # NOQA
 # from clpy.core.fusion import amax as max  # NOQA
 # from clpy.core.fusion import amin  # NOQA
 # from clpy.core.fusion import amin as min  # NOQA
-# from clpy.statistics.order import nanmax  # NOQA
-# from clpy.statistics.order import nanmin  # NOQA
+from clpy.statistics.order import nanmax  # NOQA
+from clpy.statistics.order import nanmin  # NOQA
 
 # from clpy.statistics.meanvar import mean  # NOQA
 # from clpy.statistics.meanvar import std  # NOQA

@@ -40,11 +40,15 @@ fi
 TEST_DIRS="
 tests/clpy_tests/opencl_tests/
 tests/clpy_tests/binary_tests/
+tests/clpy_tests/testing_tests/
+tests/clpy_tests/io_tests/
+tests/clpy_tests/padding_tests/
 "
 
 TEST_FILES="
 tests/clpy_tests/core_tests/test_carray.py
 tests/clpy_tests/core_tests/test_core.py
+tests/clpy_tests/core_tests/test_cupy_aliased_ndarray.py
 tests/clpy_tests/core_tests/test_elementwise.py
 tests/clpy_tests/core_tests/test_flags.py
 tests/clpy_tests/core_tests/test_internal.py
@@ -61,7 +65,18 @@ tests/clpy_tests/core_tests/test_reduction.py
 tests/clpy_tests/creation_tests/test_basic.py
 tests/clpy_tests/creation_tests/test_matrix.py
 tests/clpy_tests/creation_tests/test_ranges.py
+tests/clpy_tests/indexing_tests/test_insert.py
+tests/clpy_tests/logic_tests/test_comparison.py
+tests/clpy_tests/logic_tests/test_ops.py
+tests/clpy_tests/manipulation_tests/test_dims.py
+tests/clpy_tests/manipulation_tests/test_join.py
+tests/clpy_tests/manipulation_tests/test_kind.py
+tests/clpy_tests/manipulation_tests/test_shape.py
+tests/clpy_tests/manipulation_tests/test_split.py
+tests/clpy_tests/manipulation_tests/test_tiling.py
+tests/clpy_tests/manipulation_tests/test_transpose.py
 tests/clpy_tests/sorting_tests/test_count.py
+tests/clpy_tests/statics_tests/test_order.py
 "
 
 ERROR_HAS_OCCURRED=0

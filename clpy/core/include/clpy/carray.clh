@@ -344,6 +344,7 @@ CREATE_CINDXER(15)
 #define CREATE_CARRAY(_NDIM) \
 typedef struct { \
   size_t offset; \
+  size_t size_; \
   size_t shape_[_NDIM]; \
   size_t strides_[_NDIM]; \
 } CArray_##_NDIM; \
@@ -360,6 +361,7 @@ size_t get_CArrayIndexI_##_NDIM(const CArray_##_NDIM* const __restrict__ info, c
 
 typedef struct {
   size_t offset;
+  size_t size_;
 } CArray_0;
 static size_t get_CArrayIndexRaw_0(const CArray_0* const __restrict__ info, const ptrdiff_t idx) {
   return info->offset;
@@ -373,6 +375,7 @@ static size_t get_CArrayIndexI_0(const CArray_0* const __restrict__ info, const 
 
 typedef struct {
   size_t offset;
+  size_t size_;
   size_t shape_;
   size_t strides_;
 } CArray_1;

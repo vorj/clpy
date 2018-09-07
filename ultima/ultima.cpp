@@ -144,12 +144,14 @@ class stmt_visitor : public clang::StmtVisitor<stmt_visitor> {
   clang::PrintingPolicy& Policy;
   clang::DeclVisitor<decl_visitor>& dv;
   const std::vector<std::vector<function_special_argument_info>>& func_arg_info;
+  const std::unordered_map<clang::FunctionDecl*, std::string>& func_name;
 public:
   stmt_visitor(ostreams& os,
               clang::PrintingPolicy &Policy,
               unsigned& Indentation, clang::DeclVisitor<decl_visitor>& dv,
-              const std::vector<std::vector<function_special_argument_info>>& func_arg_info)
-    : os(os), IndentLevel(Indentation), Policy(Policy), dv{dv}, func_arg_info{func_arg_info} {}
+              const std::vector<std::vector<function_special_argument_info>>& func_arg_info,
+              const std::unordered_map<clang::FunctionDecl*, std::string>& func_name)
+    : os(os), IndentLevel(Indentation), Policy(Policy), dv{dv}, func_arg_info{func_arg_info}, func_name{func_name} {}
 
   void PrintStmt(clang::Stmt *S) {
     PrintStmt(S, Policy.Indentation);
@@ -735,6 +737,7 @@ public:
     case '(': ss << "__left_paren__"; break;
     case ')': ss << "__right_paren__"; break;
     case ',': ss << "__comma__"; break;
+    case '.': ss << "__dot__"; break;
     case ' ': break;
     case '*': ss << "__pointer__"; break;
     case '[': ss << "__left_square__"; break;
@@ -772,8 +775,9 @@ public:
 
   void print_template_arguments(const clang::TemplateArgumentList* tal){
     for(auto&& x : tal->asArray()){
-      os << '_';
+      os << to_identifier("<");
       print_template_argument(x);
+      os << to_identifier(">");
     }
   }
 
@@ -790,10 +794,20 @@ public:
   }
 
   void VisitCallExpr(clang::CallExpr *Call) {
-    PrintExpr(Call->getCallee());
-    if(auto f = clang::dyn_cast<clang::FunctionDecl>(Call->getCalleeDecl()))
-    if(auto list = f->getTemplateSpecializationArgs())
-      print_template_arguments(list);
+    if(auto f = clang::dyn_cast<clang::FunctionDecl>(Call->getCalleeDecl())){
+      auto it = func_name.find(f);
+      if(it != func_name.end())
+        os << it->second;
+      else{
+        PrintExpr(Call->getCallee());
+        if(auto list = f->getTemplateSpecializationArgs()){
+          os << '_';
+          print_template_arguments(list);
+        }
+      }
+    }
+    else
+      PrintExpr(Call->getCallee());
     os << '(';
     PrintCallArgs(Call);
     os << ')';
@@ -1113,9 +1127,9 @@ public:
         if(var_info->ndim > 1){
           const auto type = Node->getArg(1)->getType();
           if(auto array = type->getAsArrayTypeUnsafe())
-            os << "Raw_" << var_info->ndim << '_' << to_identifier(array->getElementType()->getUnqualifiedDesugaredType()->getLocallyUnqualifiedSingleStepDesugaredType().getAsString());
+            os << "Raw_" << var_info->ndim << '_' << to_identifier('<'+array->getElementType()->getUnqualifiedDesugaredType()->getLocallyUnqualifiedSingleStepDesugaredType().getAsString()+'>');
           else if(auto pointer = type->getAs<clang::PointerType>())
-            os << "Raw_" << var_info->ndim << '_' << to_identifier(pointer->getPointeeType()->getUnqualifiedDesugaredType()->getLocallyUnqualifiedSingleStepDesugaredType().getAsString());
+            os << "Raw_" << var_info->ndim << '_' << to_identifier('<'+pointer->getPointeeType()->getUnqualifiedDesugaredType()->getLocallyUnqualifiedSingleStepDesugaredType().getAsString()+'>');
           else
             os << "I_" << var_info->ndim;
         }
@@ -1123,7 +1137,7 @@ public:
           os << "Raw_" << var_info->ndim;
         os << "(&" << name << "_info, ";
         PrintExpr(Node->getArg(1));
-        os << ")]";
+        os << ")/sizeof(" << var_info->type << ")]";
         return;
       }
       PrintExpr(Node->getArg(0));
@@ -1166,11 +1180,18 @@ public:
       }
       else if(base_type->getDecl()->getName() == "CArray"){
         auto raw = clang::dyn_cast<clang::DeclRefExpr>(dig_expr(base));
-        if(member_expr->getMemberNameInfo().getAsString() == "size")
-          throw std::runtime_error("Current ultima doesn't support CArray::size().");
-        else if(member_expr->getMemberNameInfo().getAsString() == "shape"){
+        const auto member_function_name = member_expr->getMemberNameInfo().getAsString();
+        if(member_function_name == "size"){
           if(raw == nullptr)
-            throw std::runtime_error("Current ultima only support calling CArray::shape() with a CArray object.");
+            throw std::runtime_error("Current ultima only support calling CArray::size() with a CArray object.");
+          os << "((const size_t)";
+          Visit(raw);
+          os << "_info.size_)";
+          return;
+        }
+        else if(member_function_name == "shape" || member_function_name == "strides"){
+          if(raw == nullptr)
+            throw std::runtime_error("Current ultima only support calling CArray::" + member_function_name + "() with a CArray object.");
           const auto name = raw->getNameInfo().getAsString();
           auto var_info = std::find_if(func_arg_info.back().begin(), func_arg_info.back().end(), [name](const function_special_argument_info& t){
             return t.name == name && t.arg_flag == function_special_argument_info::raw;
@@ -1184,12 +1205,10 @@ public:
             if(var_info->ndim == 1)
               os << '&';
             Visit(raw);
-            os << "_info.shape_)";
+            os << "_info." << member_function_name << "_)";
           }
           return;
         }
-        else if(member_expr->getMemberNameInfo().getAsString() == "strides")
-          throw std::runtime_error("Current ultima doesn't support CArray::strides().");
       }
     }
     // If we have a conversion operator call only print the argument.
@@ -1815,6 +1834,7 @@ class decl_visitor : public clang::DeclVisitor<decl_visitor>{
   unsigned indentation;
   bool PrintInstantiation;
   std::vector<std::vector<function_special_argument_info>> func_arg_info;
+  std::unordered_map<clang::FunctionDecl*, std::string> func_name;
   stmt_visitor sv;
   int print_out_counter = 0;
 
@@ -1823,7 +1843,7 @@ public:
                unsigned indentation = 0, bool PrintInstantiation = false)
     : os(os), policy(policy), indentation(indentation),
       PrintInstantiation(PrintInstantiation),
-      sv{this->os, this->policy, this->indentation, *this, this->func_arg_info} { }
+      sv{this->os, this->policy, this->indentation, *this, this->func_arg_info, this->func_name} { }
 
   llvm::raw_ostream& indent(unsigned indentation) {
     for (unsigned i = 0; i != indentation; ++i)
@@ -2221,9 +2241,9 @@ public:
   }
 
   void VisitFunctionDecl(clang::FunctionDecl *D) {
+    const auto annons = prettyPrintPragmas(D);
     if (!D->getDescribedFunctionTemplate() &&
         !D->isFunctionTemplateSpecialization()){
-      const auto annons = prettyPrintPragmas(D);
       for(auto&& x : annons) if(x == "clpy_elementwise_tag"){
         auto _ind = std::find_if(func_arg_info.back().begin(), func_arg_info.back().end(), [](const function_special_argument_info& x){
           return x.arg_flag == function_special_argument_info::cindex && x.name == "_ind";
@@ -2249,7 +2269,7 @@ public:
               os << ";\n";
               indent();
             }
-            os << x.name << "_data[get_CArrayIndex_" << x.ndim << "(&" << x.name << "_info, &_ind)] = " << x.name << ";\n";
+            os << x.name << "_data[get_CArrayIndex_" << x.ndim << "(&" << x.name << "_info, &_ind)/sizeof(" << x.type << ")] = " << x.name << ";\n";
           }
         }
         return;
@@ -2311,9 +2331,9 @@ public:
             indent();
           }
           if(is_simple)
-            os << x.name << "_data[get_CArrayIndex_" << _out_ind->ndim << "(&" << x.name << "_info, &_out_ind)] = " << x.name;
+            os << x.name << "_data[get_CArrayIndex_" << _out_ind->ndim << "(&" << x.name << "_info, &_out_ind)/sizeof(" << x.type << ")] = " << x.name;
           else
-            os << x.name << "_data[get_CArrayIndexI_" << _out_ind->ndim << "(&" << x.name << "_info, _i)] = " << x.name;
+            os << x.name << "_data[get_CArrayIndexI_" << _out_ind->ndim << "(&" << x.name << "_info, _i)/sizeof(" << x.type << ")] = " << x.name;
         }
         return;
       }
@@ -2354,19 +2374,49 @@ public:
         NS->print(OS, policy);
       }
     }
-    Proto += D->getNameInfo().getAsString();
+
+    auto name = D->getNameInfo().getAsString();
 
     if(auto TArgs = D->getTemplateSpecializationArgs()) {
       auto backup = policy;
       policy.SuppressSpecifiers = false;
-      llvm::raw_string_ostream Pos(Proto);
+      llvm::raw_string_ostream Pos(name);
       auto _ = os.scoped_push(Pos);
+      os << '_';
       sv.print_template_arguments(TArgs);
       Pos.flush();
       policy = backup;
     }
 
     clang::QualType Ty = D->getType();
+
+    if(std::find(annons.begin(), annons.end(), "clpy_no_mangle") == annons.end()){
+      const bool conflicted = std::any_of(func_name.cbegin(), func_name.cend(), [&](const std::pair<clang::FunctionDecl*, std::string>& t){return t.second == name;});
+      if(conflicted){
+        if(auto AFT = Ty->getAs<clang::FunctionType>()) {
+          const clang::FunctionProtoType *FT = nullptr;
+          if (D->hasWrittenPrototype())
+            FT = clang::dyn_cast<clang::FunctionProtoType>(AFT);
+
+          name += '(';
+          for (unsigned i = 0, e = D->getNumParams(); i != e; ++i) {
+            if (i) name += ", ";
+            name += D->getParamDecl(i)->getType().getAsString();
+          }
+
+          if (FT && FT->isVariadic()) {
+            if (D->getNumParams()) name += ", ";
+            name += "...";
+          }
+
+          name += ')';
+        }
+        name = sv.to_identifier(name);
+      }
+    }
+    func_name[D] = name;
+    Proto += name;
+
     while(auto PT = clang::dyn_cast<clang::ParenType>(Ty)) {
       Proto = '(' + Proto + ')';
       Ty = PT->getInnerType();
@@ -2679,7 +2729,7 @@ public:
           if(var_info == func_arg_info.back().end())
             throw std::runtime_error("invalid \"clpy_elementwise_tag\" annotation (there is no related argument)");
           is_const = var_info->is_input;
-          init_str = " = " + var_info->name + "_data[get_CArrayIndex_" + std::to_string(var_info->ndim) + "(&" + var_info->name + "_info, &_ind)]";
+          init_str = " = " + var_info->name + "_data[get_CArrayIndex_" + std::to_string(var_info->ndim) + "(&" + var_info->name + "_info, &_ind)/sizeof(" + var_info->type + ")]";
         }
         else if(!parameter && x.find(clpy_simple_reduction_tag) == 0){
           static constexpr std::size_t tag_length = sizeof(clpy_simple_reduction_tag)-1;
@@ -2690,7 +2740,7 @@ public:
             throw std::runtime_error("invalid \"clpy_simple_reduction_tag\" annotation (there is no related argument)");
           const auto& name = var_info->name;
           is_const = var_info->is_input;
-          init_str = " = " + name + "_data[get_CArrayIndex_" + std::to_string(var_info->ndim) + "(&" + name + "_info, &_" + x.substr(tag_length) + "_ind)]";
+          init_str = " = " + name + "_data[get_CArrayIndex_" + std::to_string(var_info->ndim) + "(&" + name + "_info, &_" + x.substr(tag_length) + "_ind)/sizeof(" + var_info->type + ")]";
         }
         else if(!parameter && x.find(clpy_standard_reduction_tag) == 0){
           static constexpr std::size_t tag_length = sizeof(clpy_standard_reduction_tag)-1;
@@ -2701,7 +2751,7 @@ public:
             throw std::runtime_error("invalid \"clpy_simple_reduction_tag\" annotation (there is no related argument)");
           const auto& name = var_info->name;
           is_const = var_info->is_input;
-          init_str = " = " + name + "_data[get_CArrayIndexI_" + std::to_string(var_info->ndim) + "(&" + name + "_info, _" + x.substr(tag_length) + ")]";
+          init_str = " = " + name + "_data[get_CArrayIndexI_" + std::to_string(var_info->ndim) + "(&" + name + "_info, _" + x.substr(tag_length) + ")/sizeof(" + var_info->type + ")]";
         }
     }
 
