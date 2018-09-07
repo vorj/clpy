@@ -1,51 +1,33 @@
-include "clblast.pxi"
-
 cimport clpy.backend.opencl.api as api
 import clpy.backend.opencl.env
 cimport clpy.backend.opencl.env
 import clpy.backend.opencl.types
 cimport clpy.backend.opencl.types
-from clpy.backend.opencl.types cimport cl_event
+from clpy.backend.opencl.types cimport *
 
-cdef void clblast_sgemm(layout, a_transpose, b_transpose,
-                   m, n, k,
-                   alpha,
-                   a_buffer, a_offset, a_ld,
-                   b_buffer, b_offset, b_ld,
-                   beta,
-                   c_buffer, c_offset, c_ld):
+cdef void clblast_sgemm(CLBlastLayout layout, CLBlastTranspose a_transpose, CLBlastTranspose b_transpose,
+                   size_t m, size_t n, size_t k,
+                   float alpha,
+                   cl_mem a_buffer, size_t a_offset, size_t a_ld,
+                   cl_mem b_buffer, size_t b_offset, size_t b_ld,
+                   float beta,
+                   cl_mem c_buffer, size_t c_offset, size_t c_ld) except *:
     cdef cl_event event = NULL
     cdef cl_command_queue command_queue=clpy.backend.opencl.env.get_command_queue()
-    cdef int tmp = <int> a_buffer
-    cdef cl_mem a_mem = <cl_mem>tmp
-    tmp = <int>b_buffer
-    cdef cl_mem b_mem = <cl_mem>tmp
-    tmp = <int>c_buffer
-    cdef cl_mem c_mem = <cl_mem>tmp
 
     cdef CLBlastStatusCode status = CLBlastSgemm(
-        <const CLBlastLayout>layout,
-        <const CLBlastTranspose>a_transpose,
-        <const CLBlastTranspose>b_transpose,
-        <const size_t>m,
-        <const size_t>n,
-        <const size_t>k,
-        <const float>alpha,
-        <const cl_mem>a_mem,
-        <const size_t>a_offset,
-        <const size_t>a_ld,
-        <const cl_mem>b_mem,
-        <const size_t>b_offset,
-        <const size_t>b_ld,
-        <const float>beta,
-        <cl_mem>c_mem,
-        <const size_t>c_offset,
-        <const size_t>c_ld,
-        <cl_command_queue*>&command_queue,
-        <cl_event*>&event
+        layout, a_transpose, b_transpose,
+        m, n, k,
+        alpha,
+        a_buffer, a_offset, a_ld,
+        b_buffer, b_offset, b_ld,
+        beta,
+        c_buffer, c_offset, c_ld,
+        &command_queue,
+        &event
         )
     if (status == CLBlastSuccess):
-        api.WaitForEvents(1, <cl_event*>&event)
+        api.WaitForEvents(1, &event)
 	# TODO api.ReleaseEvent should be implemented
         # api.ReleaseEvent
     return
@@ -80,13 +62,17 @@ cpdef sgemm(str_layout, transa, transb,
     else:
         raise ValueError("transb should be n(0) or t(1)")
 
+    cdef size_t a_buffer = A.data.buf.get()
+    cdef size_t b_buffer = B.data.buf.get()
+    cdef size_t c_buffer = C.data.buf.get()
+
     clblast_sgemm(
         layout,
         a_transpose,
         b_transpose,
         m, n, k,
         alpha,
-        A.data.buf.get(), A.data.cl_mem_offset() // A.itemsize, lda,
-        B.data.buf.get(), B.data.cl_mem_offset() // B.itemsize, ldb,
+        <cl_mem>a_buffer, A.data.cl_mem_offset() // A.itemsize, lda,
+        <cl_mem>b_buffer, B.data.cl_mem_offset() // B.itemsize, ldb,
         beta,
-        C.data.buf.get(), C.data.cl_mem_offset() // C.itemsize, ldc)
+        <cl_mem>c_buffer, C.data.cl_mem_offset() // C.itemsize, ldc)

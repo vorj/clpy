@@ -1,13 +1,14 @@
 include "../types.pxi"
 include "clblast.pxi"
 
-cdef void clblast_sgemm(layout, a_transpose, b_transpose,
-                   m, n, k,
-                   alpha,
-                   a_buffer, a_offset, a_ld,
-                   b_buffer, b_offset, b_ld,
-                   beta,
-                   c_buffer, c_offset, c_ld)
+cdef void clblast_sgemm(CLBlastLayout layout, CLBlastTranspose a_transpose, CLBlastTranspose b_transpose,
+                   size_t m, size_t n, size_t k,
+                   float alpha,
+                   cl_mem a_buffer, size_t a_offset, size_t a_ld,
+                   cl_mem b_buffer, size_t b_offset, size_t b_ld,
+                   float beta,
+                   cl_mem c_buffer, size_t c_offset, size_t c_ld) except *
+
 cpdef sgemm(str_layout, t_a_transpose, t_b_transpose,
             m, n, k, alpha,
 	    A, lda,
