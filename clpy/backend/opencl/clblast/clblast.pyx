@@ -28,8 +28,7 @@ cdef void clblast_sgemm(CLBlastLayout layout, CLBlastTranspose a_transpose, CLBl
         )
     if (status == CLBlastSuccess):
         api.WaitForEvents(1, &event)
-	# TODO api.ReleaseEvent should be implemented
-        # api.ReleaseEvent
+        api.ReleaseEvent(event)
     return
 
 cpdef sgemm(str_layout, transa, transb,

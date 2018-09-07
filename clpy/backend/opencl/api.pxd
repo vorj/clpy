@@ -92,7 +92,9 @@ cdef void Flush(cl_command_queue command_queue) except *
 cdef void Finish(cl_command_queue command_queue) except *
 cdef void ReleaseKernel(cl_kernel kernel) except *
 cdef void ReleaseProgram(cl_program program) except *
+cdef void ReleaseEvent(cl_event memobj) except *
 cdef void ReleaseMemObject(cl_mem memobj) except *
 cdef void ReleaseCommandQueue(cl_command_queue command_queue) except *
 cdef void ReleaseContext(cl_context context) except *
 cdef void WaitForEvents(size_t num_events, cl_event* event_list) except *
+
