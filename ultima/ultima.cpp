@@ -1221,7 +1221,35 @@ public:
       PrintExpr(Node->getImplicitObjectArgument());
       return;
     }
-    VisitCallExpr(clang::cast<clang::CallExpr>(Node));
+    auto Call = clang::cast<clang::CallExpr>(Node);
+    if(auto f = clang::dyn_cast<clang::FunctionDecl>(Call->getCalleeDecl())){
+      auto it = func_name.find(f);
+      if(it != func_name.end())
+        os << it->second;
+      else{
+        PrintExpr(Call->getCallee());
+        os << '_' << to_identifier(base_type->getAsCXXRecordDecl()->getName());
+        if(auto list = f->getTemplateSpecializationArgs()){
+          os << '_';
+          print_template_arguments(list);
+        }
+      }
+    }
+    else
+      PrintExpr(Call->getCallee());
+    os << '(';
+    os << '&';
+    PrintExpr(base);
+    for (unsigned i = 0, e = Call->getNumArgs(); i != e; ++i) {
+      if (clang::isa<clang::CXXDefaultArgExpr>(Call->getArg(i))) {
+        // Don't print any defaulted arguments
+        break;
+      }
+
+      os << ", ";
+      PrintExpr(Call->getArg(i));
+    }
+    os << ')';
   }
 
   void VisitCXXNamedCastExpr(clang::CXXNamedCastExpr *Node) {
@@ -1547,9 +1575,41 @@ public:
       E->getDestroyedType().print(os, Policy);
   }
 
-  void VisitCXXConstructExpr(clang::CXXConstructExpr *E) {
+  void VisitCXXConstructExpr(clang::CXXConstructExpr *E, const char* name = nullptr) {
+    if(E->isElidable()){
+      auto a = E->getArg(0);
+      if(auto subexpr = clang::dyn_cast<clang::CXXConstructExpr>(a->IgnoreImplicit()))
+        VisitCXXConstructExpr(subexpr, name);
+      else
+        Visit(a);
+      return;
+    }
+
+    const bool is_defaulted = E->getConstructor()->isDefaulted();
+
     if (E->isListInitialization() && !E->isStdInitListInitialization())
       os << '{';
+
+    auto f = clang::dyn_cast<clang::FunctionDecl>(E->getConstructor());
+
+    if(!is_defaulted){
+      if(f){
+        auto it = func_name.find(f);
+        if(it != func_name.end())
+          os << it->second;
+        else{
+          os << "constructor_" << to_identifier(E->getConstructor()->getDeclName().getAsString());
+          if(auto list = f->getTemplateSpecializationArgs()){
+            os << '_';
+            print_template_arguments(list);
+          }
+        }
+        os << '(';
+      }
+
+      if(name)
+        os << '&' << name;
+    }
 
     for (unsigned i = 0, e = E->getNumArgs(); i != e; ++i) {
       if (clang::isa<clang::CXXDefaultArgExpr>(E->getArg(i))) {
@@ -1557,12 +1617,17 @@ public:
         break;
       }
 
-      if (i) os << ", ";
+      if ((!is_defaulted && name) || i) os << ", ";
       PrintExpr(E->getArg(i));
     }
 
-    if (E->isListInitialization() && !E->isStdInitListInitialization())
-      os << '}';
+    if(!is_defaulted){
+      if(f)
+        os << ')';
+
+      if (E->isListInitialization() && !E->isStdInitListInitialization())
+        os << '}';
+    }
   }
 
   void VisitCXXInheritedCtorInitExpr(clang::CXXInheritedCtorInitExpr*) {
@@ -1836,17 +1901,16 @@ class decl_visitor : public clang::DeclVisitor<decl_visitor>{
   ostreams os;
   clang::PrintingPolicy policy;
   unsigned indentation;
-  bool PrintInstantiation;
   std::vector<std::vector<function_special_argument_info>> func_arg_info;
   std::unordered_map<clang::FunctionDecl*, std::string> func_name;
   stmt_visitor sv;
   int print_out_counter = 0;
+  std::vector<std::string> delayed_outputs;
 
 public:
   decl_visitor(llvm::raw_ostream& os, const clang::PrintingPolicy& policy,
-               unsigned indentation = 0, bool PrintInstantiation = false)
+               unsigned indentation = 0)
     : os(os), policy(policy), indentation(indentation),
-      PrintInstantiation(PrintInstantiation),
       sv{this->os, this->policy, this->indentation, *this, this->func_arg_info, this->func_name} { }
 
   llvm::raw_ostream& indent(unsigned indentation) {
@@ -1960,6 +2024,13 @@ public:
   }
 
   void printDeclType(clang::QualType T, llvm::StringRef DeclName, bool Pack = false) {
+    if(auto tst = T->getAs<clang::TemplateSpecializationType>()){
+      os << tst->getAsCXXRecordDecl()->getName() << '_';
+      sv.print_template_arguments(tst->template_arguments());
+      if(!DeclName.empty())
+        os << ' ' << DeclName;
+      return;
+    }
     // Normally, a PackExpansionType is written as T[3]... (for instance, as a
     // template argument), but if it is the type of a declaration, the ellipsis
     // is placed before the name being declared.
@@ -1987,7 +2058,7 @@ public:
     }
   }
 
-  void VisitDeclContext(clang::DeclContext *DC, bool indent = true) {
+  void VisitDeclContext(clang::DeclContext *DC, bool indent = true, std::size_t delayed_output_layer = 0) {
     if (policy.TerseOutput)
       return;
 
@@ -2038,6 +2109,10 @@ public:
       if(print_out_counter <= 0)
         continue;
 
+      if(delayed_outputs.size() > delayed_output_layer){
+        ros << delayed_outputs.back();
+        delayed_outputs.pop_back();
+      }
       ros.flush();
       os << os_source;
       os_source.clear();
@@ -2111,7 +2186,8 @@ public:
       Visit(x);
 
       // FIXME: Need to be able to tell the DeclPrinter when
-      const char *Terminator = nullptr;
+      const char* Terminator = nullptr;
+      const char* terminator_delayed = nullptr;
       if (clang::isa<clang::OMPThreadPrivateDecl>(x) || clang::isa<clang::OMPDeclareReductionDecl>(x))
         Terminator = nullptr;
       else if (clang::isa<clang::ObjCMethodDecl>(x) && clang::cast<clang::ObjCMethodDecl>(x)->hasBody())
@@ -2119,19 +2195,19 @@ public:
       else if (auto FD = clang::dyn_cast<clang::FunctionDecl>(x)) {
         const bool special_definition = FD->isPure() || FD->isDefaulted() || FD->isDeleted();
         if(special_definition)
-          Terminator = ";\n";
+          terminator_delayed = ";\n";
         else if (FD->isThisDeclarationADefinition())
           Terminator = nullptr;
         else
-          Terminator = ";";
+          terminator_delayed = ";";
       } else if (auto TD = clang::dyn_cast<clang::FunctionTemplateDecl>(x)) {
         const bool special_definition = TD->getTemplatedDecl()->isPure() || TD->getTemplatedDecl()->isDefaulted() || TD->getTemplatedDecl()->isDeleted();
         if(special_definition)
-          Terminator = ";\n";
+          terminator_delayed = ";\n";
         else if (TD->getTemplatedDecl()->isThisDeclarationADefinition() && !special_definition)
           Terminator = nullptr;
         else
-          Terminator = ";";
+          terminator_delayed = ";";
       } else if (clang::isa<clang::NamespaceDecl>(x) || clang::isa<clang::LinkageSpecDecl>(x) ||
                clang::isa<clang::ObjCImplementationDecl>(x) ||
                clang::isa<clang::ObjCInterfaceDecl>(x) ||
@@ -2145,19 +2221,42 @@ public:
       } else
         Terminator = ";";
 
-      if (Terminator)
-        os << Terminator;
-      if (!policy.TerseOutput &&
-          ((clang::isa<clang::FunctionDecl>(x) &&
-            clang::cast<clang::FunctionDecl>(x)->doesThisDeclarationHaveABody()) ||
-           (clang::isa<clang::FunctionTemplateDecl>(x) &&
-            clang::cast<clang::FunctionTemplateDecl>(x)->getTemplatedDecl()->doesThisDeclarationHaveABody())))
-        ; // StmtPrinter already added '\n' after CompoundStmt.
-      else
-        os << '\n';
+      auto print_out = [&](const char* Terminator){
+        if (Terminator)
+          os << Terminator;
+        if (!policy.TerseOutput &&
+            ((clang::isa<clang::FunctionDecl>(x) &&
+              clang::cast<clang::FunctionDecl>(x)->doesThisDeclarationHaveABody()) ||
+             (clang::isa<clang::FunctionTemplateDecl>(x) &&
+              clang::cast<clang::FunctionTemplateDecl>(x)->getTemplatedDecl()->doesThisDeclarationHaveABody())))
+          ; // StmtPrinter already added '\n' after CompoundStmt.
+        else
+          os << '\n';
+      };
 
+      if(terminator_delayed){
+        bool do_empty = delayed_outputs.empty();
+        if(do_empty)
+          delayed_outputs.push_back("");
+        llvm::raw_string_ostream dos(delayed_outputs.back());
+        if(delayed_outputs.size() == delayed_output_layer)
+          os.push(dos);
+
+        print_out(terminator_delayed);
+
+        if(delayed_outputs.size() == delayed_output_layer)
+          os.pop();
+        if(do_empty)
+          delayed_outputs.pop_back();
+      }
+      else
+        print_out(Terminator);
     }
 
+    if(delayed_outputs.size() > delayed_output_layer){
+      ros << delayed_outputs.back();
+      delayed_outputs.clear();
+    }
     ros.flush();
     os << os_source;
 
@@ -2241,7 +2340,7 @@ public:
     }
   }
 
-  void VisitFunctionDecl(clang::FunctionDecl *D) {
+  void VisitFunctionDecl(clang::FunctionDecl *D, clang::CXXMethodDecl* method = nullptr) {
     const auto annons = prettyPrintPragmas(D);
     if (!D->getDescribedFunctionTemplate() &&
         !D->isFunctionTemplateSpecialization()){
@@ -2376,7 +2475,27 @@ public:
       }
     }
 
+    std::string parent_name;
+    if(method){
+      {
+        llvm::raw_string_ostream Pos(parent_name);
+        auto _ = os.scoped_push(Pos);
+        os << method->getParent()->getNameAsString();
+        if (auto S = clang::dyn_cast<clang::ClassTemplatePartialSpecializationDecl>(method->getParent()))
+          printTemplateArguments(S->getTemplateArgs(), S->getTemplateParameters());
+        else if (auto S = clang::dyn_cast<clang::ClassTemplateSpecializationDecl>(method->getParent()))
+          printTemplateArguments(S->getTemplateArgs());
+      }
+      parent_name = sv.to_identifier(parent_name);
+    }
+
     auto name = D->getNameInfo().getAsString();
+
+    if(CDecl)
+      name = "constructor";
+
+    if(method)
+      name += '_' + parent_name;
 
     if(auto TArgs = D->getTemplateSpecializationArgs()) {
       auto backup = policy;
@@ -2400,8 +2519,10 @@ public:
             FT = clang::dyn_cast<clang::FunctionProtoType>(AFT);
 
           name += '(';
+          if(method)
+            name += parent_name;
           for (unsigned i = 0, e = D->getNumParams(); i != e; ++i) {
-            if (i) name += ", ";
+            if (!method && i) name += ", ";
             name += D->getParamDecl(i)->getType().getAsString();
           }
 
@@ -2423,6 +2544,7 @@ public:
       Ty = PT->getInnerType();
     }
 
+    std::string inits; // for constructor initializer list
     if(auto AFT = Ty->getAs<clang::FunctionType>()) {
       const clang::FunctionProtoType *FT = nullptr;
       if (D->hasWrittenPrototype())
@@ -2434,19 +2556,37 @@ public:
         policy.SuppressSpecifiers = false;
         llvm::raw_string_ostream Pos(Proto);
         auto _ = os.scoped_push(Pos);
+        if(method){
+          if(method->isConst())
+            Pos << "const ";
+          if(method->isVolatile())
+            Pos << "volatile ";
+          Pos << parent_name << "*const this";
+        }
+        else if(CDecl)
+          Pos << parent_name << "*const this";
         for (unsigned i = 0, e = D->getNumParams(); i != e; ++i) {
-          if (i) Pos << ", ";
+          if (method || i) Pos << ", ";
           VisitParmVarDecl(D->getParamDecl(i));
         }
         backup = policy;
 
         if (FT->isVariadic()) {
-          if (D->getNumParams()) Pos << ", ";
+          if (!method && D->getNumParams()) Pos << ", ";
           Pos << "...";
         }
       } else if (D->doesThisDeclarationHaveABody() && !D->hasPrototype()) {
+        if(method){
+          if(method->isConst())
+            Proto += "const ";
+          if(method->isVolatile())
+            Proto += "volatile ";
+          Proto += parent_name + "*const this";
+        }
+        else if(CDecl)
+          Proto += parent_name + "*const this";
         for (unsigned i = 0, e = D->getNumParams(); i != e; ++i) {
-          if (i)
+          if (method || i)
             Proto += ", ";
           Proto += D->getParamDecl(i)->getNameAsString();
         }
@@ -2455,10 +2595,6 @@ public:
       Proto += ')';
       
       if (FT) {
-        if (FT->isConst())
-          Proto += " const";
-        if (FT->isVolatile())
-          Proto += " volatile";
         if (FT->isRestrict())
           Proto += " restrict";
 
@@ -2466,63 +2602,28 @@ public:
         case clang::RQ_None:
           break;
         case clang::RQ_LValue:
-          Proto += " &";
-          break;
         case clang::RQ_RValue:
-          Proto += " &&";
+          throw std::runtime_error("ultima doesn't support ref qualifier");
           break;
         }
       }
 
       auto subpolicy = policy;
       subpolicy.SuppressSpecifiers = false;
-      if (FT && FT->hasDynamicExceptionSpec()) {
-        Proto += " throw(";
-        if (FT->getExceptionSpecType() == clang::EST_MSAny)
-          Proto += "...";
-        else 
-          for (unsigned I = 0, N = FT->getNumExceptions(); I != N; ++I) {
-            if (I)
-              Proto += ", ";
-
-            Proto += FT->getExceptionType(I).getAsString(subpolicy);
-          }
-        Proto += ')';
-      } else if (FT && isNoexceptExceptionSpec(FT->getExceptionSpecType())) {
-        Proto += " noexcept";
-        if (FT->getExceptionSpecType() == clang::EST_ComputedNoexcept) {
-          Proto += '(';
-          llvm::raw_string_ostream Eos(Proto);
-          FT->getNoexceptExpr()->printPretty(Eos, nullptr, subpolicy,
-                                             indentation);
-          Eos.flush();
-          Proto += Eos.str();
-          Proto += ')';
-        }
-      }
-
       if (CDecl) {
-        bool HasInitializerList = false;
+        llvm::raw_string_ostream ios(inits);
+        auto _ = os.scoped_push(ios);
         for (const auto *BMInitializer : CDecl->inits()) {
           if (BMInitializer->isInClassMemberInitializer())
             continue;
 
-          if (!HasInitializerList) {
-            Proto += " : ";
-            os << Proto;
-            Proto.clear();
-            HasInitializerList = true;
-          } else
-            os << ", ";
-
           if (BMInitializer->isAnyMemberInitializer()) {
             clang::FieldDecl *FD = BMInitializer->getAnyMember();
-            os << *FD;
+            sv.Indent() << "this->" << *FD << " = ";
           } else {
             os << clang::QualType(BMInitializer->getBaseClass(), 0).getAsString(policy);
           }
-          
-          os << '(';
+
           if (!BMInitializer->getInit()) {
             // Nothing to print
           } else {
@@ -2558,11 +2659,12 @@ public:
                 sv.Visit(Args[I]);
               }
             }
+            os << ";\n";
           }
-          os << ')';
           if (BMInitializer->isPackExpansion())
             os << "...";
         }
+        Proto = "void " + Proto;
       } else if (!ConversionDecl && !clang::isa<clang::CXXDestructorDecl>(D)) {
         if (FT && FT->hasTrailingReturn()) {
           os << Proto << " -> ";
@@ -2579,11 +2681,10 @@ public:
     prettyPrintAttributes(D);
 
     if (D->isPure())
-      os << " = 0";
-    else if (D->isDeletedAsWritten())
-      os << " = delete";
+      throw std::runtime_error("ultima doesn't support pure function");
+    else if (D->isDeletedAsWritten());
     else if (D->isExplicitlyDefaulted())
-      os << " = default";
+      os << "{}";
     else if (D->doesThisDeclarationHaveABody()) {
       if (!policy.TerseOutput) {
         if (!D->hasPrototype() && D->getNumParams()) {
@@ -2605,13 +2706,26 @@ public:
 
         if (D->getBody()){
           os << '\n';
-          sv.Visit(D->getBody());
+          indent() << "{\n" << inits;
+
+          for (auto *I : clang::dyn_cast<clang::CompoundStmt>(D->getBody())->body())
+            sv.PrintStmt(I);
+
+          sv.Indent() << "}\n";
         }
       } else {
         if (clang::isa<clang::CXXConstructorDecl>(*D))
           os << " {}";
       }
     }
+  }
+
+  void VisitCXXMethodDecl(clang::CXXMethodDecl* method){
+    if(delayed_outputs.empty())
+      delayed_outputs.push_back("");
+    llvm::raw_string_ostream dos(delayed_outputs.back());
+    auto _ = os.scoped_push(dos);
+    VisitFunctionDecl(clang::dyn_cast<clang::FunctionDecl>(method), method);
   }
 
   void VisitFriendDecl(clang::FriendDecl *D) {
@@ -2802,10 +2916,20 @@ public:
     else
       printDeclType(T, D->getName());
     clang::Expr *Init = D->getInit();
+    auto dig_elidable = [](clang::CXXConstructExpr* E){
+      while(E && E->isElidable()){
+        auto a = E->getArg(0);
+        if(auto subexpr = clang::dyn_cast<clang::CXXConstructExpr>(a->IgnoreImplicit()))
+          E = subexpr;
+        else
+          break;
+      }
+      return E;
+    };
+    auto Construct = Init ? dig_elidable(clang::dyn_cast<clang::CXXConstructExpr>(Init->IgnoreImplicit())) : nullptr;
     if (!policy.SuppressInitializers && Init) {
       bool ImplicitInit = false;
-      if (auto *Construct =
-              clang::dyn_cast<clang::CXXConstructExpr>(Init->IgnoreImplicit())) {
+      if (Construct) {
         if (D->getInitStyle() == clang::VarDecl::CallInit &&
             !Construct->isListInitialization()) {
           ImplicitInit = Construct->getNumArgs() == 0 ||
@@ -2813,18 +2937,25 @@ public:
         }
       }
       if (!ImplicitInit) {
-        if ((D->getInitStyle() == clang::VarDecl::CallInit) && !clang::isa<clang::ParenListExpr>(Init))
-          os << '(';
-        else if (D->getInitStyle() == clang::VarDecl::CInit) {
+        if (D->getInitStyle() == clang::VarDecl::CInit && (!Construct || Construct->getConstructor()->isDefaulted()))
           os << " = ";
-        }
+        else
+          os << ';';
         auto backup = policy;
         policy.SuppressSpecifiers = false;
         policy.IncludeTagDefinition = false;
-        sv.Visit(Init);
+        if(Construct)
+          sv.VisitCXXConstructExpr(Construct, D->getNameAsString().c_str());
+        else
+          sv.Visit(Init);
         policy = backup;
-        if ((D->getInitStyle() == clang::VarDecl::CallInit) && !clang::isa<clang::ParenListExpr>(Init))
-          os << ')';
+      }
+      else if(Construct){
+        if (D->getInitStyle() == clang::VarDecl::CInit && Construct->getConstructor()->isDefaulted())
+          os << " = ";
+        else
+          os << ';';
+        sv.VisitCXXConstructExpr(Construct, D->getNameAsString().c_str());
       }
     }
     else if(!init_str.empty())
@@ -2887,17 +3018,30 @@ public:
     // FIXME: add printing of pragma attributes if required.
     if (!policy.SuppressSpecifiers && D->isModulePrivate())
       os << "__module_private__ ";
-    os << D->getKindName();
+    if(!force)
+      os << "typedef ";
+    if(D->getKindName() == "class")
+      os << "struct";
+    else
+      os << D->getKindName();
 
     prettyPrintAttributes(D);
 
-    if (D->getIdentifier()) {
-      os << ' ' << *D;
+    std::string name;
 
-      if (auto S = clang::dyn_cast<clang::ClassTemplatePartialSpecializationDecl>(D))
-        printTemplateArguments(S->getTemplateArgs(), S->getTemplateParameters());
-      else if (auto S = clang::dyn_cast<clang::ClassTemplateSpecializationDecl>(D))
-        printTemplateArguments(S->getTemplateArgs());
+    if (D->getIdentifier()) {
+      {
+        llvm::raw_string_ostream nos(name);
+        auto _ = os.scoped_push(nos);
+        os << *D;
+
+        if (auto S = clang::dyn_cast<clang::ClassTemplatePartialSpecializationDecl>(D))
+          printTemplateArguments(S->getTemplateArgs(), S->getTemplateParameters());
+        else if (auto S = clang::dyn_cast<clang::ClassTemplateSpecializationDecl>(D))
+          printTemplateArguments(S->getTemplateArgs());
+      }
+      name = sv.to_identifier(name);
+      os << ' ' << name;
     }
 
     if (D->isCompleteDefinition()) {
@@ -2930,8 +3074,12 @@ public:
         os << " {}";
       } else {
         os << " {\n";
-        VisitDeclContext(D);
+        delayed_outputs.push_back("");
+        VisitDeclContext(D, true, delayed_outputs.size());
         indent() << '}';
+        if(D->getIdentifier()){
+          os << name;
+        }
       }
     }
   }
@@ -3071,28 +3219,19 @@ public:
   }
 
   void VisitClassTemplateDecl(clang::ClassTemplateDecl *D) {
-    VisitRedeclarableTemplateDecl(D);
-
-    if (PrintInstantiation)
-      for (auto *I : D->specializations())
-        if (I->getSpecializationKind() == clang::TSK_ImplicitInstantiation) {
-          if (D->isThisDeclarationADefinition())
-            os << ';';
-          os << '\n';
-          Visit(I);
-        }
+    for (auto *I : D->specializations()){
+      if (D->isThisDeclarationADefinition())
+        os << ';';
+      os << '\n';
+      Visit(I);
+    }
   }
 
   void VisitClassTemplateSpecializationDecl(clang::ClassTemplateSpecializationDecl *D) {
-    os << "template<> ";
     VisitCXXRecordDecl(D);
   }
 
-  void VisitClassTemplatePartialSpecializationDecl(
-                                      clang::ClassTemplatePartialSpecializationDecl *D) {
-    printTemplateParameters(D->getTemplateParameters());
-    VisitCXXRecordDecl(D);
-  }
+  void VisitClassTemplatePartialSpecializationDecl(clang::ClassTemplatePartialSpecializationDecl*) {}
 
   void VisitUsingDecl(clang::UsingDecl *D) {
     if (!D->isAccessDeclaration())
