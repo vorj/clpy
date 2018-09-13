@@ -466,7 +466,7 @@ from clpy.core import real  # NOQA
 from clpy.core.fusion import maximum  # NOQA
 # from clpy.core.fusion import minimum  # NOQA
 # from clpy.core.fusion import sign  # NOQA
-# from clpy.core.fusion import sqrt  # NOQA
+from clpy.core.fusion import sqrt  # NOQA
 # from clpy.core.fusion import square  # NOQA
 
 # -----------------------------------------------------------------------------
@@ -503,9 +503,9 @@ from clpy.sorting.search import argmax  # NOQA
 from clpy.statistics.order import nanmax  # NOQA
 from clpy.statistics.order import nanmin  # NOQA
 
-# from clpy.statistics.meanvar import mean  # NOQA
-# from clpy.statistics.meanvar import std  # NOQA
-# from clpy.statistics.meanvar import var  # NOQA
+from clpy.statistics.meanvar import mean  # NOQA
+from clpy.statistics.meanvar import std  # NOQA
+from clpy.statistics.meanvar import var  # NOQA
 
 # from clpy.statistics.histogram import bincount  # NOQA
 
