@@ -3,13 +3,13 @@ import unittest
 import numpy
 
 import clpy
-# from clpy.cuda import compiler
+from clpy.core import core
 from clpy import testing
 
 
-# def _compile_func(kernel_name, code):
-#     mod = compiler.compile_with_cache(code)
-#     return mod.get_function(kernel_name)
+def _compile_func(kernel_name, code):
+    module = core.compile_with_cache(code)
+    return module.get_function(kernel_name)
 
 
 @testing.gpu
@@ -17,9 +17,10 @@ class TestFunction(unittest.TestCase):
 
     def test_python_scalar(self):
         code = '''
-extern "C" __global__ void test_kernel(const double* a, double b, double* x) {
-  int i = threadIdx.x;
-  x[i] = a[i] + b;
+__kernel void test_kernel(__global const double* a, CArray_2 ai, double b, __global double* x, CArray_2 xi) {
+  int i = get_local_id(0);
+  //set_CIndexer_2(&_ind, i);
+  x[get_CArrayIndexI_2(&xi, i)/sizeof(double)] = a[get_CArrayIndexI_2(&ai, i)/sizeof(double)] + b;
 }
 '''
 
@@ -37,9 +38,10 @@ extern "C" __global__ void test_kernel(const double* a, double b, double* x) {
 
     def test_numpy_scalar(self):
         code = '''
-extern "C" __global__ void test_kernel(const double* a, double b, double* x) {
-  int i = threadIdx.x;
-  x[i] = a[i] + b;
+__kernel void test_kernel(__global const double* a, CArray_2 ai, double b, __global double* x, CArray_2 xi) {
+  int i = get_local_id(0);
+  //set_CIndexer_2(&_ind, i);
+  x[get_CArrayIndexI_2(&xi, i)/sizeof(double)] = a[get_CArrayIndexI_2(&ai, i)/sizeof(double)] + b;
 }
 '''
 
