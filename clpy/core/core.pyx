@@ -2882,17 +2882,17 @@ cdef _take_kernel_0axis = ElementwiseKernel(
 #     'clpy_scatter_update')
 
 
-# cdef _scatter_add_kernel = ElementwiseKernel(
-#     'raw T v, S indices, int32 cdim, int32 rdim, int32 adim',
-#     'raw T a',
-#     '''
-#       S wrap_indices = indices % adim;
-#       if (wrap_indices < 0) wrap_indices += adim;
-#       ptrdiff_t li = i / (rdim * cdim);
-#       ptrdiff_t ri = i % rdim;
-#       atomicAdd(&a[(li * adim + wrap_indices) * rdim + ri], v[i]);
-#     ''',
-#     'clpy_scatter_add')
+cdef _scatter_add_kernel = ElementwiseKernel(
+    'raw T v, S indices, int32 cdim, int32 rdim, int32 adim',
+    'raw T a',
+    '''
+      S wrap_indices = indices % adim;
+      if (wrap_indices < 0) wrap_indices += adim;
+      ptrdiff_t li = i / (rdim * cdim);
+      ptrdiff_t ri = i % rdim;
+      atomicAdd(&a[(li * adim + wrap_indices) * rdim + ri], v[i]);
+    ''',
+    'clpy_scatter_add')
 
 
 # cdef _scatter_update_mask_kernel = ElementwiseKernel(
@@ -3074,23 +3074,26 @@ cpdef _scatter_op_single(ndarray a, ndarray indices, v,
         (1,) * len(lshape) + indices_shape + (1,) * len(rshape))
     indices = broadcast_to(indices, v_shape)
 
-    raise NotImplementedError("clpy does not support this")
-#    if op == 'update':
-#        _scatter_update_kernel(
-#            v, indices, cdim, rdim, adim, a.reduced_view())
-#    elif op == 'add':
-#        # There is constraints on types because atomicAdd() in CUDA 7.5
-#        # only supports int32, uint32, uint64, and float32.
-#        if not issubclass(v.dtype.type,
-#                          (numpy.int32, numpy.float32,
-#                           numpy.uint32, numpy.uint64, numpy.ulonglong)):
-#            raise TypeError(
-#                'scatter_add only supports int32, float32, uint32, uint64 as '
-#                'data type')
-#        _scatter_add_kernel(
-#            v, indices, cdim, rdim, adim, a.reduced_view())
-#    else:
-#        raise ValueError('provided op is not supported')
+    if op == 'update':
+        # _scatter_update_kernel(
+        #     v, indices, cdim, rdim, adim, a.reduced_view())
+        raise NotImplementedError("clpy does not support this")
+    elif op == 'add':
+        # There is constraints on types because atomicAdd() in CUDA 7.5
+        # only supports int32, uint32, uint64, and float32.
+        # if not issubclass(v.dtype.type,
+        #                   (numpy.int32, numpy.float32,
+        #                    numpy.uint32, numpy.uint64, numpy.ulonglong)):
+        #     raise TypeError(
+        #         'scatter_add only supports int32, float32, uint32, uint64 as'
+        #         ' data type')
+        # TODO(vorj): fix this after resolve #30
+        if not issubclass(v.dtype.type, numpy.float32):
+            raise NotImplementedError('clpy does not support this')
+        _scatter_add_kernel(
+            v, indices, cdim, rdim, adim, a.reduced_view())
+    else:
+        raise ValueError('provided op is not supported')
 
 
 cpdef _scatter_op_mask_single(ndarray a, ndarray mask, v, Py_ssize_t axis, op):
