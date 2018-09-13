@@ -1902,12 +1902,9 @@ public:
           os << "__kernel ";
         else if(an == "cl_local")
           os << "__local ";
-        else if(an == "cu_global")
-          os << "__global__ ";
-        else if(an == "cu_device")
-          os << "__device__ ";
-        else if(an == "cu_shared")
-          os << "__shared__ ";
+        else if(an == "cu_global");
+        else if(an == "cu_device");
+        else if(an == "cu_shared");
         else
           annons.emplace_back(an);
         continue;
