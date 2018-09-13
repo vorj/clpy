@@ -17,10 +17,13 @@ class TestFunction(unittest.TestCase):
 
     def test_python_scalar(self):
         code = '''
-__kernel void test_kernel(__global const double* a, CArray_2 ai, double b, __global double* x, CArray_2 xi) {
+__kernel void test_kernel(
+    __global const double* a, CArray_2 ai,
+    double b,
+    __global double* x, CArray_2 xi) {
   int i = get_local_id(0);
-  //set_CIndexer_2(&_ind, i);
-  x[get_CArrayIndexI_2(&xi, i)/sizeof(double)] = a[get_CArrayIndexI_2(&ai, i)/sizeof(double)] + b;
+  x[get_CArrayIndexI_2(&xi, i)/sizeof(double)]
+    = a[get_CArrayIndexI_2(&ai, i)/sizeof(double)] + b;
 }
 '''
 
@@ -38,10 +41,13 @@ __kernel void test_kernel(__global const double* a, CArray_2 ai, double b, __glo
 
     def test_numpy_scalar(self):
         code = '''
-__kernel void test_kernel(__global const double* a, CArray_2 ai, double b, __global double* x, CArray_2 xi) {
+__kernel void test_kernel(
+    __global const double* a, CArray_2 ai,
+    double b,
+    __global double* x, CArray_2 xi) {
   int i = get_local_id(0);
-  //set_CIndexer_2(&_ind, i);
-  x[get_CArrayIndexI_2(&xi, i)/sizeof(double)] = a[get_CArrayIndexI_2(&ai, i)/sizeof(double)] + b;
+  x[get_CArrayIndexI_2(&xi, i)/sizeof(double)]
+    = a[get_CArrayIndexI_2(&ai, i)/sizeof(double)] + b;
 }
 '''
 
