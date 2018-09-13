@@ -773,12 +773,16 @@ public:
     }
   }
 
-  void print_template_arguments(const clang::TemplateArgumentList* tal){
-    for(auto&& x : tal->asArray()){
+  void print_template_arguments(const llvm::ArrayRef<clang::TemplateArgument>& arr){
+    for(auto&& x : arr){
       os << to_identifier("<");
       print_template_argument(x);
       os << to_identifier(">");
     }
+  }
+
+  void print_template_arguments(const clang::TemplateArgumentList* tal){
+    print_template_arguments(tal->asArray());
   }
 
   void PrintCallArgs(clang::CallExpr *Call) {
