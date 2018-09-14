@@ -1856,7 +1856,7 @@ cdef _id = 'out0 = in0'
 _elementwise_copy = create_ufunc(
     'clpy_copy',
     ('?->?', 'b->b', 'B->B', 'h->h', 'H->H', 'i->i', 'I->I', 'l->l', 'L->L',
-     'q->q', 'Q->Q', 'f->f', 'd->d', 'F->F', 'D->D'),
+     'q->q', 'Q->Q', ('e->e', _id), 'f->f', 'd->d', 'F->F', 'D->D'),
     'out0 = (out0_type)(in0)')
 # complex numbers requires out0 = complex<T>(in0)
 
