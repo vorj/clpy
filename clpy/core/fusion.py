@@ -244,7 +244,7 @@ _kind_score = {
 _dtype_to_ctype = {
     numpy.dtype('float64'): 'double',
     numpy.dtype('float32'): 'float',
-    # numpy.dtype('float16'): 'half', # Extension type
+    numpy.dtype('float16'): 'half',
     # numpy.dtype('complex128'): 'complex<double>', # OpenCL does not support
     # numpy.dtype('complex64'): 'complex<float>', # OpenCL does not support
     numpy.dtype('int64'): 'long',
@@ -260,7 +260,7 @@ _dtype_to_ctype = {
     numpy.dtype('bool'): 'uchar',
 }
 
-_dtype_list = [numpy.dtype(_) for _ in '?bhilqBHILQfd']
+_dtype_list = [numpy.dtype(_) for _ in '?bhilqBHILQfde']
 
 
 def _const_to_str(val):
