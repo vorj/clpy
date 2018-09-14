@@ -24,7 +24,11 @@ copysign = ufunc.create_math_ufunc(
 
 ldexp = core.create_ufunc(
     'clpy_ldexp',
-    ('fi->f', 'fl->f', 'di->d', 'dq->d'),
+    (('bi->e', 'out0 = convert_float_to_half(ldexp((float)in0, in1))'),
+     ('bl->e', 'out0 = convert_float_to_half(ldexp((float)in0, in1))'),
+     ('Bi->e', 'out0 = convert_float_to_half(ldexp((float)in0, in1))'),
+     ('Bl->e', 'out0 = convert_float_to_half(ldexp((float)in0, in1))'),
+     'fi->f', 'fl->f', 'di->d', 'dq->d'),
     'out0 = ldexp(in0, in1)',
     doc='''Computes ``x1 * 2 ** x2`` elementwise.
 
@@ -35,7 +39,13 @@ ldexp = core.create_ufunc(
 
 frexp = core.create_ufunc(
     'clpy_frexp',
-    ('f->fi', 'd->di'),
+    (('b->ei', 'int nptr; '
+               'out0 = convert_float_to_half(frexp((float)in0, &nptr)); '
+               'out1 = nptr'),
+     ('B->ei', 'int nptr; '
+               'out0 = convert_float_to_half(frexp((float)in0, &nptr)); '
+               'out1 = nptr'),
+     'f->fi', 'd->di'),
     'int nptr; out0 = frexp(in0, &nptr); out1 = nptr',
     doc='''Decomposes each element to mantissa and two's exponent.
 

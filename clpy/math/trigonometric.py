@@ -79,7 +79,9 @@ arctan2 = ufunc.create_math_ufunc(
 
 deg2rad = core.create_ufunc(
     'clpy_deg2rad',
-    ('f->f', 'd->d'),
+    (('b->e', 'out0 = convert_float_to_half(in0 * (float)(M_PI / 180))'),
+     ('B->e', 'out0 = convert_float_to_half(in0 * (float)(M_PI / 180))'),
+     'f->f', 'd->d'),
     'out0 = in0 * (out0_type)(M_PI / 180)',
     doc='''Converts angles from degrees to radians elementwise.
 
@@ -90,7 +92,9 @@ deg2rad = core.create_ufunc(
 
 rad2deg = core.create_ufunc(
     'clpy_rad2deg',
-    ('f->f', 'd->d'),
+    (('b->e', 'out0 = convert_float_to_half(in0 * (float)(180 / M_PI))'),
+     ('B->e', 'out0 = convert_float_to_half(in0 * (float)(180 / M_PI))'),
+     'f->f', 'd->d'),
     'out0 = in0 * (out0_type)(180 / M_PI)',
     doc='''Converts angles from radians to degrees elementwise.
 
