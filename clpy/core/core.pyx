@@ -3819,6 +3819,8 @@ conj = create_ufunc(
 angle = create_ufunc(
     'clpy_angle',
     ('?->d', 'f->f', 'd->d',
+     ('b->e', 'out0 = convert_float_to_half(arg((float)in0))'),
+     ('B->e', 'out0 = convert_float_to_half(arg((float)in0))'),
      ('F->f', 'out0 = arg(in0)'),
      ('D->d', 'out0 = arg(in0)')),
     'out0 = in0 >= 0 ? 0 : M_PI',
@@ -4028,7 +4030,9 @@ absolute = create_ufunc(
 
 sqrt = create_ufunc(
     'clpy_sqrt',
-    ('f->f', 'd->d', 'F->F', 'D->D'),
+    (('b->e', 'out0 = convert_float_to_half(sqrt((float)in0))'),
+     ('B->e', 'out0 = convert_float_to_half(sqrt((float)in0))'),
+     'f->f', 'd->d', 'F->F', 'D->D'),
     'out0 = sqrt(in0)')
 
 

@@ -513,3 +513,31 @@ static void atomicAdd(__global float* x, float y)
   } while ( new_value.u != old_value.u );
 }
 // TODO(yoriyuki.kitta): Add another types implementation
+
+#ifdef __ULTIMA
+__attribute__((annotate("clpy_no_mangle"))) static half convert_float_to_half(float x);
+#else
+static half convert_float_to_half(float f) {
+  const float scale_to_inf = 0x1.0p+112f;
+  const float scale_to_zero = 0x1.0p-110f;
+  float base = (fabs(f) * scale_to_inf) * scale_to_zero;
+
+  const uint w = *(const uint*)&f;
+  const uint shl1_w = w + w;
+  const uint sign = w & (uint)(0x80000000);
+  uint bias = shl1_w & (uint)(0xFF000000);
+  if (bias < (uint)(0x71000000)) {
+    bias = (uint)(0x71000000);
+  }
+
+  uint bits = (bias >> 1) + (uint)(0x07800000);
+  base = *(const float*)&bits + base;
+  bits = *(const uint*)&base;
+  const uint exp_bits = (bits >> 13) & (uint)(0x00007C00);
+  const uint mantissa_bits = bits & (uint)(0x00000FFF);
+  const uint nonsign = exp_bits + mantissa_bits;
+  const ushort ret = ((sign >> 16) | (shl1_w > (uint)(0xFF000000) ? (ushort)(0x7E00) : nonsign));
+  return *(const half*)&ret;
+}
+typedef half __clpy__half;
+#endif

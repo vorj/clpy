@@ -4,7 +4,9 @@ from clpy import core
 def _create_float_test_ufunc(name, doc):
     return core.create_ufunc(
         'clpy_' + name,
-        ('f->?', 'd->?', 'F->?', 'D->?',
+        (('b->e', 'out0 = convert_float_to_half(%s((float)in0))'),
+         ('B->e', 'out0 = convert_float_to_half(%s((float)in0))'),
+         'f->?', 'd->?', 'F->?', 'D->?',
          ), 'out0 = %s(in0)' % name,
         doc=doc)
 
