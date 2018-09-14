@@ -356,9 +356,9 @@ from clpy.linalg.product import vdot  # NOQA
 # -----------------------------------------------------------------------------
 # Logic functions
 # -----------------------------------------------------------------------------
-# from clpy.core.fusion import isfinite  # NOQA
-# from clpy.core.fusion import isinf  # NOQA
-# from clpy.core.fusion import isnan  # NOQA
+from clpy.core.fusion import isfinite  # NOQA
+from clpy.core.fusion import isinf  # NOQA
+from clpy.core.fusion import isnan  # NOQA
 
 
 def isscalar(num):
@@ -381,45 +381,45 @@ from clpy.core.fusion import less  # NOQA
 from clpy.core.fusion import less_equal  # NOQA
 from clpy.core.fusion import not_equal  # NOQA
 
-# from clpy.core.fusion import all  # NOQA
-# from clpy.core.fusion import any  # NOQA
+from clpy.core.fusion import all  # NOQA
+from clpy.core.fusion import any  # NOQA
 
 # -----------------------------------------------------------------------------
 # Mathematical functions
 # -----------------------------------------------------------------------------
-# from clpy.core.fusion import arccos  # NOQA
-# from clpy.core.fusion import arcsin  # NOQA
-# from clpy.core.fusion import arctan  # NOQA
-# from clpy.core.fusion import arctan2  # NOQA
-# from clpy.core.fusion import cos  # NOQA
-# from clpy.core.fusion import deg2rad  # NOQA
-# from clpy.core.fusion import degrees  # NOQA
-# from clpy.core.fusion import hypot  # NOQA
-# from clpy.core.fusion import rad2deg  # NOQA
-# from clpy.core.fusion import radians  # NOQA
-# from clpy.core.fusion import sin  # NOQA
-# from clpy.core.fusion import tan  # NOQA
+from clpy.core.fusion import arccos  # NOQA
+from clpy.core.fusion import arcsin  # NOQA
+from clpy.core.fusion import arctan  # NOQA
+from clpy.core.fusion import arctan2  # NOQA
+from clpy.core.fusion import cos  # NOQA
+from clpy.core.fusion import deg2rad  # NOQA
+from clpy.core.fusion import degrees  # NOQA
+from clpy.core.fusion import hypot  # NOQA
+from clpy.core.fusion import rad2deg  # NOQA
+from clpy.core.fusion import radians  # NOQA
+from clpy.core.fusion import sin  # NOQA
+from clpy.core.fusion import tan  # NOQA
 
-# from clpy.core.fusion import arccosh  # NOQA
-# from clpy.core.fusion import arcsinh  # NOQA
-# from clpy.core.fusion import arctanh  # NOQA
-# from clpy.core.fusion import cosh  # NOQA
-# from clpy.core.fusion import sinh  # NOQA
-# from clpy.core.fusion import tanh  # NOQA
+from clpy.core.fusion import arccosh  # NOQA
+from clpy.core.fusion import arcsinh  # NOQA
+from clpy.core.fusion import arctanh  # NOQA
+from clpy.core.fusion import cosh  # NOQA
+from clpy.core.fusion import sinh  # NOQA
+from clpy.core.fusion import tanh  # NOQA
 
-# from clpy.core.fusion import ceil  # NOQA
-# from clpy.core.fusion import fix  # NOQA
-# from clpy.core.fusion import floor  # NOQA
-# from clpy.core.fusion import rint  # NOQA
-# from clpy.core.fusion import trunc  # NOQA
+from clpy.core.fusion import ceil  # NOQA
+from clpy.core.fusion import fix  # NOQA
+from clpy.core.fusion import floor  # NOQA
+from clpy.core.fusion import rint  # NOQA
+from clpy.core.fusion import trunc  # NOQA
 
-# from clpy.core.fusion import prod  # NOQA
-# from clpy.core.fusion import sum  # NOQA
-# from clpy.math.sumprod import cumprod  # NOQA
-# from clpy.math.sumprod import cumsum  # NOQA
-# from clpy.math.window import blackman  # NOQA
-# from clpy.math.window import hamming  # NOQA
-# from clpy.math.window import hanning  # NOQA
+from clpy.core.fusion import prod  # NOQA
+from clpy.core.fusion import sum  # NOQA
+from clpy.math.sumprod import cumprod  # NOQA
+from clpy.math.sumprod import cumsum  # NOQA
+from clpy.math.window import blackman  # NOQA
+from clpy.math.window import hamming  # NOQA
+from clpy.math.window import hanning  # NOQA
 
 
 from clpy.core.fusion import exp  # NOQA
@@ -432,11 +432,11 @@ from clpy.core.fusion import log2  # NOQA
 from clpy.core.fusion import logaddexp  # NOQA
 from clpy.core.fusion import logaddexp2  # NOQA
 
-# from clpy.core.fusion import copysign  # NOQA
-# from clpy.core.fusion import frexp  # NOQA
-# from clpy.core.fusion import ldexp  # NOQA
-# from clpy.core.fusion import nextafter  # NOQA
-# from clpy.core.fusion import signbit  # NOQA
+from clpy.core.fusion import copysign  # NOQA
+from clpy.core.fusion import frexp  # NOQA
+from clpy.core.fusion import ldexp  # NOQA
+from clpy.core.fusion import nextafter  # NOQA
+from clpy.core.fusion import signbit  # NOQA
 
 from clpy.core.fusion import add  # NOQA
 from clpy.core.fusion import divide  # NOQA
@@ -458,16 +458,16 @@ from clpy.core import conj  # NOQA
 from clpy.core import imag  # NOQA
 from clpy.core import real  # NOQA
 
-# from clpy.core.fusion import abs  # NOQA
-# from clpy.core.fusion import absolute  # NOQA
-# from clpy.core.fusion import clip  # NOQA
-# from clpy.core.fusion import fmax  # NOQA
-# from clpy.core.fusion import fmin  # NOQA
+from clpy.core.fusion import abs  # NOQA
+from clpy.core.fusion import absolute  # NOQA
+from clpy.core.fusion import clip  # NOQA
+from clpy.core.fusion import fmax  # NOQA
+from clpy.core.fusion import fmin  # NOQA
 from clpy.core.fusion import maximum  # NOQA
-# from clpy.core.fusion import minimum  # NOQA
-# from clpy.core.fusion import sign  # NOQA
+from clpy.core.fusion import minimum  # NOQA
+from clpy.core.fusion import sign  # NOQA
 from clpy.core.fusion import sqrt  # NOQA
-# from clpy.core.fusion import square  # NOQA
+from clpy.core.fusion import square  # NOQA
 
 # -----------------------------------------------------------------------------
 # Padding
@@ -482,9 +482,9 @@ from clpy.sorting.count import count_nonzero  # NOQA
 # from clpy.sorting.search import flatnonzero  # NOQA
 # from clpy.sorting.search import nonzero  # NOQA
 
-# from clpy.core.fusion import where  # NOQA
+from clpy.core.fusion import where  # NOQA
 from clpy.sorting.search import argmax  # NOQA
-# from clpy.sorting.search import argmin  # NOQA
+from clpy.sorting.search import argmin  # NOQA
 
 # from clpy.sorting.sort import argpartition  # NOQA
 # from clpy.sorting.sort import argsort  # NOQA
@@ -496,10 +496,10 @@ from clpy.sorting.search import argmax  # NOQA
 # -----------------------------------------------------------------------------
 # Statistics
 # -----------------------------------------------------------------------------
-# from clpy.core.fusion import amax  # NOQA
-# from clpy.core.fusion import amax as max  # NOQA
-# from clpy.core.fusion import amin  # NOQA
-# from clpy.core.fusion import amin as min  # NOQA
+from clpy.core.fusion import amax  # NOQA
+from clpy.core.fusion import amax as max  # NOQA
+from clpy.core.fusion import amin  # NOQA
+from clpy.core.fusion import amin as min  # NOQA
 from clpy.statistics.order import nanmax  # NOQA
 from clpy.statistics.order import nanmin  # NOQA
 
