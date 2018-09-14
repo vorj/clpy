@@ -49,7 +49,7 @@ cpdef _get_simple_elementwise_kernel(
 cdef dict _typenames_base = {
     numpy.dtype('float64'): 'double',
     numpy.dtype('float32'): 'float',
-    # numpy.dtype('float16'): 'half', # Extension type
+    numpy.dtype('float16'): 'half',
     # numpy.dtype('complex128'): 'complex<double>', # OpenCL does not support
     # numpy.dtype('complex64'): 'complex<float>', # OpenCL does not support
     numpy.dtype('int64'): 'long',
@@ -65,7 +65,7 @@ cdef dict _typenames_base = {
     # (same as uchar)
 }
 
-cdef str _all_type_chars = 'dfqlihbQLIHB?'
+cdef str _all_type_chars = 'dfeqlihbQLIHB?'
 # for c in 'dDfFeqlihbQLIHB?':
 #    print('#', c, '...', np.dtype(c).name)
 # d ... float64
