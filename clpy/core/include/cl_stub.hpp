@@ -174,3 +174,4 @@ typedef enum{
   CLK_GLOBAL_MEM_FENCE
 }cl_mem_fence_flags;
 __attribute__((annotate("clpy_no_mangle"))) void barrier(cl_mem_fence_flags);
+static constexpr double M_PI = 3.14;
