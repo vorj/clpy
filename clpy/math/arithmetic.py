@@ -7,7 +7,6 @@ add = core.add
 reciprocal = core.create_ufunc(
     'clpy_reciprocal',
     ('b', 'B', 'h', 'H', 'i', 'I', 'l', 'L', 'q', 'Q',
-     ('e', 'out0 = 1 / in0'),
      ('f', 'out0 = 1 / in0'),
      ('d', 'out0 = 1 / in0'),
      ('F', 'out0 = in0_type(1) / in0'),
