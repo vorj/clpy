@@ -750,7 +750,7 @@ public:
   void print_template_argument(const clang::TemplateArgument& targ){
     switch(targ.getKind()){
     case clang::TemplateArgument::ArgKind::Type:
-      os << to_identifier(targ.getAsType().getAsString(Policy));
+      os << to_identifier(targ.getAsType()->getUnqualifiedDesugaredType()->getLocallyUnqualifiedSingleStepDesugaredType().getAsString(Policy));
       break;
     case clang::TemplateArgument::ArgKind::Expression:
       PrintExpr(targ.getAsExpr());
@@ -1587,7 +1587,7 @@ public:
 
     const bool is_defaulted = E->getConstructor()->isDefaulted();
 
-    if (E->isListInitialization() && !E->isStdInitListInitialization())
+    if (is_defaulted && E->isListInitialization() && !E->isStdInitListInitialization())
       os << '{';
 
     auto f = clang::dyn_cast<clang::FunctionDecl>(E->getConstructor());
@@ -1624,10 +1624,9 @@ public:
     if(!is_defaulted){
       if(f)
         os << ')';
-
-      if (E->isListInitialization() && !E->isStdInitListInitialization())
-        os << '}';
     }
+    else if (E->isListInitialization() && !E->isStdInitListInitialization())
+      os << '}';
   }
 
   void VisitCXXInheritedCtorInitExpr(clang::CXXInheritedCtorInitExpr*) {
@@ -2025,8 +2024,10 @@ public:
 
   void printDeclType(clang::QualType T, llvm::StringRef DeclName, bool Pack = false) {
     if(auto tst = T->getAs<clang::TemplateSpecializationType>()){
-      os << tst->getAsCXXRecordDecl()->getName() << '_';
-      sv.print_template_arguments(tst->template_arguments());
+      if(!policy.SuppressSpecifiers){
+        os << tst->getAsCXXRecordDecl()->getName() << '_';
+        sv.print_template_arguments(tst->template_arguments());
+      }
       if(!DeclName.empty())
         os << ' ' << DeclName;
       return;
@@ -2481,10 +2482,14 @@ public:
         llvm::raw_string_ostream Pos(parent_name);
         auto _ = os.scoped_push(Pos);
         os << method->getParent()->getNameAsString();
-        if (auto S = clang::dyn_cast<clang::ClassTemplatePartialSpecializationDecl>(method->getParent()))
-          printTemplateArguments(S->getTemplateArgs(), S->getTemplateParameters());
-        else if (auto S = clang::dyn_cast<clang::ClassTemplateSpecializationDecl>(method->getParent()))
-          printTemplateArguments(S->getTemplateArgs());
+        if (auto S = clang::dyn_cast<clang::ClassTemplatePartialSpecializationDecl>(method->getParent())) {
+          os << '_';
+          sv.print_template_arguments(&S->getTemplateArgs());
+        }
+        else if (auto S = clang::dyn_cast<clang::ClassTemplateSpecializationDecl>(method->getParent())) {
+          os << '_';
+          sv.print_template_arguments(&S->getTemplateArgs());
+        }
       }
       parent_name = sv.to_identifier(parent_name);
     }
@@ -2670,12 +2675,12 @@ public:
           os << Proto << " -> ";
           Proto.clear();
         }
-        AFT->getReturnType().print(os, policy, Proto);
+        printDeclType(AFT->getReturnType(), Proto);
         Proto.clear();
       }
       os << Proto;
     } else {
-      Ty.print(os, policy, Proto);
+      printDeclType(Ty, Proto);
     }
 
     prettyPrintAttributes(D);
@@ -3035,10 +3040,14 @@ public:
         auto _ = os.scoped_push(nos);
         os << *D;
 
-        if (auto S = clang::dyn_cast<clang::ClassTemplatePartialSpecializationDecl>(D))
-          printTemplateArguments(S->getTemplateArgs(), S->getTemplateParameters());
-        else if (auto S = clang::dyn_cast<clang::ClassTemplateSpecializationDecl>(D))
-          printTemplateArguments(S->getTemplateArgs());
+        if (auto S = clang::dyn_cast<clang::ClassTemplatePartialSpecializationDecl>(D)) {
+          os << '_';
+          sv.print_template_arguments(&S->getTemplateArgs());
+        }
+        else if (auto S = clang::dyn_cast<clang::ClassTemplateSpecializationDecl>(D)) {
+          os << '_';
+          sv.print_template_arguments(&S->getTemplateArgs());
+        }
       }
       name = sv.to_identifier(name);
       os << ' ' << name;
