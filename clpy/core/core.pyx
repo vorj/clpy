@@ -1923,291 +1923,169 @@ divmod = create_ufunc(
 
 
 cdef _min_max_preamble = '''
-#define CREATE_MIN_MAX_ST(T) \\
-typedef struct{ \\
-    T value; \\
-    int index; \\
-} min_max_st_##T; \\
-static min_max_st_##T create0_min_max_st_##T() \\
-{ \
-    min_max_st_##T ret; \\
-    ret.index = -1; \\
-    return ret; \\
-} \\
-static min_max_st_##T create1_min_max_st_##T(const T v) \\
-{ \\
-    min_max_st_##T ret; \\
-    ret.value = v; \\
-    ret.index = 0; \\
-    return ret; \\
-} \\
-static min_max_st_##T create2_min_max_st_##T(const T v, const int i) \\
-{ \\
-    min_max_st_##T ret; \\
-    ret.value = v; \\
-    ret.index = i; \\
-    return ret; \\
+template <typename T>
+struct min_max_st{
+    T value;
+    int index;
+    min_max_st() : index(-1) { }
+    min_max_st(T v) : value(v), index(0) { }
+    min_max_st(T v, int i) : value(v), index(i) { }
+};
+
+template <typename T>
+inline bool is_nan(T x) {
+    return x != x;
 }
-CREATE_MIN_MAX_ST(double)
-CREATE_MIN_MAX_ST(float)
-CREATE_MIN_MAX_ST(long)
-CREATE_MIN_MAX_ST(int)
-CREATE_MIN_MAX_ST(short)
-CREATE_MIN_MAX_ST(char)
-CREATE_MIN_MAX_ST(ulong)
-CREATE_MIN_MAX_ST(uint)
-CREATE_MIN_MAX_ST(ushort)
-CREATE_MIN_MAX_ST(uchar)
-CREATE_MIN_MAX_ST(bool)
 
-#define is_nan(x) ((x) != (x))
+template <typename T>
+min_max_st<T> my_min(
+        const min_max_st<T> a, const min_max_st<T> b) {
+    if (a.index == -1) return b;
+    if (b.index == -1) return a;
+    min_max_st<T> ret(min(a.value, b.value));
+    return ret;
+}
+template <typename T>
+min_max_st<T> my_min_float(
+        const min_max_st<T> a, const min_max_st<T> b) {
+    if (a.index == -1) return b;
+    if (b.index == -1) return a;
+    if (is_nan(a.value)) return a;
+    if (is_nan(b.value)) return b;
+    min_max_st<T> ret(min(a.value, b.value));
+    return ret;
+}
 
-#define my_min(a, b, T) \\
-    ( ((a).index == -1) ? (b) : \\
-    ( ((b).index == -1) ? (a) : \\
-    ( create1_min_max_st_##T(min((a).value, (b).value)) \\
-    )))
-#define my_min_float(a, b, T) \\
-    ( ((a).index == -1) ? (b) : \\
-    ( ((b).index == -1) ? (a) : \\
-    ( is_nan((a).value) ? (a) : \\
-    ( is_nan((b).value) ? (b) : \\
-    ( create1_min_max_st_##T(fmin((a).value, (b).value)) \\
-    )))))
+template <typename T>
+min_max_st<T> my_max(
+        const min_max_st<T> a, const min_max_st<T> b) {
+    if (a.index == -1) return b;
+    if (b.index == -1) return a;
+    min_max_st<T> ret(max(a.value, b.value));
+    return ret;
+}
+template <typename T>
+min_max_st<T> my_max_float(
+        const min_max_st<T> a, const min_max_st<T> b) {
+    if (a.index == -1) return b;
+    if (b.index == -1) return a;
+    if (is_nan(a.value)) return a;
+    if (is_nan(b.value)) return b;
+    min_max_st<T> ret(max(a.value, b.value));
+    return ret;
+}
 
-#define my_max(a, b, T) \\
-    ( ((a).index == -1) ? (b) : \\
-    ( ((b).index == -1) ? (a) : \\
-    ( create1_min_max_st_##T(max((a).value, (b).value)) \\
-    )))
-#define my_max_float(a, b, T) \\
-    ( ((a).index == -1) ? (b) : \\
-    ( ((b).index == -1) ? (a) : \\
-    ( is_nan((a).value) ? (a) : \\
-    ( is_nan((b).value) ? (b) : \\
-    ( create1_min_max_st_##T(fmax((a).value, (b).value)) \\
-    )))))
+template <typename T>
+min_max_st<T> my_argmin(
+        const min_max_st<T> a, const min_max_st<T> b) {
+    if (a.index == -1) return b;
+    if (b.index == -1) return a;
+    if (a.value == b.value) {
+        min_max_st<T> ret(a.value, min(a.index, b.index));
+        return ret;
+    }
+    return (a.value <= b.value) ? a : b;
+}
+template <typename T>
+min_max_st<T> my_argmin_float(
+        const min_max_st<T> a, const min_max_st<T> b) {
+    if (a.index == -1) return b;
+    if (b.index == -1) return a;
+    if (a.value == b.value) {
+        min_max_st<T> ret(a.value, min(a.index, b.index));
+        return ret;
+    }
+    if (is_nan(a.value)) return a;
+    if (is_nan(b.value)) return b;
+    return (a.value <= b.value) ? a : b;
+}
 
-#define my_argmin(a, b, T) \\
-    ( ((a).index == -1) ? (b) : \\
-    ( ((b).index == -1) ? (a) : \\
-    ( ((a).value == (b).value) ? \\
-    create2_min_max_st_##T( (a).value, min((a).index, (b).index) ) : \\
-    ( ((a).value <= (b).value) ? a : b \\
-    ))))
-#define my_argmin_float(a, b, T) \\
-    ( ((a).index == -1) ? (b) : \\
-    ( ((b).index == -1) ? (a) : \\
-    ( ((a).value == (b).value) ? \\
-    create2_min_max_st_##T( (a).value, min((a).index, (b).index) ) : \\
-    ( is_nan((a).value) ? (a) : \\
-    ( is_nan((b).value) ? (b) : \\
-    ( ((a).value <= (b).value) ? a : b \\
-    ))))))
-
-#define my_argmax(a, b, T) \\
-    ( ((a).index == -1) ? (b) : \\
-    ( ((b).index == -1) ? (a) : \\
-    ( ((a).value == (b).value) ? \\
-    create2_min_max_st_##T( (a).value, min((a).index, (b).index) ) : \\
-    ( ((a).value >= (b).value) ? a : b \\
-    ))))
-#define my_argmax_float(a, b, T) \\
-    ( ((a).index == -1) ? (b) : \\
-    ( ((b).index == -1) ? (a) : \\
-    ( ((a).value == (b).value) ? \\
-    create2_min_max_st_##T( (a).value, min((a).index, (b).index) ) : \\
-    ( is_nan((a).value) ? (a) : \\
-    ( is_nan((b).value) ? (b) : \\
-    ( ((a).value >= (b).value) ? a : b \\
-    ))))))
+template <typename T>
+min_max_st<T> my_argmax(
+        const min_max_st<T> a, const min_max_st<T> b) {
+    if (a.index == -1) return b;
+    if (b.index == -1) return a;
+    if (a.value == b.value) {
+        min_max_st<T> ret(a.value, min(a.index, b.index));
+        return ret;
+    }
+    return (a.value >= b.value) ? a : b;
+}
+template <typename T>
+min_max_st<T> my_argmax_float(
+        const min_max_st<T> a, const min_max_st<T> b) {
+    if (a.index == -1) return b;
+    if (b.index == -1) return a;
+    if (a.value == b.value) {
+        min_max_st<T> ret(a.value, min(a.index, b.index));
+        return ret;
+    }
+    if (is_nan(a.value)) return a;
+    if (is_nan(b.value)) return b;
+    return (a.value >= b.value) ? a : b;
+}
 '''
 
 _amin = create_reduction_func(
     'clpy_min',
-    (('?->?', ('create1_min_max_st_bool(in0)',
-               'my_min(a, b, bool)', None, 'min_max_st_bool')),
-     ('b->b', ('create1_min_max_st_char(in0)',
-               'my_min(a, b, char)', None, 'min_max_st_char')),
-     ('B->B', ('create1_min_max_st_uchar(in0)',
-               'my_min(a, b, uchar)', None, 'min_max_st_uchar')),
-     ('h->h', ('create1_min_max_st_short(in0)',
-               'my_min(a, b, short)', None, 'min_max_st_short')),
-     ('H->H', ('create1_min_max_st_ushort(in0)',
-               'my_min(a, b, ushort)', None, 'min_max_st_ushort')),
-     ('i->i', ('create1_min_max_st_int(in0)',
-               'my_min(a, b, int)', None, 'min_max_st_int')),
-     ('I->I', ('create1_min_max_st_uint(in0)',
-               'my_min(a, b, uint)', None, 'min_max_st_uint')),
-     ('l->l', ('create1_min_max_st_long(in0)',
-               'my_min(a, b, long)', None, 'min_max_st_long')),
-     ('L->L', ('create1_min_max_st_ulong(in0)',
-               'my_min(a, b, ulong)', None, 'min_max_st_ulong')),
-     ('q->q', ('create1_min_max_st_long(in0)',
-               'my_min(a, b, long)', None, 'min_max_st_long')),
-     ('Q->Q', ('create1_min_max_st_ulong(in0)',
-               'my_min(a, b, ulong)', None, 'min_max_st_ulong')),
-     ('f->f', ('create1_min_max_st_float(in0)',
-               'my_min_float(a, b, float)', None, 'min_max_st_float')),
-     ('d->d', ('create1_min_max_st_double(in0)',
-               'my_min_float(a, b, double)', None, 'min_max_st_double'))),
-    (None, None, 'out0 = a.value', None),
-    'create0_${reduce_type}()', _min_max_preamble)
+    ('?->?', 'b->b', 'B->B', 'h->h', 'H->H', 'i->i', 'I->I', 'l->l', 'L->L',
+     'q->q', 'Q->Q',
+     ('f->f', (None, 'my_min_float(a, b)', None, None)),
+     ('d->d', (None, 'my_min_float(a, b)', None, None))),
+    ('in0', 'my_min(a, b)', 'out0 = a.value',
+     'min_max_st<type_in0_data>'),
+    '{}', _min_max_preamble)
+
 
 _amax = create_reduction_func(
     'clpy_max',
-    (('?->?', ('create1_min_max_st_bool(in0)',
-               'my_max(a, b, bool)', None, 'min_max_st_bool')),
-     ('b->b', ('create1_min_max_st_char(in0)',
-               'my_max(a, b, char)', None, 'min_max_st_char')),
-     ('B->B', ('create1_min_max_st_uchar(in0)',
-               'my_max(a, b, uchar)', None, 'min_max_st_uchar')),
-     ('h->h', ('create1_min_max_st_short(in0)',
-               'my_max(a, b, short)', None, 'min_max_st_short')),
-     ('H->H', ('create1_min_max_st_ushort(in0)',
-               'my_max(a, b, ushort)', None, 'min_max_st_ushort')),
-     ('i->i', ('create1_min_max_st_int(in0)',
-               'my_max(a, b, int)', None, 'min_max_st_int')),
-     ('I->I', ('create1_min_max_st_uint(in0)',
-               'my_max(a, b, uint)', None, 'min_max_st_uint')),
-     ('l->l', ('create1_min_max_st_long(in0)',
-               'my_max(a, b, long)', None, 'min_max_st_long')),
-     ('L->L', ('create1_min_max_st_ulong(in0)',
-               'my_max(a, b, ulong)', None, 'min_max_st_ulong')),
-     ('q->q', ('create1_min_max_st_long(in0)',
-               'my_max(a, b, long)', None, 'min_max_st_long')),
-     ('Q->Q', ('create1_min_max_st_ulong(in0)',
-               'my_max(a, b, ulong)', None, 'min_max_st_ulong')),
-     ('f->f', ('create1_min_max_st_float(in0)',
-               'my_max_float(a, b, float)', None, 'min_max_st_float')),
-     ('d->d', ('create1_min_max_st_double(in0)',
-               'my_max_float(a, b, double)', None, 'min_max_st_double'))),
-    (None, None, 'out0 = a.value', None),
-    'create0_${reduce_type}()', _min_max_preamble)
+    ('?->?', 'b->b', 'B->B', 'h->h', 'H->H', 'i->i', 'I->I', 'l->l', 'L->L',
+     'q->q', 'Q->Q',
+     ('f->f', (None, 'my_max_float(a, b)', None, None)),
+     ('d->d', (None, 'my_max_float(a, b)', None, None))),
+    ('in0', 'my_max(a, b)', 'out0 = a.value',
+     'min_max_st<type_in0_data>'),
+    '{}', _min_max_preamble)
+
 
 nanmin = create_reduction_func(
     'clpy_nanmin',
-    (('?->?', ('create1_min_max_st_bool(in0)',
-               'my_min(a, b, bool)', None, 'min_max_st_bool')),
-     ('b->b', ('create1_min_max_st_char(in0)',
-               'my_min(a, b, char)', None, 'min_max_st_char')),
-     ('B->B', ('create1_min_max_st_uchar(in0)',
-               'my_min(a, b, uchar)', None, 'min_max_st_uchar')),
-     ('h->h', ('create1_min_max_st_short(in0)',
-               'my_min(a, b, short)', None, 'min_max_st_short')),
-     ('H->H', ('create1_min_max_st_ushort(in0)',
-               'my_min(a, b, ushort)', None, 'min_max_st_ushort')),
-     ('i->i', ('create1_min_max_st_int(in0)',
-               'my_min(a, b, int)', None, 'min_max_st_int')),
-     ('I->I', ('create1_min_max_st_uint(in0)',
-               'my_min(a, b, uint)', None, 'min_max_st_uint')),
-     ('l->l', ('create1_min_max_st_long(in0)',
-               'my_min(a, b, long)', None, 'min_max_st_long')),
-     ('L->L', ('create1_min_max_st_ulong(in0)',
-               'my_min(a, b, ulong)', None, 'min_max_st_ulong')),
-     ('q->q', ('create1_min_max_st_long(in0)',
-               'my_min(a, b, long)', None, 'min_max_st_long')),
-     ('Q->Q', ('create1_min_max_st_ulong(in0)',
-               'my_min(a, b, ulong)', None, 'min_max_st_ulong')),
-     ('f->f', ('create1_min_max_st_float(in0)',
-               'my_min(a, b, float)', None, 'min_max_st_float')),
-     ('d->d', ('create1_min_max_st_double(in0)',
-               'my_min(a, b, double)', None, 'min_max_st_double'))),
-    (None, None, 'out0 = a.value', None),
-    'create0_${reduce_type}()', _min_max_preamble)
+    ('?->?', 'b->b', 'B->B', 'h->h', 'H->H', 'i->i', 'I->I', 'l->l', 'L->L',
+     'q->q', 'Q->Q', 'f->f', 'd->d'),
+    ('in0', 'my_min(a, b)', 'out0 = a.value',
+     'min_max_st<type_in0_data>'),
+    '{}', _min_max_preamble)
+
 
 nanmax = create_reduction_func(
     'clpy_nanmax',
-    (('?->?', ('create1_min_max_st_bool(in0)',
-               'my_max(a, b, bool)', None, 'min_max_st_bool')),
-     ('b->b', ('create1_min_max_st_char(in0)',
-               'my_max(a, b, char)', None, 'min_max_st_char')),
-     ('B->B', ('create1_min_max_st_uchar(in0)',
-               'my_max(a, b, uchar)', None, 'min_max_st_uchar')),
-     ('h->h', ('create1_min_max_st_short(in0)',
-               'my_max(a, b, short)', None, 'min_max_st_short')),
-     ('H->H', ('create1_min_max_st_ushort(in0)',
-               'my_max(a, b, ushort)', None, 'min_max_st_ushort')),
-     ('i->i', ('create1_min_max_st_int(in0)',
-               'my_max(a, b, int)', None, 'min_max_st_int')),
-     ('I->I', ('create1_min_max_st_uint(in0)',
-               'my_max(a, b, uint)', None, 'min_max_st_uint')),
-     ('l->l', ('create1_min_max_st_long(in0)',
-               'my_max(a, b, long)', None, 'min_max_st_long')),
-     ('L->L', ('create1_min_max_st_ulong(in0)',
-               'my_max(a, b, ulong)', None, 'min_max_st_ulong')),
-     ('q->q', ('create1_min_max_st_long(in0)',
-               'my_max(a, b, long)', None, 'min_max_st_long')),
-     ('Q->Q', ('create1_min_max_st_ulong(in0)',
-               'my_max(a, b, ulong)', None, 'min_max_st_ulong')),
-     ('f->f', ('create1_min_max_st_float(in0)',
-               'my_max(a, b, float)', None, 'min_max_st_float')),
-     ('d->d', ('create1_min_max_st_double(in0)',
-               'my_max(a, b, double)', None, 'min_max_st_double'))),
-    (None, None, 'out0 = a.value', None),
-    'create0_${reduce_type}()', _min_max_preamble)
+    ('?->?', 'b->b', 'B->B', 'h->h', 'H->H', 'i->i', 'I->I', 'l->l', 'L->L',
+     'q->q', 'Q->Q', 'f->f', 'd->d'),
+    ('in0', 'my_max(a, b)', 'out0 = a.value',
+     'min_max_st<type_in0_data>'),
+    '{}', _min_max_preamble)
+
 
 cdef _argmin = create_reduction_func(
     'clpy_argmin',
-    (('?->?', ('create2_min_max_st_bool(in0, _J)',
-               'my_argmin(a, b, bool)', None, 'min_max_st_bool')),
-     ('b->b', ('create2_min_max_st_char(in0, _J)',
-               'my_argmin(a, b, char)', None, 'min_max_st_char')),
-     ('B->B', ('create2_min_max_st_uchar(in0, _J)',
-               'my_argmin(a, b, uchar)', None, 'min_max_st_uchar')),
-     ('h->h', ('create2_min_max_st_short(in0, _J)',
-               'my_argmin(a, b, short)', None, 'min_max_st_short')),
-     ('H->H', ('create2_min_max_st_ushort(in0, _J)',
-               'my_argmin(a, b, ushort)', None, 'min_max_st_ushort')),
-     ('i->i', ('create2_min_max_st_int(in0, _J)',
-               'my_argmin(a, b, int)', None, 'min_max_st_int')),
-     ('I->I', ('create2_min_max_st_uint(in0, _J)',
-               'my_argmin(a, b, uint)', None, 'min_max_st_uint')),
-     ('l->l', ('create2_min_max_st_long(in0, _J)',
-               'my_argmin(a, b, long)', None, 'min_max_st_long')),
-     ('L->L', ('create2_min_max_st_ulong(in0, _J)',
-               'my_argmin(a, b, ulong)', None, 'min_max_st_ulong')),
-     ('q->q', ('create2_min_max_st_long(in0, _J)',
-               'my_argmin(a, b, long)', None, 'min_max_st_long')),
-     ('Q->Q', ('create2_min_max_st_ulong(in0, _J)',
-               'my_argmin(a, b, ulong)', None, 'min_max_st_ulong')),
-     ('f->f', ('create2_min_max_st_float(in0, _J)',
-               'my_argmin_float(a, b, float)', None, 'min_max_st_float')),
-     ('d->d', ('create2_min_max_st_double(in0, _J)',
-               'my_argmin_float(a, b, double)', None, 'min_max_st_double'))),
-    (None, None, 'out0 = a.index', None),
-    'create0_${reduce_type}()', _min_max_preamble)
+    ('?->q', 'B->q', 'h->q', 'H->q', 'i->q', 'I->q', 'l->q', 'L->q',
+     'q->q', 'Q->q',
+     ('f->q', (None, 'my_argmin_float(a, b)', None, None)),
+     ('d->q', (None, 'my_argmin_float(a, b)', None, None))),
+    ('min_max_st<type_in0_data>(in0, _J)', 'my_argmin(a, b)', 'out0 = a.index',
+     'min_max_st<type_in0_data>'),
+    '{}', _min_max_preamble)
+
 
 cdef _argmax = create_reduction_func(
     'clpy_argmax',
-    (('?->q', ('create2_min_max_st_bool(in0, _J)',
-               'my_argmax(a, b, bool)', None, 'min_max_st_bool')),
-     ('b->q', ('create2_min_max_st_char(in0, _J)',
-               'my_argmax(a, b, char)', None, 'min_max_st_char')),
-     ('B->q', ('create2_min_max_st_uchar(in0, _J)',
-               'my_argmax(a, b, uchar)', None, 'min_max_st_uchar')),
-     ('h->q', ('create2_min_max_st_short(in0, _J)',
-               'my_argmax(a, b, short)', None, 'min_max_st_short')),
-     ('H->q', ('create2_min_max_st_ushort(in0, _J)',
-               'my_argmax(a, b, ushort)', None, 'min_max_st_ushort')),
-     ('i->q', ('create2_min_max_st_int(in0, _J)',
-               'my_argmax(a, b, int)', None, 'min_max_st_int')),
-     ('I->q', ('create2_min_max_st_uint(in0, _J)',
-               'my_argmax(a, b, uint)', None, 'min_max_st_uint')),
-     ('l->q', ('create2_min_max_st_long(in0, _J)',
-               'my_argmax(a, b, long)', None, 'min_max_st_long')),
-     ('L->q', ('create2_min_max_st_ulong(in0, _J)',
-               'my_argmax(a, b, ulong)', None, 'min_max_st_ulong')),
-     ('q->q', ('create2_min_max_st_long(in0, _J)',
-               'my_argmax(a, b, long)', None, 'min_max_st_long')),
-     ('Q->q', ('create2_min_max_st_ulong(in0, _J)',
-               'my_argmax(a, b, ulong)', None, 'min_max_st_ulong')),
-     ('f->q', ('create2_min_max_st_float(in0, _J)',
-               'my_argmax_float(a, b, float)', None, 'min_max_st_float')),
-     ('d->q', ('create2_min_max_st_double(in0, _J)',
-               'my_argmax_float(a, b, double)', None, 'min_max_st_double'))),
-    (None, None, 'out0 = a.index', None),
-    'create0_${reduce_type}()', _min_max_preamble, default=True)
+    ('?->q', 'B->q', 'h->q', 'H->q', 'i->q', 'I->q', 'l->q', 'L->q',
+     'q->q', 'Q->q',
+     ('f->q', (None, 'my_argmax_float(a, b)', None, None)),
+     ('d->q', (None, 'my_argmax_float(a, b)', None, None))),
+    ('min_max_st<type_in0_data>(in0, _J)', 'my_argmax(a, b)', 'out0 = a.index',
+     'min_max_st<type_in0_data>'),
+    '{}', _min_max_preamble)
 
 
 # -----------------------------------------------------------------------------
