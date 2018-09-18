@@ -100,7 +100,8 @@ done
 for f in $TEST_FILES; do
   pushd $(dirname $f)
   python -m pytest $(basename $f) 2>&1 | tee temporary_log
-  if [[ ${PIPESTATUS[0]} -ne 0 ]] && [[ ${PIPESTATUS[0]} -ne 5 ]]; then
+  status=${PIPESTATUS[0]}
+  if [[ status -ne 0 ]] && [[ status -ne 5 ]]; then
     cat temporary_log >> $ERRORS_FILENAME
     ERROR_HAS_OCCURRED=1
   fi
