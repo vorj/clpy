@@ -63,6 +63,7 @@ tests/clpy_tests/core_tests/test_ndarray_owndata.py
 tests/clpy_tests/core_tests/test_ndarray_reduction.py
 tests/clpy_tests/core_tests/test_ndarray_unary_op.py
 tests/clpy_tests/core_tests/test_reduction.py
+tests/clpy_tests/core_tests/test_userkernel.py
 tests/clpy_tests/creation_tests/test_basic.py
 tests/clpy_tests/creation_tests/test_matrix.py
 tests/clpy_tests/creation_tests/test_ranges.py
