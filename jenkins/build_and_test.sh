@@ -71,6 +71,8 @@ tests/clpy_tests/creation_tests/test_ranges.py
 tests/clpy_tests/indexing_tests/test_insert.py
 tests/clpy_tests/logic_tests/test_comparison.py
 tests/clpy_tests/logic_tests/test_ops.py
+tests/clpy_tests/logic_tests/test_type_test.py
+tests/clpy_tests/manipulation_tests/test_add_remove.py
 tests/clpy_tests/manipulation_tests/test_dims.py
 tests/clpy_tests/manipulation_tests/test_join.py
 tests/clpy_tests/manipulation_tests/test_kind.py
@@ -98,7 +100,8 @@ done
 for f in $TEST_FILES; do
   pushd $(dirname $f)
   python -m pytest $(basename $f) 2>&1 | tee temporary_log
-  if [[ ${PIPESTATUS[0]} -ne 0 ]]; then
+  status=${PIPESTATUS[0]}
+  if [[ status -ne 0 ]] && [[ status -ne 5 ]]; then
     cat temporary_log >> $ERRORS_FILENAME
     ERROR_HAS_OCCURRED=1
   fi
