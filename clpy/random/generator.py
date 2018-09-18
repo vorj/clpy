@@ -296,8 +296,7 @@ class RandomState(object):
             :meth:`numpy.random.RandomState.uniform`
 
         """
-        raise NotImplementedError
-        dtype = numpy.dtype(dtype)
+        dtype = clpy.dtype(dtype)
         rand = self.random_sample(size=size, dtype=dtype)
         return dtype.type(low) + rand * dtype.type(high - low)
 
