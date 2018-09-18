@@ -71,6 +71,7 @@ tests/clpy_tests/creation_tests/test_ranges.py
 tests/clpy_tests/indexing_tests/test_insert.py
 tests/clpy_tests/logic_tests/test_comparison.py
 tests/clpy_tests/logic_tests/test_ops.py
+tests/clpy_tests/logic_tests/test_type_test.py
 tests/clpy_tests/manipulation_tests/test_dims.py
 tests/clpy_tests/manipulation_tests/test_join.py
 tests/clpy_tests/manipulation_tests/test_kind.py
