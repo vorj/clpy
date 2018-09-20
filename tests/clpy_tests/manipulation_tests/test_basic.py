@@ -73,6 +73,7 @@ class TestBasic(unittest.TestCase):
                         '^Array device must be same as the current device'):
                     clpy.copyto(a, b, where=c)
 
+
 '''
     @testing.multi_gpu(2)
     @testing.for_all_dtypes()
