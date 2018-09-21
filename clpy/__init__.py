@@ -204,7 +204,7 @@ from clpy.creation.matrix import diagflat  # NOQA
 # -----------------------------------------------------------------------------
 # Array manipulation routines
 # -----------------------------------------------------------------------------
-# from clpy.manipulation.basic import copyto  # NOQA
+from clpy.manipulation.basic import copyto  # NOQA
 
 from clpy.manipulation.shape import ravel  # NOQA
 from clpy.manipulation.shape import reshape  # NOQA
