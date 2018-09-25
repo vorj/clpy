@@ -11,16 +11,18 @@ class TestUltima(unittest.TestCase):
 
     def test_implicit_conversion_with_constructor(self):
         x = clpy.core.array(numpy.array([1]))
-        clpy.ElementwiseKernel(
+        y = clpy.ElementwiseKernel(
             'T x',
-            '',
-            'test t = 3;',
+            'T y',
+            'test t = 3; y = t.v',
             'test_implicit_conversion_with_constructor',
             preamble='''
             struct test{
-              test(int dummy){}
+              int v;
+              test(int v_):v(v_+1){}
             };
             ''')(x)
+        self.assertTrue(y[0] == 4)
 
 
 if __name__ == "__main__":
