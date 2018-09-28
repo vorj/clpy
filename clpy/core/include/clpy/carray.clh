@@ -554,7 +554,7 @@ static half clpy_nextafter_fp16(half x1, half x2){
   }else if(iszero_fp16(x1)){
     ret_raw_ = (*x2_raw & 0x8000u) + 1;
   }else if(!(*x1_raw & 0x8000u)){
-    if (*x1_raw > *x2_raw){
+    if (*(short const*)x1_raw > *(short const*)x2_raw){
       ret_raw_ = *x1_raw - 1;
     }else{
       ret_raw_ = *x1_raw + 1;
