@@ -16,6 +16,21 @@ cdef cl_uint GetPlatformIDs(size_t num_entries,
     exceptions.check_status(status)
     return num_platforms
 
+cdef void GetPlatformInfo(
+        cl_platform_id platform,
+        cl_platform_info param_name,
+        size_t param_value_size,
+        void *param_value,
+        size_t *param_value_size_ret) except *:
+    cdef cl_int status
+    status = clGetPlatformInfo(
+        platform,
+        param_name,
+        param_value_size,
+        param_value,
+        param_value_size_ret)
+    exceptions.check_status(status)
+
 cdef cl_uint GetDeviceIDs(cl_platform_id platform,
                           size_t device_type,
                           size_t num_entries,
@@ -30,6 +45,21 @@ cdef cl_uint GetDeviceIDs(cl_platform_id platform,
         &num_devices)
     exceptions.check_status(status)
     return num_devices
+
+cdef void GetDeviceInfo(
+        cl_device_id device,
+        cl_platform_info param_name,
+        size_t param_value_size,
+        void *param_value,
+        size_t *param_value_size_ret) except *:
+    cdef cl_int status
+    status = clGetDeviceInfo(
+        device,
+        param_name,
+        param_value_size,
+        param_value,
+        param_value_size_ret)
+    exceptions.check_status(status)
 
 cdef cl_context CreateContext(
         cl_context_properties* properties,
