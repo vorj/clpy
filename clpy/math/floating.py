@@ -56,9 +56,13 @@ frexp = core.create_ufunc(
     ''')
 
 
-nextafter = ufunc.create_math_ufunc(
-    'nextafter', 2, 'clpy_nextafter',
-    '''Computes the nearest neighbor float values towards the second argument.
+nextafter = core.create_ufunc(
+    'clpy_nextafter',
+    (('bb->e', 'out0 = nextafter((half)in0, (half)in1)'),
+     ('BB->e', 'out0 = nextafter((half)in0, (half)in1)'),
+     'ff->f', 'dd->d', 'FF->F', 'DD->D'),
+    'out0 = nextafter(in0, in1)',
+    doc='''Computes the nearest neighbor float values towards the second argument.
 
     .. seealso:: :data:`numpy.nextafter`
 
