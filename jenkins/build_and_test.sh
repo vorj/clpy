@@ -77,6 +77,7 @@ tests/clpy_tests/manipulation_tests/test_basic.py
 tests/clpy_tests/manipulation_tests/test_dims.py
 tests/clpy_tests/manipulation_tests/test_join.py
 tests/clpy_tests/manipulation_tests/test_kind.py
+tests/clpy_tests/manipulation_tests/test_rearrange.py
 tests/clpy_tests/manipulation_tests/test_shape.py
 tests/clpy_tests/manipulation_tests/test_split.py
 tests/clpy_tests/manipulation_tests/test_tiling.py
