@@ -86,6 +86,8 @@ tests/clpy_tests/statics_tests/test_meanvar.py
 tests/clpy_tests/statics_tests/test_order.py
 "
 
+export CLPY_TEST_GPU_LIMIT=1
+
 ERROR_HAS_OCCURRED=0
 
 for d in $TEST_DIRS; do
