@@ -44,8 +44,8 @@ tests/clpy_tests/ext_tests/
 tests/clpy_tests/testing_tests/
 tests/clpy_tests/io_tests/
 tests/clpy_tests/padding_tests/
-tests/clpy_tests/creation_tests
-tests/clpy_tests/manipulation_tests
+tests/clpy_tests/creation_tests/
+tests/clpy_tests/manipulation_tests/
 "
 
 TEST_FILES="
