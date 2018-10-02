@@ -84,6 +84,7 @@ tests/clpy_tests/manipulation_tests/test_transpose.py
 tests/clpy_tests/sorting_tests/test_count.py
 tests/clpy_tests/statics_tests/test_meanvar.py
 tests/clpy_tests/statics_tests/test_order.py
+tests/clpy_tests/statics_tests/test_correlation.py
 "
 
 ERROR_HAS_OCCURRED=0
