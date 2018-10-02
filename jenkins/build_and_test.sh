@@ -44,6 +44,7 @@ tests/clpy_tests/ext_tests/
 tests/clpy_tests/testing_tests/
 tests/clpy_tests/io_tests/
 tests/clpy_tests/padding_tests/
+tests/clpy_tests/creation_tests
 "
 
 TEST_FILES="
@@ -65,10 +66,6 @@ tests/clpy_tests/core_tests/test_ndarray_reduction.py
 tests/clpy_tests/core_tests/test_ndarray_unary_op.py
 tests/clpy_tests/core_tests/test_reduction.py
 tests/clpy_tests/core_tests/test_userkernel.py
-tests/clpy_tests/creation_tests/test_basic.py
-tests/clpy_tests/creation_tests/test_from_data.py
-tests/clpy_tests/creation_tests/test_matrix.py
-tests/clpy_tests/creation_tests/test_ranges.py
 tests/clpy_tests/indexing_tests/test_insert.py
 tests/clpy_tests/logic_tests/test_comparison.py
 tests/clpy_tests/logic_tests/test_ops.py
