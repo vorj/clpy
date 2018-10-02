@@ -240,11 +240,11 @@ from clpy.manipulation.split import vsplit  # NOQA
 from clpy.manipulation.tiling import repeat  # NOQA
 from clpy.manipulation.tiling import tile  # NOQA
 
-# from clpy.manipulation.rearrange import flip  # NOQA
-# from clpy.manipulation.rearrange import fliplr  # NOQA
-# from clpy.manipulation.rearrange import flipud  # NOQA
-# from clpy.manipulation.rearrange import roll  # NOQA
-# from clpy.manipulation.rearrange import rot90  # NOQA
+from clpy.manipulation.rearrange import flip  # NOQA
+from clpy.manipulation.rearrange import fliplr  # NOQA
+from clpy.manipulation.rearrange import flipud  # NOQA
+from clpy.manipulation.rearrange import roll  # NOQA
+from clpy.manipulation.rearrange import rot90  # NOQA
 
 # -----------------------------------------------------------------------------
 # Binary operations
