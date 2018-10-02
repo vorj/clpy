@@ -174,7 +174,8 @@ class TestFlip(unittest.TestCase):
         x = xp.array([], dtype).reshape((1, 0, 1))
         return xp.flip(x, 1)
 
-    # TODO(tomoharu.kitawaki): revert these test cases when flip raise core.core._AxisError instead ValueError
+    # TODO(tomoharu.kitawaki): revert these test cases
+    #   when flip raise core.core._AxisError instead ValueError
     '''
     @testing.for_all_dtypes()
     @testing.numpy_clpy_raises()
