@@ -44,6 +44,7 @@ tests/clpy_tests/ext_tests/
 tests/clpy_tests/testing_tests/
 tests/clpy_tests/io_tests/
 tests/clpy_tests/padding_tests/
+tests/clpy_tests/manipulation_tests
 "
 
 TEST_FILES="
@@ -72,16 +73,6 @@ tests/clpy_tests/indexing_tests/test_insert.py
 tests/clpy_tests/logic_tests/test_comparison.py
 tests/clpy_tests/logic_tests/test_ops.py
 tests/clpy_tests/logic_tests/test_type_test.py
-tests/clpy_tests/manipulation_tests/test_add_remove.py
-tests/clpy_tests/manipulation_tests/test_basic.py
-tests/clpy_tests/manipulation_tests/test_dims.py
-tests/clpy_tests/manipulation_tests/test_join.py
-tests/clpy_tests/manipulation_tests/test_kind.py
-tests/clpy_tests/manipulation_tests/test_rearrange.py
-tests/clpy_tests/manipulation_tests/test_shape.py
-tests/clpy_tests/manipulation_tests/test_split.py
-tests/clpy_tests/manipulation_tests/test_tiling.py
-tests/clpy_tests/manipulation_tests/test_transpose.py
 tests/clpy_tests/sorting_tests/test_count.py
 tests/clpy_tests/statics_tests/test_meanvar.py
 tests/clpy_tests/statics_tests/test_order.py
