@@ -3,22 +3,44 @@ import unittest
 
 import numpy
 
+import functools
 import clpy
 from clpy.backend.opencl.clblast import clblast
 from clpy.core import core
 
 
-class TestBlas3Sgemm(unittest.TestCase):
-    """test class of ClPy's BLAS-3 SGEMM function"""
+def for_each_dtype_and_blasfunc_pair(pairs):
+    def decorator(impl):
+        @functools.wraps(impl)
+        def test_func(self, *args, **kwargs):
+            for pair in pairs:
+                try:
+                    kwargs['dtype'] = numpy.dtype(pair[0]).type
+                    kwargs['blasfunc'] = pair[1]
+                    impl(self, *args, **kwargs)
+                except Exception:
+                    print('dtype:', pair[0], ", blasfunc:", pair[1])
+                    raise
+        return test_func
+    return decorator
 
-    def test_row_matrix_row_matrix(self):
+_dtype_and_blasfunc_pairs = [
+    ('float32', clblast.sgemm),
+    ('float64', clblast.dgemm),
+]
+
+class TestBlas3GEMM(unittest.TestCase):
+    """test class of CLBlast BLAS-3 GEMM functions"""
+
+    @for_each_dtype_and_blasfunc_pair(_dtype_and_blasfunc_pairs)
+    def test_row_matrix_row_matrix(self, dtype, blasfunc):
         npA = numpy.array([
             [1, 2, 3],
-            [4, 5, 6]], dtype='float32')  # row-major
+            [4, 5, 6]], dtype=dtype)  # row-major
         npB = numpy.array([
             [10, 11],
             [13, 14],
-            [16, 17]], dtype='float32')  # row-major
+            [16, 17]], dtype=dtype)  # row-major
         transa = 0  # A is not transposed in c-style(row-major)
         transb = 0  # B is not transposed in c-style(row-major)
 
@@ -26,12 +48,11 @@ class TestBlas3Sgemm(unittest.TestCase):
         n = npB.shape[1]  # op(B) cols = (B in row-major) cols = C cols
         k = npA.shape[1]  # op(A) cols = (A in row-major) cols = op(B) rows
 
-        clpA = clpy.ndarray(npA.shape, dtype=numpy.dtype('float32'))
+        clpA = clpy.ndarray(npA.shape, dtype=dtype)
         clpA.set(npA)
-        clpB = clpy.ndarray(npB.shape, dtype=numpy.dtype('float32'))
+        clpB = clpy.ndarray(npB.shape, dtype=dtype)
         clpB.set(npB)
-        clpC = clpy.ndarray((n, m), dtype=numpy.dtype(
-            'float32'))  # column-major
+        clpC = clpy.ndarray((n, m), dtype=dtype)  # column-major
 
         clpA, transa, lda = core._mat_to_cublas_contiguous(
             clpA, transa)  # as cublas-style
@@ -39,24 +60,25 @@ class TestBlas3Sgemm(unittest.TestCase):
             clpB, transb)  # as cublas-style
         ldc = clpC.shape[1]
 
-        clblast.sgemm('C', transa, transb, m, n, k,
-                      1.0, clpA, lda,
-                      clpB, ldb,
-                      0.0, clpC, ldc
-                      )
+        blasfunc('C', transa, transb, m, n, k,
+                 1.0, clpA, lda,
+                 clpB, ldb,
+                 0.0, clpC, ldc
+                 )
 
         actualC = clpC.get().T  # as row-major
         expectedC = numpy.dot(npA, npB)  # row-major caluculation
         self.assertTrue(numpy.allclose(expectedC, actualC))
 
-    def test_row_matrix_row_vector(self):
+    @for_each_dtype_and_blasfunc_pair(_dtype_and_blasfunc_pairs)
+    def test_row_matrix_row_vector(self, dtype, blasfunc):
         npA = numpy.array([
             [1, 2],
             [4, 5],
-            [7, 8]], dtype='float32')  # row-major
+            [7, 8]], dtype=dtype)  # row-major
         npB = numpy.array([
             [10],
-            [13]], dtype='float32')  # row-major
+            [13]], dtype=dtype)  # row-major
         transa = 0  # A is not transposed in c-style(row-major)
         transb = 0  # B is not transposed in c-style(row-major)
 
@@ -64,12 +86,11 @@ class TestBlas3Sgemm(unittest.TestCase):
         n = npB.shape[1]  # op(B) cols = (B in row-major) cols = C cols
         k = npA.shape[1]  # op(A) cols = (A in row-major) cols = op(B) rows
 
-        clpA = clpy.ndarray(npA.shape, dtype=numpy.dtype('float32'))
+        clpA = clpy.ndarray(npA.shape, dtype=dtype)
         clpA.set(npA)
-        clpB = clpy.ndarray(npB.shape, dtype=numpy.dtype('float32'))
+        clpB = clpy.ndarray(npB.shape, dtype=dtype)
         clpB.set(npB)
-        clpC = clpy.ndarray((n, m), dtype=numpy.dtype(
-            'float32'))  # column-major
+        clpC = clpy.ndarray((n, m), dtype=dtype)  # column-major
 
         clpA, transa, lda = core._mat_to_cublas_contiguous(
             clpA, transa)  # as cublas-style
@@ -77,25 +98,26 @@ class TestBlas3Sgemm(unittest.TestCase):
             clpB, transb)  # as cublas-style
         ldc = clpC.shape[1]
 
-        clblast.sgemm('C', transa, transb, m, n, k,
-                      1.0, clpA, lda,
-                      clpB, ldb,
-                      0.0, clpC, ldc
-                      )
+        blasfunc('C', transa, transb, m, n, k,
+                 1.0, clpA, lda,
+                 clpB, ldb,
+                 0.0, clpC, ldc
+                 )
 
         actualC = clpC.get().T  # as row-major
         expectedC = numpy.dot(npA, npB)  # row-major caluculation
         self.assertTrue(numpy.allclose(expectedC, actualC))
         m = npA.shape[0]  # op(A) rows = (A in row-major) rows = C rows
 
-    def test_row_vector_row_matrix(self):
+    @for_each_dtype_and_blasfunc_pair(_dtype_and_blasfunc_pairs)
+    def test_row_vector_row_matrix(self, dtype, blasfunc):
         npA = numpy.array([
             [10, 13, 16]
-        ], dtype='float32')  # row-major
+        ], dtype=dtype)  # row-major
         npB = numpy.array([
             [1, 2, 3],
             [4, 5, 6],
-            [7, 8, 9]], dtype='float32')  # row-major
+            [7, 8, 9]], dtype=dtype)  # row-major
         transa = 0  # A is not transposed in c-style(row-major)
         transb = 0  # B is not transposed in c-style(row-major)
 
@@ -103,12 +125,11 @@ class TestBlas3Sgemm(unittest.TestCase):
         n = npB.shape[1]  # op(B) cols = (B in row-major) cols = C cols
         k = npA.shape[1]  # op(A) cols = (A in row-major) cols = op(B) rows
 
-        clpA = clpy.ndarray(npA.shape, dtype=numpy.dtype('float32'))
+        clpA = clpy.ndarray(npA.shape, dtype=dtype)
         clpA.set(npA)
-        clpB = clpy.ndarray(npB.shape, dtype=numpy.dtype('float32'))
+        clpB = clpy.ndarray(npB.shape, dtype=dtype)
         clpB.set(npB)
-        clpC = clpy.ndarray((n, m), dtype=numpy.dtype(
-            'float32'))  # column-major
+        clpC = clpy.ndarray((n, m), dtype=dtype)  # column-major
 
         clpA, transa, lda = core._mat_to_cublas_contiguous(
             clpA, transa)  # as cublas-style
@@ -116,27 +137,28 @@ class TestBlas3Sgemm(unittest.TestCase):
             clpB, transb)  # as cublas-style
         ldc = clpC.shape[1]
 
-        clblast.sgemm('C', transa, transb, m, n, k,
-                      1.0, clpA, lda,
-                      clpB, ldb,
-                      0.0, clpC, ldc
-                      )
+        blasfunc('C', transa, transb, m, n, k,
+                 1.0, clpA, lda,
+                 clpB, ldb,
+                 0.0, clpC, ldc
+                 )
 
         actualC = clpC.get().T  # as row-major
         expectedC = numpy.dot(npA, npB)  # row-major caluculation
         self.assertTrue(numpy.allclose(expectedC, actualC))
 
-    def test_column_matrix_column_matrix(self):
+    @for_each_dtype_and_blasfunc_pair(_dtype_and_blasfunc_pairs)
+    def test_column_matrix_column_matrix(self, dtype, blasfunc):
         npA = numpy.array([
             [1, 2, 3],
-            [4, 5, 6]], dtype='float32')  # column-major
+            [4, 5, 6]], dtype=dtype)  # column-major
         # 1 4
         # 2 5
         # 3 6
         npB = numpy.array([
             [10, 11],
             [13, 14],
-            [16, 17]], dtype='float32')  # column-major
+            [16, 17]], dtype=dtype)  # column-major
         # 10 13 16
         # 11 14 17
         transa = 1  # A is transposed in c-style(row-major)
@@ -146,12 +168,11 @@ class TestBlas3Sgemm(unittest.TestCase):
         n = npB.shape[0]  # op(B) cols = (B in column-major) cols = C cols
         k = npA.shape[0]  # op(A) cols = (A in column-major) cols = op(B) rows
 
-        clpA = clpy.ndarray(npA.shape, dtype=numpy.dtype('float32'))
+        clpA = clpy.ndarray(npA.shape, dtype=dtype)
         clpA.set(npA)
-        clpB = clpy.ndarray(npB.shape, dtype=numpy.dtype('float32'))
+        clpB = clpy.ndarray(npB.shape, dtype=dtype)
         clpB.set(npB)
-        clpC = clpy.ndarray((n, m), dtype=numpy.dtype(
-            'float32'))  # column-major
+        clpC = clpy.ndarray((n, m), dtype=dtype)  # column-major
 
         clpA, transa, lda = core._mat_to_cublas_contiguous(
             clpA, transa)  # as cublas-style
@@ -159,25 +180,26 @@ class TestBlas3Sgemm(unittest.TestCase):
             clpB, transb)  # as cublas-style
         ldc = clpC.shape[1]
 
-        clblast.sgemm('C', transa, transb, m, n, k,
-                      1.0, clpA, lda,
-                      clpB, ldb,
-                      0.0, clpC, ldc
-                      )
+        blasfunc('C', transa, transb, m, n, k,
+                 1.0, clpA, lda,
+                 clpB, ldb,
+                 0.0, clpC, ldc
+                 )
 
         actualC = clpC.get().T  # as row-major
         expectedC = numpy.dot(npA.T, npB.T)  # row-major caluculation
         self.assertTrue(numpy.allclose(expectedC, actualC))
 
-    def test_column_matrix_column_vector(self):
+    @for_each_dtype_and_blasfunc_pair(_dtype_and_blasfunc_pairs)
+    def test_column_matrix_column_vector(self, dtype, blasfunc):
         npA = numpy.array([
             [1, 2, 3],
-            [4, 5, 6]], dtype='float32')  # column-major
+            [4, 5, 6]], dtype=dtype)  # column-major
         # 1 4
         # 2 5
         # 3 6
         npB = numpy.array([
-            [10, 11]], dtype='float32')  # column-major
+            [10, 11]], dtype=dtype)  # column-major
         # 10
         # 11
         transa = 1  # A is transposed in c-style(row-major)
@@ -187,12 +209,11 @@ class TestBlas3Sgemm(unittest.TestCase):
         n = npB.shape[0]  # op(B) cols = (B in column-major) cols = C cols
         k = npA.shape[0]  # op(A) cols = (A in column-major) cols = op(B) rows
 
-        clpA = clpy.ndarray(npA.shape, dtype=numpy.dtype('float32'))
+        clpA = clpy.ndarray(npA.shape, dtype=dtype)
         clpA.set(npA)
-        clpB = clpy.ndarray(npB.shape, dtype=numpy.dtype('float32'))
+        clpB = clpy.ndarray(npB.shape, dtype=dtype)
         clpB.set(npB)
-        clpC = clpy.ndarray((n, m), dtype=numpy.dtype(
-            'float32'))  # column-major
+        clpC = clpy.ndarray((n, m), dtype=dtype)  # column-major
 
         clpA, transa, lda = core._mat_to_cublas_contiguous(
             clpA, transa)  # as cublas-style
@@ -200,25 +221,26 @@ class TestBlas3Sgemm(unittest.TestCase):
             clpB, transb)  # as cublas-style
         ldc = clpC.shape[1]
 
-        clblast.sgemm('C', transa, transb, m, n, k,
-                      1.0, clpA, lda,
-                      clpB, ldb,
-                      0.0, clpC, ldc
-                      )
+        blasfunc('C', transa, transb, m, n, k,
+                 1.0, clpA, lda,
+                 clpB, ldb,
+                 0.0, clpC, ldc
+                 )
 
         actualC = clpC.get().T  # as row-major
         expectedC = numpy.dot(npA.T, npB.T)  # row-major caluculation
         self.assertTrue(numpy.allclose(expectedC, actualC))
 
-    def test_column_vector_column_matrix(self):
+    @for_each_dtype_and_blasfunc_pair(_dtype_and_blasfunc_pairs)
+    def test_column_vector_column_matrix(self, dtype, blasfunc):
         npA = numpy.array([
             [1],
-            [4]], dtype='float32')  # column-major
+            [4]], dtype=dtype)  # column-major
         # 1 4
         npB = numpy.array([
             [10, 11],
             [13, 14],
-            [16, 17]], dtype='float32')  # column-major
+            [16, 17]], dtype=dtype)  # column-major
         # 10 13 16
         # 11 14 17
         transa = 1  # A is transposed in c-style(row-major)
@@ -228,12 +250,11 @@ class TestBlas3Sgemm(unittest.TestCase):
         n = npB.shape[0]  # op(B) cols = (B in column-major) cols = C cols
         k = npA.shape[0]  # op(A) cols = (A in column-major) cols = op(B) rows
 
-        clpA = clpy.ndarray(npA.shape, dtype=numpy.dtype('float32'))
+        clpA = clpy.ndarray(npA.shape, dtype=dtype)
         clpA.set(npA)
-        clpB = clpy.ndarray(npB.shape, dtype=numpy.dtype('float32'))
+        clpB = clpy.ndarray(npB.shape, dtype=dtype)
         clpB.set(npB)
-        clpC = clpy.ndarray((n, m), dtype=numpy.dtype(
-            'float32'))  # column-major
+        clpC = clpy.ndarray((n, m), dtype=dtype)  # column-major
 
         clpA, transa, lda = core._mat_to_cublas_contiguous(
             clpA, transa)  # as cublas-style
@@ -241,26 +262,27 @@ class TestBlas3Sgemm(unittest.TestCase):
             clpB, transb)  # as cublas-style
         ldc = clpC.shape[1]
 
-        clblast.sgemm('C', transa, transb, m, n, k,
-                      1.0, clpA, lda,
-                      clpB, ldb,
-                      0.0, clpC, ldc
-                      )
+        blasfunc('C', transa, transb, m, n, k,
+                 1.0, clpA, lda,
+                 clpB, ldb,
+                 0.0, clpC, ldc
+                 )
 
         actualC = clpC.get().T  # as row-major
         expectedC = numpy.dot(npA.T, npB.T)  # row-major caluculation
         self.assertTrue(numpy.allclose(expectedC, actualC))
 
-    def test_row_matrix_column_matrix(self):
+    @for_each_dtype_and_blasfunc_pair(_dtype_and_blasfunc_pairs)
+    def test_row_matrix_column_matrix(self, dtype, blasfunc):
         npA = numpy.array([
             [1, 2],
-            [4, 5]], dtype='float32')  # row-major
+            [4, 5]], dtype=dtype)  # row-major
         # 1 2
         # 4 5
         npB = numpy.array([
             [10, 11],
             [13, 14],
-            [16, 17]], dtype='float32')  # column-major
+            [16, 17]], dtype=dtype)  # column-major
         # 10 13 16
         # 11 14 17
         transa = 0  # A is not transposed in c-style(row-major)
@@ -270,12 +292,11 @@ class TestBlas3Sgemm(unittest.TestCase):
         n = npB.shape[0]  # op(B) cols = (B in column-major) cols = C cols
         k = npA.shape[1]  # op(A) cols = (A in row-major)    cols = op(B) rows
 
-        clpA = clpy.ndarray(npA.shape, dtype=numpy.dtype('float32'))
+        clpA = clpy.ndarray(npA.shape, dtype=dtype)
         clpA.set(npA)
-        clpB = clpy.ndarray(npB.shape, dtype=numpy.dtype('float32'))
+        clpB = clpy.ndarray(npB.shape, dtype=dtype)
         clpB.set(npB)
-        clpC = clpy.ndarray((n, m), dtype=numpy.dtype(
-            'float32'))  # column-major
+        clpC = clpy.ndarray((n, m), dtype=dtype)  # column-major
 
         clpA, transa, lda = core._mat_to_cublas_contiguous(
             clpA, transa)  # as cublas-style
@@ -283,24 +304,25 @@ class TestBlas3Sgemm(unittest.TestCase):
             clpB, transb)  # as cublas-style
         ldc = clpC.shape[1]
 
-        clblast.sgemm('C', transa, transb, m, n, k,
-                      1.0, clpA, lda,
-                      clpB, ldb,
-                      0.0, clpC, ldc
-                      )
+        blasfunc('C', transa, transb, m, n, k,
+                 1.0, clpA, lda,
+                 clpB, ldb,
+                 0.0, clpC, ldc
+                 )
 
         actualC = clpC.get().T  # as row-major
         expectedC = numpy.dot(npA, npB.T)  # row-major caluculation
         self.assertTrue(numpy.allclose(expectedC, actualC))
 
-    def test_row_matrix_column_vector(self):
+    @for_each_dtype_and_blasfunc_pair(_dtype_and_blasfunc_pairs)
+    def test_row_matrix_column_vector(self, dtype, blasfunc):
         npA = numpy.array([
             [1, 2],
-            [4, 5]], dtype='float32')  # row-major
+            [4, 5]], dtype=dtype)  # row-major
         # 1 2
         # 4 5
         npB = numpy.array([
-            [10, 11]], dtype='float32')  # column-major
+            [10, 11]], dtype=dtype)  # column-major
         # 10
         # 11
         transa = 0  # A is not transposed in c-style(row-major)
@@ -310,12 +332,11 @@ class TestBlas3Sgemm(unittest.TestCase):
         n = npB.shape[0]  # op(B) cols = (B in column-major) cols = C cols
         k = npA.shape[1]  # op(A) cols = (A in row-major)    cols = op(B) rows
 
-        clpA = clpy.ndarray(npA.shape, dtype=numpy.dtype('float32'))
+        clpA = clpy.ndarray(npA.shape, dtype=dtype)
         clpA.set(npA)
-        clpB = clpy.ndarray(npB.shape, dtype=numpy.dtype('float32'))
+        clpB = clpy.ndarray(npB.shape, dtype=dtype)
         clpB.set(npB)
-        clpC = clpy.ndarray((n, m), dtype=numpy.dtype(
-            'float32'))  # column-major
+        clpC = clpy.ndarray((n, m), dtype=dtype)  # column-major
 
         clpA, transa, lda = core._mat_to_cublas_contiguous(
             clpA, transa)  # as cublas-style
@@ -323,25 +344,26 @@ class TestBlas3Sgemm(unittest.TestCase):
             clpB, transb)  # as cublas-style
         ldc = clpC.shape[1]
 
-        clblast.sgemm('C', transa, transb, m, n, k,
-                      1.0, clpA, lda,
-                      clpB, ldb,
-                      0.0, clpC, ldc
-                      )
+        blasfunc('C', transa, transb, m, n, k,
+                 1.0, clpA, lda,
+                 clpB, ldb,
+                 0.0, clpC, ldc
+                 )
 
         actualC = clpC.get().T  # as row-major
         expectedC = numpy.dot(npA, npB.T)  # row-major caluculation
         self.assertTrue(numpy.allclose(expectedC, actualC))
 
-    def test_row_vector_column_matrix(self):
+    @for_each_dtype_and_blasfunc_pair(_dtype_and_blasfunc_pairs)
+    def test_row_vector_column_matrix(self, dtype, blasfunc):
         npA = numpy.array([
-            [1, 2]], dtype='float32')  # row-major
+            [1, 2]], dtype=dtype)  # row-major
         # 1 2
         # 4 5
         npB = numpy.array([
             [10, 11],
             [13, 14],
-            [16, 17]], dtype='float32')  # column-major
+            [16, 17]], dtype=dtype)  # column-major
         # 10 13 16
         # 11 14 17
         transa = 0  # A is not transposed in c-style(row-major)
@@ -351,12 +373,11 @@ class TestBlas3Sgemm(unittest.TestCase):
         n = npB.shape[0]  # op(B) cols = (B in column-major) cols = C cols
         k = npA.shape[1]  # op(A) cols = (A in row-major)    cols = op(B) rows
 
-        clpA = clpy.ndarray(npA.shape, dtype=numpy.dtype('float32'))
+        clpA = clpy.ndarray(npA.shape, dtype=dtype)
         clpA.set(npA)
-        clpB = clpy.ndarray(npB.shape, dtype=numpy.dtype('float32'))
+        clpB = clpy.ndarray(npB.shape, dtype=dtype)
         clpB.set(npB)
-        clpC = clpy.ndarray((n, m), dtype=numpy.dtype(
-            'float32'))  # column-major
+        clpC = clpy.ndarray((n, m), dtype=dtype)  # column-major
 
         clpA, transa, lda = core._mat_to_cublas_contiguous(
             clpA, transa)  # as cublas-style
@@ -364,26 +385,27 @@ class TestBlas3Sgemm(unittest.TestCase):
             clpB, transb)  # as cublas-style
         ldc = clpC.shape[1]
 
-        clblast.sgemm('C', transa, transb, m, n, k,
-                      1.0, clpA, lda,
-                      clpB, ldb,
-                      0.0, clpC, ldc
-                      )
+        blasfunc('C', transa, transb, m, n, k,
+                 1.0, clpA, lda,
+                 clpB, ldb,
+                 0.0, clpC, ldc
+                 )
 
         actualC = clpC.get().T  # as row-major
         expectedC = numpy.dot(npA, npB.T)  # row-major caluculation
         self.assertTrue(numpy.allclose(expectedC, actualC))
 
-    def test_column_matrix_row_matrix(self):
+    @for_each_dtype_and_blasfunc_pair(_dtype_and_blasfunc_pairs)
+    def test_column_matrix_row_matrix(self, dtype, blasfunc):
         npA = numpy.array([
             [1, 2, 3],
-            [4, 5, 6]], dtype='float32')  # column-major
+            [4, 5, 6]], dtype=dtype)  # column-major
         # 1 4
         # 2 5
         # 3 6
         npB = numpy.array([
             [10, 11],
-            [13, 14]], dtype='float32')  # row-major
+            [13, 14]], dtype=dtype)  # row-major
         # 10 11
         # 13 14
         transa = 1  # A is transposed in c-style(row-major)
@@ -393,12 +415,11 @@ class TestBlas3Sgemm(unittest.TestCase):
         n = npB.shape[1]  # op(B) cols = (B in row-major)    cols = C cols
         k = npA.shape[0]  # op(A) cols = (A in column-major) cols = op(B) rows
 
-        clpA = clpy.ndarray(npA.shape, dtype=numpy.dtype('float32'))
+        clpA = clpy.ndarray(npA.shape, dtype=dtype)
         clpA.set(npA)
-        clpB = clpy.ndarray(npB.shape, dtype=numpy.dtype('float32'))
+        clpB = clpy.ndarray(npB.shape, dtype=dtype)
         clpB.set(npB)
-        clpC = clpy.ndarray((n, m), dtype=numpy.dtype(
-            'float32'))  # column-major
+        clpC = clpy.ndarray((n, m), dtype=dtype)  # column-major
 
         clpA, transa, lda = core._mat_to_cublas_contiguous(
             clpA, transa)  # as cublas-style
@@ -406,26 +427,27 @@ class TestBlas3Sgemm(unittest.TestCase):
             clpB, transb)  # as cublas-style
         ldc = clpC.shape[1]
 
-        clblast.sgemm('C', transa, transb, m, n, k,
-                      1.0, clpA, lda,
-                      clpB, ldb,
-                      0.0, clpC, ldc
-                      )
+        blasfunc('C', transa, transb, m, n, k,
+                 1.0, clpA, lda,
+                 clpB, ldb,
+                 0.0, clpC, ldc
+                 )
 
         actualC = clpC.get().T  # as row-major
         expectedC = numpy.dot(npA.T, npB)  # row-major caluculation
         self.assertTrue(numpy.allclose(expectedC, actualC))
 
-    def test_column_matrix_row_vector(self):
+    @for_each_dtype_and_blasfunc_pair(_dtype_and_blasfunc_pairs)
+    def test_column_matrix_row_vector(self, dtype, blasfunc):
         npA = numpy.array([
             [1, 2, 3],
-            [4, 5, 6]], dtype='float32')  # column-major
+            [4, 5, 6]], dtype=dtype)  # column-major
         # 1 4
         # 2 5
         # 3 6
         npB = numpy.array([
             [10],
-            [13]], dtype='float32')  # row-major
+            [13]], dtype=dtype)  # row-major
         # 10
         # 13
         transa = 1  # A is transposed in c-style(row-major)
@@ -435,12 +457,11 @@ class TestBlas3Sgemm(unittest.TestCase):
         n = npB.shape[1]  # op(B) cols = (B in row-major)    cols = C cols
         k = npA.shape[0]  # op(A) cols = (A in column-major) cols = op(B) rows
 
-        clpA = clpy.ndarray(npA.shape, dtype=numpy.dtype('float32'))
+        clpA = clpy.ndarray(npA.shape, dtype=dtype)
         clpA.set(npA)
-        clpB = clpy.ndarray(npB.shape, dtype=numpy.dtype('float32'))
+        clpB = clpy.ndarray(npB.shape, dtype=dtype)
         clpB.set(npB)
-        clpC = clpy.ndarray((n, m), dtype=numpy.dtype(
-            'float32'))  # column-major
+        clpC = clpy.ndarray((n, m), dtype=dtype)  # column-major
 
         clpA, transa, lda = core._mat_to_cublas_contiguous(
             clpA, transa)  # as cublas-style
@@ -448,26 +469,27 @@ class TestBlas3Sgemm(unittest.TestCase):
             clpB, transb)  # as cublas-style
         ldc = clpC.shape[1]
 
-        clblast.sgemm('C', transa, transb, m, n, k,
-                      1.0, clpA, lda,
-                      clpB, ldb,
-                      0.0, clpC, ldc
-                      )
+        blasfunc('C', transa, transb, m, n, k,
+                 1.0, clpA, lda,
+                 clpB, ldb,
+                 0.0, clpC, ldc
+                 )
 
         actualC = clpC.get().T  # as row-major
         expectedC = numpy.dot(npA.T, npB)  # row-major caluculation
         self.assertTrue(numpy.allclose(expectedC, actualC))
 
-    def test_column_vector_row_matrix(self):
+    @for_each_dtype_and_blasfunc_pair(_dtype_and_blasfunc_pairs)
+    def test_column_vector_row_matrix(self, dtype, blasfunc):
         npA = numpy.array([
             [1],
             [2],
-            [3]], dtype='float32')  # column-major
+            [3]], dtype=dtype)  # column-major
         # 1 2 3
         npB = numpy.array([
             [10, 11],
             [13, 14],
-            [16, 17]], dtype='float32')  # row-major
+            [16, 17]], dtype=dtype)  # row-major
         # 10 11
         # 13 14
         # 16 17
@@ -478,12 +500,11 @@ class TestBlas3Sgemm(unittest.TestCase):
         n = npB.shape[1]  # op(B) cols = (B in row-major)    cols = C cols
         k = npA.shape[0]  # op(A) cols = (A in column-major) cols = op(B) rows
 
-        clpA = clpy.ndarray(npA.shape, dtype=numpy.dtype('float32'))
+        clpA = clpy.ndarray(npA.shape, dtype=dtype)
         clpA.set(npA)
-        clpB = clpy.ndarray(npB.shape, dtype=numpy.dtype('float32'))
+        clpB = clpy.ndarray(npB.shape, dtype=dtype)
         clpB.set(npB)
-        clpC = clpy.ndarray((n, m), dtype=numpy.dtype(
-            'float32'))  # column-major
+        clpC = clpy.ndarray((n, m), dtype=dtype)  # column-major
 
         clpA, transa, lda = core._mat_to_cublas_contiguous(
             clpA, transa)  # as cublas-style
@@ -491,71 +512,74 @@ class TestBlas3Sgemm(unittest.TestCase):
             clpB, transb)  # as cublas-style
         ldc = clpC.shape[1]
 
-        clblast.sgemm('C', transa, transb, m, n, k,
-                      1.0, clpA, lda,
-                      clpB, ldb,
-                      0.0, clpC, ldc
-                      )
+        blasfunc('C', transa, transb, m, n, k,
+                 1.0, clpA, lda,
+                 clpB, ldb,
+                 0.0, clpC, ldc
+                 )
 
         actualC = clpC.get().T  # as row-major
         expectedC = numpy.dot(npA.T, npB)  # row-major caluculation
         self.assertTrue(numpy.allclose(expectedC, actualC))
 
-    def test_invalid_transa(self):
-        npA = numpy.array([[1, 2, 3], [4, 5, 6], [7, 8, 9]], dtype='float32')
+    @for_each_dtype_and_blasfunc_pair(_dtype_and_blasfunc_pairs)
+    def test_invalid_transa(self, dtype, blasfunc):
+        npA = numpy.array([[1, 2, 3], [4, 5, 6], [7, 8, 9]], dtype=dtype)
         npB = numpy.array([[10, 11, 12], [13, 14, 15], [
-                          16, 17, 18]], dtype='float32')
+                          16, 17, 18]], dtype=dtype)
 
-        clpA = clpy.ndarray(npA.shape, dtype=numpy.dtype('float32'))
+        clpA = clpy.ndarray(npA.shape, dtype=dtype)
         clpA.set(npA)
-        clpB = clpy.ndarray(npB.shape, dtype=numpy.dtype('float32'))
+        clpB = clpy.ndarray(npB.shape, dtype=dtype)
         clpB.set(npB)
 
         expectedC = numpy.dot(npA, npB).T
-        clpC = clpy.ndarray(expectedC.shape, dtype=numpy.dtype('float32'))
+        clpC = clpy.ndarray(expectedC.shape, dtype=dtype)
 
         m = npA.shape[0]
         n = npB.shape[1]
         k = npA.shape[1]
         with self.assertRaises(ValueError):
-            clblast.sgemm('C', transa='a', transb='t',
-                          m=m, n=n, k=k,
-                          alpha=1.0, A=clpA, lda=k,
-                          B=clpB, ldb=n,
-                          beta=0.0,
-                          C=clpC, ldc=m
-                          )
+            blasfunc('C', transa='a', transb='t',
+                     m=m, n=n, k=k,
+                     alpha=1.0, A=clpA, lda=k,
+                     B=clpB, ldb=n,
+                     beta=0.0,
+                     C=clpC, ldc=m
+                     )
 
-    def test_invalid_transb(self):
-        npA = numpy.array([[1, 2, 3], [4, 5, 6], [7, 8, 9]], dtype='float32')
+    @for_each_dtype_and_blasfunc_pair(_dtype_and_blasfunc_pairs)
+    def test_invalid_transb(self, dtype, blasfunc):
+        npA = numpy.array([[1, 2, 3], [4, 5, 6], [7, 8, 9]], dtype=dtype)
         npB = numpy.array([[10, 11, 12], [13, 14, 15], [
-                          16, 17, 18]], dtype='float32')
+                          16, 17, 18]], dtype=dtype)
 
-        clpA = clpy.ndarray(npA.shape, dtype=numpy.dtype('float32'))
+        clpA = clpy.ndarray(npA.shape, dtype=dtype)
         clpA.set(npA)
-        clpB = clpy.ndarray(npB.shape, dtype=numpy.dtype('float32'))
+        clpB = clpy.ndarray(npB.shape, dtype=dtype)
         clpB.set(npB)
 
         expectedC = numpy.dot(npA, npB).T
-        clpC = clpy.ndarray(expectedC.shape, dtype=numpy.dtype('float32'))
+        clpC = clpy.ndarray(expectedC.shape, dtype=dtype)
 
         m = npA.shape[0]
         n = npB.shape[1]
         k = npA.shape[1]
         with self.assertRaises(ValueError):
-            clblast.sgemm('C', transa='n', transb='a',
-                          m=m, n=n, k=k,
-                          alpha=1.0, A=clpA, lda=k,
-                          B=clpB, ldb=n,
-                          beta=0.0,
-                          C=clpC, ldc=m
-                          )
+            blasfunc('C', transa='n', transb='a',
+                     m=m, n=n, k=k,
+                     alpha=1.0, A=clpA, lda=k,
+                     B=clpB, ldb=n,
+                     beta=0.0,
+                     C=clpC, ldc=m
+                     )
 
-    def test_alpha_matrix_matrix(self):
+    @for_each_dtype_and_blasfunc_pair(_dtype_and_blasfunc_pairs)
+    def test_alpha_matrix_matrix(self, dtype, blasfunc):
         npA = numpy.array([[1, 2, 3], [4, 5, 6], [7, 8, 9]],
-                          dtype='float32')  # row-major
+                          dtype=dtype)  # row-major
         npB = numpy.array([[10, 11, 12], [13, 14, 15], [
-                          16, 17, 18]], dtype='float32')  # row-major
+                          16, 17, 18]], dtype=dtype)  # row-major
         transa = 0  # A is not transposed in c-style(row-major)
         transb = 0  # B is not transposed in c-style(row-major)
         alpha = 2.0
@@ -565,15 +589,13 @@ class TestBlas3Sgemm(unittest.TestCase):
         n = npB.shape[1]
         k = npA.shape[1]
 
-        clpA = clpy.ndarray(npA.shape, dtype=numpy.dtype(
-            'float32'))  # col major in clpy
+        clpA = clpy.ndarray(npA.shape, dtype=dtype)  # col major in clpy
         clpA.set(npA)
-        clpB = clpy.ndarray(npB.shape, dtype=numpy.dtype(
-            'float32'))  # col major in clpy
+        clpB = clpy.ndarray(npB.shape, dtype=dtype)  # col major in clpy
         clpB.set(npB)
 
         expectedC = numpy.dot(npA, npB) * alpha
-        clpC = clpy.ndarray(expectedC.shape, dtype=numpy.dtype('float32'))
+        clpC = clpy.ndarray(expectedC.shape, dtype=dtype)
 
         clpA, transa, lda = core._mat_to_cublas_contiguous(
             clpA, transa)  # as cublas-style
@@ -582,24 +604,25 @@ class TestBlas3Sgemm(unittest.TestCase):
         ldc = clpC.shape[1]
 
         # alpha * (A^t x B^T) in col-major = alpha * AxB in row major
-        clblast.sgemm('C', transa, transb,
-                      m, n, k, alpha,
-                      clpA, lda,
-                      clpB, ldb,
-                      beta, clpC, ldc
-                      )
+        blasfunc('C', transa, transb,
+                 m, n, k, alpha,
+                 clpA, lda,
+                 clpB, ldb,
+                 beta, clpC, ldc
+                 )
 
         actualC = clpC.get().T  # as row-major
 
         self.assertTrue(numpy.allclose(expectedC, actualC))
 
-    def test_beta_matrix_matrix(self):
+    @for_each_dtype_and_blasfunc_pair(_dtype_and_blasfunc_pairs)
+    def test_beta_matrix_matrix(self, dtype, blasfunc):
         npA = numpy.array([[1, 2, 3], [4, 5, 6], [7, 8, 9]],
-                          dtype='float32')  # row-major
+                          dtype=dtype)  # row-major
         npB = numpy.array([[10, 11, 12], [13, 14, 15], [
-                          16, 17, 18]], dtype='float32')  # row-major
+                          16, 17, 18]], dtype=dtype)  # row-major
         npC = numpy.array([[19, 20, 21], [22, 23, 24], [
-                          25, 26, 27]], dtype='float32')  # row-major
+                          25, 26, 27]], dtype=dtype)  # row-major
         transa = 0  # A is not transposed in c-style(row-major)
         transb = 0  # B is not transposed in c-style(row-major)
 
@@ -610,15 +633,12 @@ class TestBlas3Sgemm(unittest.TestCase):
         n = npB.shape[1]
         k = npA.shape[1]
 
-        clpA = clpy.ndarray(npA.shape, dtype=numpy.dtype(
-            'float32'))  # col-major in clpy
+        clpA = clpy.ndarray(npA.shape, dtype=dtype)  # col-major in clpy
         clpA.set(npA)
-        clpB = clpy.ndarray(npB.shape, dtype=numpy.dtype(
-            'float32'))  # col-major in clpy
+        clpB = clpy.ndarray(npB.shape, dtype=dtype)  # col-major in clpy
         clpB.set(npB)
 
-        clpC = clpy.ndarray(npC.shape, dtype=numpy.dtype(
-            'float32'))  # col-major in clpy
+        clpC = clpy.ndarray(npC.shape, dtype=dtype)  # col-major in clpy
         clpC.set(npC.T)  # transpose C
 
         clpA, transa, lda = core._mat_to_cublas_contiguous(
@@ -631,22 +651,23 @@ class TestBlas3Sgemm(unittest.TestCase):
         expectedC = numpy.add(numpy.dot(npA, npB), beta * npC)
 
         # (A^T x B^T) + C^T in col-major = A x B + C in row-major
-        clblast.sgemm('C', transa, transb,
-                      m, n, k, alpha,
-                      clpA, lda,
-                      clpB, ldb,
-                      beta, clpC, ldc
-                      )
+        blasfunc('C', transa, transb,
+                 m, n, k, alpha,
+                 clpA, lda,
+                 clpB, ldb,
+                 beta, clpC, ldc
+                 )
 
         actualC = clpC.get().T  # as row-major
 
         self.assertTrue(numpy.allclose(expectedC, actualC))
 
-    def test_beta_0_matrix_matrix(self):
+    @for_each_dtype_and_blasfunc_pair(_dtype_and_blasfunc_pairs)
+    def test_beta_0_matrix_matrix(self, dtype, blasfunc):
         npA = numpy.array([[1, 2, 3], [4, 5, 6], [7, 8, 9]],
-                          dtype='float32')  # row-major
+                          dtype=dtype)  # row-major
         npB = numpy.array([[10, 11, 12], [13, 14, 15], [
-                          16, 17, 18]], dtype='float32')  # row-major
+                          16, 17, 18]], dtype=dtype)  # row-major
         transa = 0  # A is not transposed in c-style(row-major)
         transb = 0  # B is not transposed in c-style(row-major)
         alpha = 1.0
@@ -656,15 +677,13 @@ class TestBlas3Sgemm(unittest.TestCase):
         n = npB.shape[1]
         k = npA.shape[1]
 
-        clpA = clpy.ndarray(npA.shape, dtype=numpy.dtype(
-            'float32'))  # col major in clpy
+        clpA = clpy.ndarray(npA.shape, dtype=dtype)  # col major in clpy
         clpA.set(npA)
-        clpB = clpy.ndarray(npB.shape, dtype=numpy.dtype(
-            'float32'))  # col major in clpy
+        clpB = clpy.ndarray(npB.shape, dtype=dtype)  # col major in clpy
         clpB.set(npB)
 
         expectedC = numpy.dot(npA, npB) * alpha
-        clpC = clpy.ndarray(expectedC.shape, dtype=numpy.dtype('float32'))
+        clpC = clpy.ndarray(expectedC.shape, dtype=dtype)
         clpC.fill(numpy.nan)
 
         clpA, transa, lda = core._mat_to_cublas_contiguous(
@@ -674,18 +693,19 @@ class TestBlas3Sgemm(unittest.TestCase):
         ldc = clpC.shape[1]
 
         # alpha * (A^t x B^T) in col-major = alpha * AxB in row major
-        clblast.sgemm('C', transa, transb,
-                      m, n, k, alpha,
-                      clpA, lda,
-                      clpB, ldb,
-                      beta, clpC, ldc
-                      )
+        blasfunc('C', transa, transb,
+                 m, n, k, alpha,
+                 clpA, lda,
+                 clpB, ldb,
+                 beta, clpC, ldc
+                 )
 
         actualC = clpC.get().T  # as row-major
 
         self.assertTrue(numpy.allclose(expectedC, actualC))
 
-    def test_chunk_sgemm_A(self):
+    @for_each_dtype_and_blasfunc_pair(_dtype_and_blasfunc_pairs)
+    def test_chunk_gemm_A(self, dtype, blasfunc):
         # create chunk and free to prepare chunk in pool
         pool = clpy.backend.memory.SingleDeviceMemoryPool()
         clpy.backend.memory.set_allocator(pool.malloc)
@@ -694,7 +714,6 @@ class TestBlas3Sgemm(unittest.TestCase):
         pool.free(tmp.buf, pooled_chunk_size, 0)
 
         size = 3
-        dtype = numpy.float32
         wrong_value = numpy.nan
 
         npA = numpy.array([[1, 2, 3], [4, 5, 6], [7, 8, 9]], dtype=dtype)
@@ -731,12 +750,12 @@ class TestBlas3Sgemm(unittest.TestCase):
             clpB, transb)  # as cublas-style
         ldc = clpC.shape[1]
 
-        clblast.sgemm('C', transa, transb,
-                      m, n, k, alpha,
-                      clpA, lda,
-                      clpB, ldb,
-                      beta, clpC, ldc
-                      )
+        blasfunc('C', transa, transb,
+                 m, n, k, alpha,
+                 clpA, lda,
+                 clpB, ldb,
+                 beta, clpC, ldc
+                 )
 
         actualC = clpC.get().T
 
@@ -744,7 +763,8 @@ class TestBlas3Sgemm(unittest.TestCase):
 
         self.assertTrue(numpy.allclose(expectedC, actualC))
 
-    def test_chunk_sgemm_B(self):
+    @for_each_dtype_and_blasfunc_pair(_dtype_and_blasfunc_pairs)
+    def test_chunk_gemm_B(self, dtype, blasfunc):
         # create chunk and free to prepare chunk in pool
         pool = clpy.backend.memory.SingleDeviceMemoryPool()
         clpy.backend.memory.set_allocator(pool.malloc)
@@ -753,7 +773,6 @@ class TestBlas3Sgemm(unittest.TestCase):
         pool.free(tmp.buf, pooled_chunk_size, 0)
 
         size = 3
-        dtype = numpy.float32
         wrong_value = numpy.nan
 
         npA = numpy.array([[1, 2, 3], [4, 5, 6], [7, 8, 9]], dtype=dtype)
@@ -790,12 +809,12 @@ class TestBlas3Sgemm(unittest.TestCase):
             clpB, transb)  # as cublas-style
         ldc = clpC.shape[1]
 
-        clblast.sgemm('C', transa, transb,
-                      m, n, k, alpha,
-                      clpA, lda,
-                      clpB, ldb,
-                      beta, clpC, ldc
-                      )
+        blasfunc('C', transa, transb,
+                 m, n, k, alpha,
+                 clpA, lda,
+                 clpB, ldb,
+                 beta, clpC, ldc
+                 )
 
         actualC = clpC.get().T
 
@@ -803,7 +822,8 @@ class TestBlas3Sgemm(unittest.TestCase):
 
         self.assertTrue(numpy.allclose(expectedC, actualC))
 
-    def test_chunk_sgemm_C(self):
+    @for_each_dtype_and_blasfunc_pair(_dtype_and_blasfunc_pairs)
+    def test_chunk_gemm_C(self, dtype, blasfunc):
         # create chunk and free to prepare chunk in pool
         pool = clpy.backend.memory.SingleDeviceMemoryPool()
         clpy.backend.memory.set_allocator(pool.malloc)
@@ -812,7 +832,6 @@ class TestBlas3Sgemm(unittest.TestCase):
         pool.free(tmp.buf, pooled_chunk_size, 0)
 
         size = 3
-        dtype = numpy.float32
         wrong_value = numpy.nan
 
         npA = numpy.array([[1, 2, 3], [4, 5, 6], [7, 8, 9]], dtype=dtype)
@@ -855,12 +874,12 @@ class TestBlas3Sgemm(unittest.TestCase):
             clpB, transb)  # as cublas-style
         ldc = clpC.shape[1]
 
-        clblast.sgemm('C', transa, transb,
-                      m, n, k, alpha,
-                      clpA, lda,
-                      clpB, ldb,
-                      beta, clpC, ldc
-                      )
+        blasfunc('C', transa, transb,
+                 m, n, k, alpha,
+                 clpA, lda,
+                 clpB, ldb,
+                 beta, clpC, ldc
+                 )
 
         actualC = clpC.get().T
 
@@ -868,13 +887,14 @@ class TestBlas3Sgemm(unittest.TestCase):
 
         self.assertTrue(numpy.allclose(expectedC, actualC))
 
-    def test_strides_transpose_A(self):
+    @for_each_dtype_and_blasfunc_pair(_dtype_and_blasfunc_pairs)
+    def test_strides_transpose_A(self, dtype, blasfunc):
         npA = numpy.array([[1, 2, 3], [4, 5, 6], [7, 8, 9]],
-                          dtype='float32')  # row-major
+                          dtype=dtype)  # row-major
         npB = numpy.array([[10, 11, 12], [13, 14, 15], [
-                          16, 17, 18]], dtype='float32')  # row-major
+                          16, 17, 18]], dtype=dtype)  # row-major
         npC = numpy.array([[19, 20, 21], [22, 23, 24], [
-                          25, 26, 27]], dtype='float32')  # row-major
+                          25, 26, 27]], dtype=dtype)  # row-major
 
         alpha = 1.1
         beta = 2.1
@@ -883,19 +903,16 @@ class TestBlas3Sgemm(unittest.TestCase):
         n = npB.shape[1]
         k = npA.shape[0]
 
-        clpA = clpy.ndarray(npA.shape, dtype=numpy.dtype(
-            'float32'))  # col-major in clpy
+        clpA = clpy.ndarray(npA.shape, dtype=dtype)  # col-major in clpy
         clpA.set(npA)
-        clpB = clpy.ndarray(npB.shape, dtype=numpy.dtype(
-            'float32'))  # col-major in clpy
+        clpB = clpy.ndarray(npB.shape, dtype=dtype)  # col-major in clpy
         clpB.set(npB)
 
         # change A.strides
         clpA = clpA.transpose(1, 0)
         npA = npA.transpose(1, 0)
 
-        clpC = clpy.ndarray(npC.shape, dtype=numpy.dtype(
-            'float32'))  # col-major in clpy
+        clpC = clpy.ndarray(npC.shape, dtype=dtype)  # col-major in clpy
         clpC.set(npC.T)  # transpose C
 
         transa = 0  # A is not transposed in c-style(row-major)
@@ -910,12 +927,12 @@ class TestBlas3Sgemm(unittest.TestCase):
         expectedC = numpy.add(alpha * numpy.dot(npA, npB), beta * npC)
 
         # (A^T x B^T) + C^T in col-major = A x B + C in row-major
-        clblast.sgemm('C', transa, transb,
-                      m, n, k, alpha,
-                      clpA, lda,
-                      clpB, ldb,
-                      beta, clpC, ldc
-                      )
+        blasfunc('C', transa, transb,
+                 m, n, k, alpha,
+                 clpA, lda,
+                 clpB, ldb,
+                 beta, clpC, ldc
+                 )
 
         actualC = clpC.get().T  # as row-major
 
