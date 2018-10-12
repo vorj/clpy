@@ -204,7 +204,7 @@ from clpy.creation.matrix import diagflat  # NOQA
 # -----------------------------------------------------------------------------
 # Array manipulation routines
 # -----------------------------------------------------------------------------
-# from clpy.manipulation.basic import copyto  # NOQA
+from clpy.manipulation.basic import copyto  # NOQA
 
 from clpy.manipulation.shape import ravel  # NOQA
 from clpy.manipulation.shape import reshape  # NOQA
@@ -240,11 +240,11 @@ from clpy.manipulation.split import vsplit  # NOQA
 from clpy.manipulation.tiling import repeat  # NOQA
 from clpy.manipulation.tiling import tile  # NOQA
 
-# from clpy.manipulation.rearrange import flip  # NOQA
-# from clpy.manipulation.rearrange import fliplr  # NOQA
-# from clpy.manipulation.rearrange import flipud  # NOQA
-# from clpy.manipulation.rearrange import roll  # NOQA
-# from clpy.manipulation.rearrange import rot90  # NOQA
+from clpy.manipulation.rearrange import flip  # NOQA
+from clpy.manipulation.rearrange import fliplr  # NOQA
+from clpy.manipulation.rearrange import flipud  # NOQA
+from clpy.manipulation.rearrange import roll  # NOQA
+from clpy.manipulation.rearrange import rot90  # NOQA
 
 # -----------------------------------------------------------------------------
 # Binary operations
@@ -466,7 +466,7 @@ from clpy.core import real  # NOQA
 from clpy.core.fusion import maximum  # NOQA
 # from clpy.core.fusion import minimum  # NOQA
 # from clpy.core.fusion import sign  # NOQA
-# from clpy.core.fusion import sqrt  # NOQA
+from clpy.core.fusion import sqrt  # NOQA
 # from clpy.core.fusion import square  # NOQA
 
 # -----------------------------------------------------------------------------
@@ -503,9 +503,9 @@ from clpy.sorting.search import argmax  # NOQA
 from clpy.statistics.order import nanmax  # NOQA
 from clpy.statistics.order import nanmin  # NOQA
 
-# from clpy.statistics.meanvar import mean  # NOQA
-# from clpy.statistics.meanvar import std  # NOQA
-# from clpy.statistics.meanvar import var  # NOQA
+from clpy.statistics.meanvar import mean  # NOQA
+from clpy.statistics.meanvar import std  # NOQA
+from clpy.statistics.meanvar import var  # NOQA
 
 # from clpy.statistics.histogram import bincount  # NOQA
 

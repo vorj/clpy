@@ -44,6 +44,8 @@ tests/clpy_tests/ext_tests/
 tests/clpy_tests/testing_tests/
 tests/clpy_tests/io_tests/
 tests/clpy_tests/padding_tests/
+tests/clpy_tests/creation_tests/
+tests/clpy_tests/manipulation_tests/
 "
 
 TEST_FILES="
@@ -52,6 +54,7 @@ tests/clpy_tests/core_tests/test_core.py
 tests/clpy_tests/core_tests/test_cupy_aliased_ndarray.py
 tests/clpy_tests/core_tests/test_elementwise.py
 tests/clpy_tests/core_tests/test_flags.py
+tests/clpy_tests/core_tests/test_function.py
 tests/clpy_tests/core_tests/test_internal.py
 tests/clpy_tests/core_tests/test_ndarray.py
 tests/clpy_tests/core_tests/test_ndarray_contiguity.py
@@ -63,22 +66,18 @@ tests/clpy_tests/core_tests/test_ndarray_owndata.py
 tests/clpy_tests/core_tests/test_ndarray_reduction.py
 tests/clpy_tests/core_tests/test_ndarray_unary_op.py
 tests/clpy_tests/core_tests/test_reduction.py
-tests/clpy_tests/creation_tests/test_basic.py
-tests/clpy_tests/creation_tests/test_matrix.py
-tests/clpy_tests/creation_tests/test_ranges.py
+tests/clpy_tests/core_tests/test_userkernel.py
 tests/clpy_tests/indexing_tests/test_insert.py
 tests/clpy_tests/logic_tests/test_comparison.py
 tests/clpy_tests/logic_tests/test_ops.py
-tests/clpy_tests/manipulation_tests/test_dims.py
-tests/clpy_tests/manipulation_tests/test_join.py
-tests/clpy_tests/manipulation_tests/test_kind.py
-tests/clpy_tests/manipulation_tests/test_shape.py
-tests/clpy_tests/manipulation_tests/test_split.py
-tests/clpy_tests/manipulation_tests/test_tiling.py
-tests/clpy_tests/manipulation_tests/test_transpose.py
+tests/clpy_tests/logic_tests/test_type_test.py
 tests/clpy_tests/sorting_tests/test_count.py
+tests/clpy_tests/statics_tests/test_meanvar.py
 tests/clpy_tests/statics_tests/test_order.py
+tests/clpy_tests/statics_tests/test_correlation.py
 "
+
+export CLPY_TEST_GPU_LIMIT=1
 
 ERROR_HAS_OCCURRED=0
 
@@ -95,7 +94,8 @@ done
 for f in $TEST_FILES; do
   pushd $(dirname $f)
   python -m pytest $(basename $f) 2>&1 | tee temporary_log
-  if [[ ${PIPESTATUS[0]} -ne 0 ]]; then
+  status=${PIPESTATUS[0]}
+  if [[ status -ne 0 ]] && [[ status -ne 5 ]]; then
     cat temporary_log >> $ERRORS_FILENAME
     ERROR_HAS_OCCURRED=1
   fi

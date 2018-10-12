@@ -31,7 +31,8 @@ ultima_build_process = subprocess.Popen(
 
 print("building headercvt")
 if subprocess.Popen(
-        'make',
+        'make use_cxx11_abi:={}'
+        .format(1 if is_clang_built_with_cxx11_abi else 0),
         cwd=os.path.join(os.path.dirname(__file__), 'headercvt'),
         shell=True).wait() != 0:
     raise RuntimeError('Building headercvt has been failed.')

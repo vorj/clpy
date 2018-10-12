@@ -4184,12 +4184,11 @@ cpdef ndarray _var(ndarray a, axis=None, dtype=None, out=None, ddof=0,
         items *= shape[ax]
     alpha = 1. / max(items - ddof, 0)
     arrmean = a.mean(axis=axis, dtype=dtype, keepdims=True)
-    raise NotImplementedError("clpy does not support this")
-#    if out is None:
-#        return _var_core(a, arrmean, alpha, axis=axis, keepdims=keepdims)
-#    else:
-#        return _var_core_out(
-#            a, arrmean, alpha, out, axis=axis, keepdims=keepdims)
+    if out is None:
+        return _var_core(a, arrmean, alpha, axis=axis, keepdims=keepdims)
+    else:
+        return _var_core_out(
+            a, arrmean, alpha, out, axis=axis, keepdims=keepdims)
 
 
 cpdef _std(a, axis=None, dtype=None, out=None, ddof=0, keepdims=False):
@@ -4197,15 +4196,15 @@ cpdef _std(a, axis=None, dtype=None, out=None, ddof=0, keepdims=False):
     return sqrt(ret, dtype=dtype, out=out)
 
 
-# cdef _var_core = ReductionKernel(
-#     'S x, T mean, T alpha', 'T out',
-#     '(x - mean) * (x - mean)',
-#     'a + b', 'out = alpha * a', '0', '_var_core')
+cdef _var_core = ReductionKernel(
+    'S x, T mean, T alpha', 'T out',
+    '(x - mean) * (x - mean)',
+    'a + b', 'out = alpha * a', '0', '_var_core')
 
-# cdef _var_core_out = ReductionKernel(
-#     'S x, T mean, T alpha', 'U out',
-#     '(x - mean) * (x - mean)',
-#     'a + b', 'out = alpha * a', '0', '_var_core')
+cdef _var_core_out = ReductionKernel(
+    'S x, T mean, T alpha', 'U out',
+    '(x - mean) * (x - mean)',
+    'a + b', 'out = alpha * a', '0', '_var_core')
 
 # TODO(okuta) needs cast
 cdef _mean = create_reduction_func(
