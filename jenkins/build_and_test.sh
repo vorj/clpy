@@ -68,6 +68,7 @@ tests/clpy_tests/core_tests/test_ndarray_unary_op.py
 tests/clpy_tests/core_tests/test_reduction.py
 tests/clpy_tests/core_tests/test_userkernel.py
 tests/clpy_tests/indexing_tests/test_insert.py
+tests/clpy_tests/linalg_tests/test_product.py
 tests/clpy_tests/logic_tests/test_comparison.py
 tests/clpy_tests/logic_tests/test_ops.py
 tests/clpy_tests/logic_tests/test_type_test.py
