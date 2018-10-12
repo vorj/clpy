@@ -4,7 +4,6 @@ import unittest
 import numpy
 
 import clpy
-from clpy.backend.opencl import blas
 from clpy.core import core
 from clpy.backend.opencl.clblast import clblast
 
