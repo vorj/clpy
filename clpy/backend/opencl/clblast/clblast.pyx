@@ -7,6 +7,21 @@ from clpy.backend.opencl.types cimport cl_command_queue
 from clpy.backend.opencl.types cimport cl_event
 from clpy.backend.opencl.types cimport cl_mem
 
+
+def getCLBlastErrorName(statuscode):
+    if statuscode in CLBLAST_STATUS_CODE:
+        return CLBLAST_STATUS_CODE[statuscode]
+    else:
+        return "Unknown CLBlastStatusCode:" + str(statuscode)
+
+
+class CLBlastRuntimeError(RuntimeError):
+    def __init__(self, statuscode, detail=''):
+        self.statuscode = statuscode
+        name = getCLBlastErrorName(statuscode)
+        super(CLBlastRuntimeError, self).__init__(
+            '%s %s' % (name, detail))
+
 cdef CLBlastLayout translate_str_layout(str_layout) except *:
     if (str_layout == 'R'):
         return CLBlastLayoutRowMajor
@@ -50,6 +65,8 @@ cdef void clblast_sgemm(
     if (status == CLBlastSuccess):
         api.WaitForEvents(1, &event)
         api.ReleaseEvent(event)
+    else:
+        raise CLBlastRuntimeError(statuscode=status)
     return
 
 cpdef sgemm(str_layout, transa, transb,
@@ -102,6 +119,8 @@ cdef void clblast_dgemm(
     if (status == CLBlastSuccess):
         api.WaitForEvents(1, &event)
         api.ReleaseEvent(event)
+    else:
+        raise CLBlastRuntimeError(statuscode=status)
     return
 
 cpdef dgemm(str_layout, transa, transb,
@@ -125,3 +144,64 @@ cpdef dgemm(str_layout, transa, transb,
         <cl_mem>b_buffer, B.data.cl_mem_offset() // B.itemsize, ldb,
         beta,
         <cl_mem>c_buffer, C.data.cl_mem_offset() // C.itemsize, ldc)
+
+CLBLAST_STATUS_CODE = {
+    CLBlastSuccess: "CLBlastSuccess",
+    CLBlastOpenCLCompilerNotAvailable: "CLBlastOpenCLCompilerNotAvailable",
+    CLBlastTempBufferAllocFailure: "CLBlastTempBufferAllocFailure",
+    CLBlastOpenCLOutOfResources: "CLBlastOpenCLOutOfResources",
+    CLBlastOpenCLOutOfHostMemory: "CLBlastOpenCLOutOfHostMemory",
+    CLBlastOpenCLBuildProgramFailure: "CLBlastOpenCLBuildProgramFailure",
+    CLBlastInvalidValue: "CLBlastInvalidValue",
+    CLBlastInvalidCommandQueue: "CLBlastInvalidCommandQueue",
+    CLBlastInvalidMemObject: "CLBlastInvalidMemObject",
+    CLBlastInvalidBinary: "CLBlastInvalidBinary",
+    CLBlastInvalidBuildOptions: "CLBlastInvalidBuildOptions",
+    CLBlastInvalidProgram: "CLBlastInvalidProgram",
+    CLBlastInvalidProgramExecutable: "CLBlastInvalidProgramExecutable",
+    CLBlastInvalidKernelName: "CLBlastInvalidKernelName",
+    CLBlastInvalidKernelDefinition: "CLBlastInvalidKernelDefinition",
+    CLBlastInvalidKernel: "CLBlastInvalidKernel",
+    CLBlastInvalidArgIndex: "CLBlastInvalidArgIndex",
+    CLBlastInvalidArgValue: "CLBlastInvalidArgValue",
+    CLBlastInvalidArgSize: "CLBlastInvalidArgSize",
+    CLBlastInvalidKernelArgs: "CLBlastInvalidKernelArgs",
+    CLBlastInvalidLocalNumDimensions: "CLBlastInvalidLocalNumDimensions",
+    CLBlastInvalidLocalThreadsTotal: "CLBlastInvalidLocalThreadsTotal",
+    CLBlastInvalidLocalThreadsDim: "CLBlastInvalidLocalThreadsDim",
+    CLBlastInvalidGlobalOffset: "CLBlastInvalidGlobalOffset",
+    CLBlastInvalidEventWaitList: "CLBlastInvalidEventWaitList",
+    CLBlastInvalidEvent: "CLBlastInvalidEvent",
+    CLBlastInvalidOperation: "CLBlastInvalidOperation",
+    CLBlastInvalidBufferSize: "CLBlastInvalidBufferSize",
+    CLBlastInvalidGlobalWorkSize: "CLBlastInvalidGlobalWorkSize",
+    CLBlastNotImplemented: "CLBlastNotImplemented",
+    CLBlastInvalidMatrixA: "CLBlastInvalidMatrixA",
+    CLBlastInvalidMatrixB: "CLBlastInvalidMatrixB",
+    CLBlastInvalidMatrixC: "CLBlastInvalidMatrixC",
+    CLBlastInvalidVectorX: "CLBlastInvalidVectorX",
+    CLBlastInvalidVectorY: "CLBlastInvalidVectorY",
+    CLBlastInvalidDimension: "CLBlastInvalidDimension",
+    CLBlastInvalidLeadDimA: "CLBlastInvalidLeadDimA",
+    CLBlastInvalidLeadDimB: "CLBlastInvalidLeadDimB",
+    CLBlastInvalidLeadDimC: "CLBlastInvalidLeadDimC",
+    CLBlastInvalidIncrementX: "CLBlastInvalidIncrementX",
+    CLBlastInvalidIncrementY: "CLBlastInvalidIncrementY",
+    CLBlastInsufficientMemoryA: "CLBlastInsufficientMemoryA",
+    CLBlastInsufficientMemoryB: "CLBlastInsufficientMemoryB",
+    CLBlastInsufficientMemoryC: "CLBlastInsufficientMemoryC",
+    CLBlastInsufficientMemoryX: "CLBlastInsufficientMemoryX",
+    CLBlastInsufficientMemoryY: "CLBlastInsufficientMemoryY",
+    CLBlastInsufficientMemoryTemp: "CLBlastInsufficientMemoryTemp",
+    CLBlastInvalidBatchCount: "CLBlastInvalidBatchCount",
+    CLBlastInvalidOverrideKernel: "CLBlastInvalidOverrideKernel",
+    CLBlastMissingOverrideParameter: "CLBlastMissingOverrideParameter",
+    CLBlastInvalidLocalMemUsage: "CLBlastInvalidLocalMemUsage",
+    CLBlastNoHalfPrecision: "CLBlastNoHalfPrecision",
+    CLBlastNoDoublePrecision: "CLBlastNoDoublePrecision",
+    CLBlastInvalidVectorScalar: "CLBlastInvalidVectorScalar",
+    CLBlastInsufficientMemoryScalar: "CLBlastInsufficientMemoryScalar",
+    CLBlastDatabaseError: "CLBlastDatabaseError",
+    CLBlastUnknownError: "CLBlastUnknownError",
+    CLBlastUnexpectedError: "CLBlastUnexpectedError",
+}
