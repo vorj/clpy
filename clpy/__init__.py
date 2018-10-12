@@ -344,10 +344,10 @@ def base_repr(number, base=2, padding=0):  # NOQA (needed to avoid redefinition 
 # from clpy.linalg.einsum import einsum  # NOQA
 
 from clpy.linalg.product import dot  # NOQA
-# from clpy.linalg.product import inner  # NOQA
-# from clpy.linalg.product import kron  # NOQA
-# from clpy.linalg.product import matmul  # NOQA
-# from clpy.linalg.product import outer  # NOQA
+from clpy.linalg.product import inner  # NOQA
+from clpy.linalg.product import kron  # NOQA
+from clpy.linalg.product import matmul  # NOQA
+from clpy.linalg.product import outer  # NOQA
 from clpy.linalg.product import tensordot  # NOQA
 from clpy.linalg.product import vdot  # NOQA
 
