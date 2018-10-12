@@ -3,10 +3,10 @@ import unittest
 
 import numpy
 
-import functools
 import clpy
 from clpy.backend.opencl.clblast import clblast
 from clpy.core import core
+import functools
 
 
 def for_each_dtype_and_blasfunc_pair(pairs):
@@ -24,10 +24,12 @@ def for_each_dtype_and_blasfunc_pair(pairs):
         return test_func
     return decorator
 
+
 _dtype_and_blasfunc_pairs = [
     ('float32', clblast.sgemm),
     ('float64', clblast.dgemm),
 ]
+
 
 class TestBlas3GEMM(unittest.TestCase):
     """test class of CLBlast BLAS-3 GEMM functions"""
