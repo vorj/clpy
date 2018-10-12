@@ -72,6 +72,11 @@ $ export PATH=/usr/lib/llvm-6.0/bin:${PATH}
 $ export CPLUS_INCLUDE_PATH=/usr/lib/llvm-6.0/include:${CPLUS_INCLUDE_PATH}
 ```
 
+### Install CLBlast
+
+ClPy depends on [CLBlast 1.4.1](https://github.com/CNugteren/CLBlast/releases/tag/1.4.1) or newer.
+Install it and set the paths if needed.
+
 ### Install ClPy
 
 After OpenCL and LLVM/Clang is successfully installed, install ClPy.
