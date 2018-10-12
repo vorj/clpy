@@ -16,7 +16,9 @@ cdef interpret_versionstr(versionstr):
     minor_version = int(match.group(2))
     return (major_version, minor_version)
 
-cdef void check_platform_version(cl_platform_id platform, required_version) except *:
+cdef void check_platform_version(
+        cl_platform_id platform,
+        required_version) except *:
     cdef size_t param_value_size
     api.GetPlatformInfo(
         platform,
