@@ -20,7 +20,7 @@ cimport cython
 from libcpp cimport vector
 
 from clpy.core cimport internal
-cimport clpy.backend.opencl.blas
+cimport clpy.backend.opencl.clblast.clblast
 from clpy.backend cimport function
 # from clpy.backend cimport pinned_memory
 # from clpy.backend cimport runtime
@@ -3747,14 +3747,15 @@ cpdef ndarray tensordot_core(
     a, transa, lda = _mat_to_cublas_contiguous(a, 0)
     b, transb, ldb = _mat_to_cublas_contiguous(b, 1)
     if dtype == 'f':
-        clpy.backend.opencl.blas.sgemm(
+        clpy.backend.opencl.clblast.clblast.sgemm(
+            'C',
             <int>transb, <int>transa, <int>m, <int>n, <int>k, 1,
             b, <int>ldb, a, <int>lda, 0, c, <int>m)
     elif dtype == 'd':
-        raise NotImplementedError("clpy does not support dgemm")
-#        cublas.dgemm(
-#            handle, <int>transb, <int>transa, <int>m, <int>n, <int>k, 1,
-#            b.data.ptr, <int>ldb, a.data.ptr, <int>lda, 0, c.data.ptr, <int>m)
+        clpy.backend.opencl.clblast.clblast.dgemm(
+            'C',
+            <int>transb, <int>transa, <int>m, <int>n, <int>k, 1,
+            b, <int>ldb, a, <int>lda, 0, c, <int>m)
     elif dtype == 'F':
         raise NotImplementedError("clpy does not support cgemm")
 #        cublas.cgemm(

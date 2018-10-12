@@ -243,6 +243,9 @@ cdef void ReleaseKernel(cl_kernel kernel) except *:
 cdef void ReleaseProgram(cl_program program) except *:
     exceptions.check_status(clReleaseProgram(program))
 
+cdef void ReleaseEvent(cl_event memobj) except *:
+    exceptions.check_status(clReleaseEvent(memobj))
+
 cdef void ReleaseMemObject(cl_mem memobj) except *:
     exceptions.check_status(clReleaseMemObject(memobj))
 
@@ -254,6 +257,7 @@ cdef void ReleaseContext(cl_context context) except *:
 
 cdef void WaitForEvents(size_t num_events, cl_event* event_list) except *:
     exceptions.check_status(clWaitForEvents(<cl_uint>num_events, event_list))
+
 
 TRUE = CL_TRUE
 FALSE = CL_FALSE
