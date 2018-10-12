@@ -3,7 +3,9 @@ import clpy.backend.opencl.env
 cimport clpy.backend.opencl.env
 import clpy.backend.opencl.types
 cimport clpy.backend.opencl.types
-from clpy.backend.opencl.types cimport *
+from clpy.backend.opencl.types cimport cl_command_queue
+from clpy.backend.opencl.types cimport cl_event
+from clpy.backend.opencl.types cimport cl_mem
 
 cdef CLBlastLayout translate_str_layout(str_layout) except *:
     if (str_layout == 'R'):
@@ -21,15 +23,19 @@ cdef CLBlastTranspose translate_transpose(trans) except *:
     else:
         raise ValueError("transpose should be n(0) or t(1)")
 
-cdef void clblast_sgemm(CLBlastLayout layout, CLBlastTranspose a_transpose, CLBlastTranspose b_transpose,
-                   size_t m, size_t n, size_t k,
-                   float alpha,
-                   cl_mem a_buffer, size_t a_offset, size_t a_ld,
-                   cl_mem b_buffer, size_t b_offset, size_t b_ld,
-                   float beta,
-                   cl_mem c_buffer, size_t c_offset, size_t c_ld) except *:
+cdef void clblast_sgemm(
+        CLBlastLayout layout,
+        CLBlastTranspose a_transpose,
+        CLBlastTranspose b_transpose,
+        size_t m, size_t n, size_t k,
+        float alpha,
+        cl_mem a_buffer, size_t a_offset, size_t a_ld,
+        cl_mem b_buffer, size_t b_offset, size_t b_ld,
+        float beta,
+        cl_mem c_buffer, size_t c_offset, size_t c_ld) except *:
     cdef cl_event event = NULL
-    cdef cl_command_queue command_queue=clpy.backend.opencl.env.get_command_queue()
+    cdef cl_command_queue\
+        command_queue=clpy.backend.opencl.env.get_command_queue()
 
     cdef CLBlastStatusCode status = CLBlastSgemm(
         layout, a_transpose, b_transpose,
@@ -40,8 +46,7 @@ cdef void clblast_sgemm(CLBlastLayout layout, CLBlastTranspose a_transpose, CLBl
         beta,
         c_buffer, c_offset, c_ld,
         &command_queue,
-        &event
-        )
+        &event)
     if (status == CLBlastSuccess):
         api.WaitForEvents(1, &event)
         api.ReleaseEvent(event)
@@ -52,7 +57,7 @@ cpdef sgemm(str_layout, transa, transb,
             A, lda,
             B, ldb,
             beta,
-	    C, ldc):
+            C, ldc):
     cdef CLBlastLayout layout = translate_str_layout(str_layout)
     cdef CLBlastTranspose a_transpose = translate_transpose(transa)
     cdef CLBlastTranspose b_transpose = translate_transpose(transb)
@@ -70,17 +75,19 @@ cpdef sgemm(str_layout, transa, transb,
         <cl_mem>c_buffer, C.data.cl_mem_offset() // C.itemsize, ldc)
 
 
-
-
-cdef void clblast_dgemm(CLBlastLayout layout, CLBlastTranspose a_transpose, CLBlastTranspose b_transpose,
-                   size_t m, size_t n, size_t k,
-                   double alpha,
-                   cl_mem a_buffer, size_t a_offset, size_t a_ld,
-                   cl_mem b_buffer, size_t b_offset, size_t b_ld,
-                   double beta,
-                   cl_mem c_buffer, size_t c_offset, size_t c_ld) except *:
+cdef void clblast_dgemm(
+        CLBlastLayout layout,
+        CLBlastTranspose a_transpose,
+        CLBlastTranspose b_transpose,
+        size_t m, size_t n, size_t k,
+        double alpha,
+        cl_mem a_buffer, size_t a_offset, size_t a_ld,
+        cl_mem b_buffer, size_t b_offset, size_t b_ld,
+        double beta,
+        cl_mem c_buffer, size_t c_offset, size_t c_ld) except *:
     cdef cl_event event = NULL
-    cdef cl_command_queue command_queue=clpy.backend.opencl.env.get_command_queue()
+    cdef cl_command_queue\
+        command_queue=clpy.backend.opencl.env.get_command_queue()
 
     cdef CLBlastStatusCode status = CLBlastDgemm(
         layout, a_transpose, b_transpose,
@@ -91,8 +98,7 @@ cdef void clblast_dgemm(CLBlastLayout layout, CLBlastTranspose a_transpose, CLBl
         beta,
         c_buffer, c_offset, c_ld,
         &command_queue,
-        &event
-        )
+        &event)
     if (status == CLBlastSuccess):
         api.WaitForEvents(1, &event)
         api.ReleaseEvent(event)
@@ -103,7 +109,7 @@ cpdef dgemm(str_layout, transa, transb,
             A, lda,
             B, ldb,
             beta,
-	    C, ldc):
+            C, ldc):
     cdef CLBlastLayout layout = translate_str_layout(str_layout)
     cdef CLBlastTranspose a_transpose = translate_transpose(transa)
     cdef CLBlastTranspose b_transpose = translate_transpose(transb)

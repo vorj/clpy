@@ -97,4 +97,3 @@ cdef void ReleaseMemObject(cl_mem memobj) except *
 cdef void ReleaseCommandQueue(cl_command_queue command_queue) except *
 cdef void ReleaseContext(cl_context context) except *
 cdef void WaitForEvents(size_t num_events, cl_event* event_list) except *
-

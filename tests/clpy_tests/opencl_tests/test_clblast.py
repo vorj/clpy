@@ -4,8 +4,9 @@ import unittest
 import numpy
 
 import clpy
-from clpy.core import core
 from clpy.backend.opencl.clblast import clblast
+from clpy.core import core
+
 
 class TestBlas3Sgemm(unittest.TestCase):
     """test class of ClPy's BLAS-3 SGEMM function"""
@@ -39,10 +40,10 @@ class TestBlas3Sgemm(unittest.TestCase):
         ldc = clpC.shape[1]
 
         clblast.sgemm('C', transa, transb, m, n, k,
-                   1.0, clpA, lda,
-                   clpB, ldb,
-                   0.0, clpC, ldc
-                   )
+                      1.0, clpA, lda,
+                      clpB, ldb,
+                      0.0, clpC, ldc
+                      )
 
         actualC = clpC.get().T  # as row-major
         expectedC = numpy.dot(npA, npB)  # row-major caluculation
@@ -76,11 +77,11 @@ class TestBlas3Sgemm(unittest.TestCase):
             clpB, transb)  # as cublas-style
         ldc = clpC.shape[1]
 
-        clblast.sgemm('C',transa, transb, m, n, k,
-                   1.0, clpA, lda,
-                   clpB, ldb,
-                   0.0, clpC, ldc
-                   )
+        clblast.sgemm('C', transa, transb, m, n, k,
+                      1.0, clpA, lda,
+                      clpB, ldb,
+                      0.0, clpC, ldc
+                      )
 
         actualC = clpC.get().T  # as row-major
         expectedC = numpy.dot(npA, npB)  # row-major caluculation
@@ -115,11 +116,11 @@ class TestBlas3Sgemm(unittest.TestCase):
             clpB, transb)  # as cublas-style
         ldc = clpC.shape[1]
 
-        clblast.sgemm('C',transa, transb, m, n, k,
-                   1.0, clpA, lda,
-                   clpB, ldb,
-                   0.0, clpC, ldc
-                   )
+        clblast.sgemm('C', transa, transb, m, n, k,
+                      1.0, clpA, lda,
+                      clpB, ldb,
+                      0.0, clpC, ldc
+                      )
 
         actualC = clpC.get().T  # as row-major
         expectedC = numpy.dot(npA, npB)  # row-major caluculation
@@ -158,11 +159,11 @@ class TestBlas3Sgemm(unittest.TestCase):
             clpB, transb)  # as cublas-style
         ldc = clpC.shape[1]
 
-        clblast.sgemm('C',transa, transb, m, n, k,
-                   1.0, clpA, lda,
-                   clpB, ldb,
-                   0.0, clpC, ldc
-                   )
+        clblast.sgemm('C', transa, transb, m, n, k,
+                      1.0, clpA, lda,
+                      clpB, ldb,
+                      0.0, clpC, ldc
+                      )
 
         actualC = clpC.get().T  # as row-major
         expectedC = numpy.dot(npA.T, npB.T)  # row-major caluculation
@@ -199,11 +200,11 @@ class TestBlas3Sgemm(unittest.TestCase):
             clpB, transb)  # as cublas-style
         ldc = clpC.shape[1]
 
-        clblast.sgemm('C',transa, transb, m, n, k,
-                   1.0, clpA, lda,
-                   clpB, ldb,
-                   0.0, clpC, ldc
-                   )
+        clblast.sgemm('C', transa, transb, m, n, k,
+                      1.0, clpA, lda,
+                      clpB, ldb,
+                      0.0, clpC, ldc
+                      )
 
         actualC = clpC.get().T  # as row-major
         expectedC = numpy.dot(npA.T, npB.T)  # row-major caluculation
@@ -240,11 +241,11 @@ class TestBlas3Sgemm(unittest.TestCase):
             clpB, transb)  # as cublas-style
         ldc = clpC.shape[1]
 
-        clblast.sgemm('C',transa, transb, m, n, k,
-                   1.0, clpA, lda,
-                   clpB, ldb,
-                   0.0, clpC, ldc
-                   )
+        clblast.sgemm('C', transa, transb, m, n, k,
+                      1.0, clpA, lda,
+                      clpB, ldb,
+                      0.0, clpC, ldc
+                      )
 
         actualC = clpC.get().T  # as row-major
         expectedC = numpy.dot(npA.T, npB.T)  # row-major caluculation
@@ -282,11 +283,11 @@ class TestBlas3Sgemm(unittest.TestCase):
             clpB, transb)  # as cublas-style
         ldc = clpC.shape[1]
 
-        clblast.sgemm('C',transa, transb, m, n, k,
-                   1.0, clpA, lda,
-                   clpB, ldb,
-                   0.0, clpC, ldc
-                   )
+        clblast.sgemm('C', transa, transb, m, n, k,
+                      1.0, clpA, lda,
+                      clpB, ldb,
+                      0.0, clpC, ldc
+                      )
 
         actualC = clpC.get().T  # as row-major
         expectedC = numpy.dot(npA, npB.T)  # row-major caluculation
@@ -322,11 +323,11 @@ class TestBlas3Sgemm(unittest.TestCase):
             clpB, transb)  # as cublas-style
         ldc = clpC.shape[1]
 
-        clblast.sgemm('C',transa, transb, m, n, k,
-                   1.0, clpA, lda,
-                   clpB, ldb,
-                   0.0, clpC, ldc
-                   )
+        clblast.sgemm('C', transa, transb, m, n, k,
+                      1.0, clpA, lda,
+                      clpB, ldb,
+                      0.0, clpC, ldc
+                      )
 
         actualC = clpC.get().T  # as row-major
         expectedC = numpy.dot(npA, npB.T)  # row-major caluculation
@@ -363,11 +364,11 @@ class TestBlas3Sgemm(unittest.TestCase):
             clpB, transb)  # as cublas-style
         ldc = clpC.shape[1]
 
-        clblast.sgemm('C',transa, transb, m, n, k,
-                   1.0, clpA, lda,
-                   clpB, ldb,
-                   0.0, clpC, ldc
-                   )
+        clblast.sgemm('C', transa, transb, m, n, k,
+                      1.0, clpA, lda,
+                      clpB, ldb,
+                      0.0, clpC, ldc
+                      )
 
         actualC = clpC.get().T  # as row-major
         expectedC = numpy.dot(npA, npB.T)  # row-major caluculation
@@ -405,11 +406,11 @@ class TestBlas3Sgemm(unittest.TestCase):
             clpB, transb)  # as cublas-style
         ldc = clpC.shape[1]
 
-        clblast.sgemm('C',transa, transb, m, n, k,
-                   1.0, clpA, lda,
-                   clpB, ldb,
-                   0.0, clpC, ldc
-                   )
+        clblast.sgemm('C', transa, transb, m, n, k,
+                      1.0, clpA, lda,
+                      clpB, ldb,
+                      0.0, clpC, ldc
+                      )
 
         actualC = clpC.get().T  # as row-major
         expectedC = numpy.dot(npA.T, npB)  # row-major caluculation
@@ -447,11 +448,11 @@ class TestBlas3Sgemm(unittest.TestCase):
             clpB, transb)  # as cublas-style
         ldc = clpC.shape[1]
 
-        clblast.sgemm('C',transa, transb, m, n, k,
-                   1.0, clpA, lda,
-                   clpB, ldb,
-                   0.0, clpC, ldc
-                   )
+        clblast.sgemm('C', transa, transb, m, n, k,
+                      1.0, clpA, lda,
+                      clpB, ldb,
+                      0.0, clpC, ldc
+                      )
 
         actualC = clpC.get().T  # as row-major
         expectedC = numpy.dot(npA.T, npB)  # row-major caluculation
@@ -490,11 +491,11 @@ class TestBlas3Sgemm(unittest.TestCase):
             clpB, transb)  # as cublas-style
         ldc = clpC.shape[1]
 
-        clblast.sgemm('C',transa, transb, m, n, k,
-                   1.0, clpA, lda,
-                   clpB, ldb,
-                   0.0, clpC, ldc
-                   )
+        clblast.sgemm('C', transa, transb, m, n, k,
+                      1.0, clpA, lda,
+                      clpB, ldb,
+                      0.0, clpC, ldc
+                      )
 
         actualC = clpC.get().T  # as row-major
         expectedC = numpy.dot(npA.T, npB)  # row-major caluculation
@@ -517,13 +518,13 @@ class TestBlas3Sgemm(unittest.TestCase):
         n = npB.shape[1]
         k = npA.shape[1]
         with self.assertRaises(ValueError):
-            clblast.sgemm('C',transa='a', transb='t',
-                       m=m, n=n, k=k,
-                       alpha=1.0, A=clpA, lda=k,
-                       B=clpB, ldb=n,
-                       beta=0.0,
-                       C=clpC, ldc=m
-                       )
+            clblast.sgemm('C', transa='a', transb='t',
+                          m=m, n=n, k=k,
+                          alpha=1.0, A=clpA, lda=k,
+                          B=clpB, ldb=n,
+                          beta=0.0,
+                          C=clpC, ldc=m
+                          )
 
     def test_invalid_transb(self):
         npA = numpy.array([[1, 2, 3], [4, 5, 6], [7, 8, 9]], dtype='float32')
@@ -542,13 +543,13 @@ class TestBlas3Sgemm(unittest.TestCase):
         n = npB.shape[1]
         k = npA.shape[1]
         with self.assertRaises(ValueError):
-            clblast.sgemm('C',transa='n', transb='a',
-                       m=m, n=n, k=k,
-                       alpha=1.0, A=clpA, lda=k,
-                       B=clpB, ldb=n,
-                       beta=0.0,
-                       C=clpC, ldc=m
-                       )
+            clblast.sgemm('C', transa='n', transb='a',
+                          m=m, n=n, k=k,
+                          alpha=1.0, A=clpA, lda=k,
+                          B=clpB, ldb=n,
+                          beta=0.0,
+                          C=clpC, ldc=m
+                          )
 
     def test_alpha_matrix_matrix(self):
         npA = numpy.array([[1, 2, 3], [4, 5, 6], [7, 8, 9]],
@@ -581,12 +582,12 @@ class TestBlas3Sgemm(unittest.TestCase):
         ldc = clpC.shape[1]
 
         # alpha * (A^t x B^T) in col-major = alpha * AxB in row major
-        clblast.sgemm('C',transa, transb,
-                   m, n, k, alpha,
-                   clpA, lda,
-                   clpB, ldb,
-                   beta, clpC, ldc
-                   )
+        clblast.sgemm('C', transa, transb,
+                      m, n, k, alpha,
+                      clpA, lda,
+                      clpB, ldb,
+                      beta, clpC, ldc
+                      )
 
         actualC = clpC.get().T  # as row-major
 
@@ -630,12 +631,12 @@ class TestBlas3Sgemm(unittest.TestCase):
         expectedC = numpy.add(numpy.dot(npA, npB), beta * npC)
 
         # (A^T x B^T) + C^T in col-major = A x B + C in row-major
-        clblast.sgemm('C',transa, transb,
-                   m, n, k, alpha,
-                   clpA, lda,
-                   clpB, ldb,
-                   beta, clpC, ldc
-                   )
+        clblast.sgemm('C', transa, transb,
+                      m, n, k, alpha,
+                      clpA, lda,
+                      clpB, ldb,
+                      beta, clpC, ldc
+                      )
 
         actualC = clpC.get().T  # as row-major
 
@@ -673,12 +674,12 @@ class TestBlas3Sgemm(unittest.TestCase):
         ldc = clpC.shape[1]
 
         # alpha * (A^t x B^T) in col-major = alpha * AxB in row major
-        clblast.sgemm('C',transa, transb,
-                   m, n, k, alpha,
-                   clpA, lda,
-                   clpB, ldb,
-                   beta, clpC, ldc
-                   )
+        clblast.sgemm('C', transa, transb,
+                      m, n, k, alpha,
+                      clpA, lda,
+                      clpB, ldb,
+                      beta, clpC, ldc
+                      )
 
         actualC = clpC.get().T  # as row-major
 
@@ -730,12 +731,12 @@ class TestBlas3Sgemm(unittest.TestCase):
             clpB, transb)  # as cublas-style
         ldc = clpC.shape[1]
 
-        clblast.sgemm('C',transa, transb,
-                   m, n, k, alpha,
-                   clpA, lda,
-                   clpB, ldb,
-                   beta, clpC, ldc
-                   )
+        clblast.sgemm('C', transa, transb,
+                      m, n, k, alpha,
+                      clpA, lda,
+                      clpB, ldb,
+                      beta, clpC, ldc
+                      )
 
         actualC = clpC.get().T
 
@@ -789,12 +790,12 @@ class TestBlas3Sgemm(unittest.TestCase):
             clpB, transb)  # as cublas-style
         ldc = clpC.shape[1]
 
-        clblast.sgemm('C',transa, transb,
-                   m, n, k, alpha,
-                   clpA, lda,
-                   clpB, ldb,
-                   beta, clpC, ldc
-                   )
+        clblast.sgemm('C', transa, transb,
+                      m, n, k, alpha,
+                      clpA, lda,
+                      clpB, ldb,
+                      beta, clpC, ldc
+                      )
 
         actualC = clpC.get().T
 
@@ -854,12 +855,12 @@ class TestBlas3Sgemm(unittest.TestCase):
             clpB, transb)  # as cublas-style
         ldc = clpC.shape[1]
 
-        clblast.sgemm('C',transa, transb,
-                   m, n, k, alpha,
-                   clpA, lda,
-                   clpB, ldb,
-                   beta, clpC, ldc
-                   )
+        clblast.sgemm('C', transa, transb,
+                      m, n, k, alpha,
+                      clpA, lda,
+                      clpB, ldb,
+                      beta, clpC, ldc
+                      )
 
         actualC = clpC.get().T
 
@@ -909,17 +910,16 @@ class TestBlas3Sgemm(unittest.TestCase):
         expectedC = numpy.add(alpha * numpy.dot(npA, npB), beta * npC)
 
         # (A^T x B^T) + C^T in col-major = A x B + C in row-major
-        clblast.sgemm('C',transa, transb,
-                   m, n, k, alpha,
-                   clpA, lda,
-                   clpB, ldb,
-                   beta, clpC, ldc
-                   )
+        clblast.sgemm('C', transa, transb,
+                      m, n, k, alpha,
+                      clpA, lda,
+                      clpB, ldb,
+                      beta, clpC, ldc
+                      )
 
         actualC = clpC.get().T  # as row-major
 
         self.assertTrue(numpy.allclose(expectedC, actualC))
-
 
 
 if __name__ == '__main__':

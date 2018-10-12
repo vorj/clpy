@@ -1,5 +1,5 @@
 cdef extern from "clblast_c.h":
-    cdef enum CLBlastStatusCode_ :
+    cdef enum CLBlastStatusCode_:
         CLBlastSuccess,
         CLBlastOpenCLCompilerNotAvailable,
         CLBlastTempBufferAllocFailure,
@@ -70,21 +70,21 @@ cdef extern from "clblast_c.h":
     ctypedef CLBlastTranspose_ CLBlastTranspose
 
 cdef extern from "clblast_c.h":
-    CLBlastStatusCode CLBlastSgemm(const CLBlastLayout, const CLBlastTranspose, const CLBlastTranspose,
-                                   const size_t, const size_t, const size_t,
-                                   const float,
-                                   const cl_mem, const size_t, const size_t,
-                                   const cl_mem, const size_t, const size_t,
-                                   const float,
-                                   cl_mem, const size_t, const size_t,
-                                   cl_command_queue* , cl_event* )
-    CLBlastStatusCode CLBlastDgemm(const CLBlastLayout, const CLBlastTranspose, const CLBlastTranspose,
-                                   const size_t, const size_t, const size_t,
-                                   const double,
-                                   const cl_mem, const size_t, const size_t,
-                                   const cl_mem, const size_t, const size_t,
-                                   const double,
-                                   cl_mem, const size_t, const size_t,
-                                   cl_command_queue* , cl_event* )
-
-
+    CLBlastStatusCode CLBlastSgemm(
+        const CLBlastLayout, const CLBlastTranspose, const CLBlastTranspose,
+        const size_t, const size_t, const size_t,
+        const float,
+        const cl_mem, const size_t, const size_t,
+        const cl_mem, const size_t, const size_t,
+        const float,
+        cl_mem, const size_t, const size_t,
+        cl_command_queue*, cl_event*)
+    CLBlastStatusCode CLBlastDgemm(
+        const CLBlastLayout, const CLBlastTranspose, const CLBlastTranspose,
+        const size_t, const size_t, const size_t,
+        const double,
+        const cl_mem, const size_t, const size_t,
+        const cl_mem, const size_t, const size_t,
+        const double,
+        cl_mem, const size_t, const size_t,
+        cl_command_queue*, cl_event*)

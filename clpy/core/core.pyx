@@ -3747,11 +3747,13 @@ cpdef ndarray tensordot_core(
     a, transa, lda = _mat_to_cublas_contiguous(a, 0)
     b, transb, ldb = _mat_to_cublas_contiguous(b, 1)
     if dtype == 'f':
-        clpy.backend.opencl.clblast.clblast.sgemm('C',
+        clpy.backend.opencl.clblast.clblast.sgemm(
+            'C',
             <int>transb, <int>transa, <int>m, <int>n, <int>k, 1,
             b, <int>ldb, a, <int>lda, 0, c, <int>m)
     elif dtype == 'd':
-        clpy.backend.opencl.clblast.clblast.dgemm('C',
+        clpy.backend.opencl.clblast.clblast.dgemm(
+            'C',
             <int>transb, <int>transa, <int>m, <int>n, <int>k, 1,
             b, <int>ldb, a, <int>lda, 0, c, <int>m)
     elif dtype == 'F':
