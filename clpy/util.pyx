@@ -30,9 +30,8 @@ def memoize(bint for_each_device=False):
         def ret(*args, **kwargs):
             cdef int id = -1
             cdef dict m = memo
-            # TODO(LWisteria): implement me for multi device environment
-#            if for_each_device:
-#                id = device.get_device_id()
+            if for_each_device:
+                id = device.get_device_id()
             arg_key = (id, args, frozenset(kwargs.items()))
             if arg_key in m:
                 result = m[arg_key]
