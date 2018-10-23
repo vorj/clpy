@@ -4,10 +4,10 @@ import numpy
 import six
 
 import clpy
-# from clpy import backend
+from clpy import backend
 from clpy.backend.opencl.exceptions import OpenCLProgramBuildError
 from clpy.backend.ultima.exceptions import UltimaRuntimeError
-# from clpy import core
+from clpy import core
 from clpy import testing
 
 
@@ -16,25 +16,24 @@ class TestElementwise(unittest.TestCase):
 
     _multiprocess_can_split_ = True
 
-    # TODO(LWisteria): Enable below if multi device is implemented
-    # def check_copy(self, dtype, src_id, dst_id):
-    #     with backend.Device(src_id):
-    #         src = testing.shaped_arange((2, 3, 4), dtype=dtype)
-    #     with backend.Device(dst_id):
-    #         dst = clpy.empty((2, 3, 4), dtype=dtype)
-    #     core.elementwise_copy(src, dst)
-    #     testing.assert_allclose(src, dst)
+    def check_copy(self, dtype, src_id, dst_id):
+        with backend.Device(src_id):
+            src = testing.shaped_arange((2, 3, 4), dtype=dtype)
+        with backend.Device(dst_id):
+            dst = clpy.empty((2, 3, 4), dtype=dtype)
+        core.elementwise_copy(src, dst)
+        testing.assert_allclose(src, dst)
 
-    # @testing.for_all_dtypes()
-    # def test_copy(self, dtype):
-    #     device_id = backend.Device().id
-    #     self.check_copy(dtype, device_id, device_id)
+    @testing.for_all_dtypes()
+    def test_copy(self, dtype):
+        device_id = backend.Device().id
+        self.check_copy(dtype, device_id, device_id)
 
-    # @testing.multi_gpu(2)
-    # @testing.for_all_dtypes()
-    # def test_copy_multigpu(self, dtype):
-    #     with self.assertRaises(ValueError):
-    #         self.check_copy(dtype, 0, 1)
+    @testing.multi_gpu(2)
+    @testing.for_all_dtypes()
+    def test_copy_multigpu(self, dtype):
+        with self.assertRaises(ValueError):
+            self.check_copy(dtype, 0, 1)
 
     @testing.for_orders('CFAK')
     @testing.for_all_dtypes()
