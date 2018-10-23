@@ -135,7 +135,7 @@ cpdef list _preprocess_args(args):
     - Converts Python scalars into NumPy scalars
     """
     cdef list ret = []
-#    cdef int dev_id = device.get_device_id()
+    cdef int dev_id = device.get_device_id()
     cdef type typ
 
     for arg in args:

@@ -8,9 +8,11 @@ import six
 # from clpy.backend cimport cusparse
 # from clpy.backend cimport runtime
 
+cdef int current_device_id=0
+
 cpdef int get_device_id() except *:
-    return 0  # TODO(LWisteria): Always zero until implement multi device
-#    return runtime.getDevice()
+    global current_device_id
+    return current_device_id
 
 
 cdef dict _cublas_handles = {}
@@ -41,9 +43,9 @@ cpdef get_cusparse_handle():
 
 cdef class Device:
 
-    """Object that represents a CUDA device.
+    """Object that represents a openCL device.
 
-    This class provides some basic manipulations on CUDA devices.
+    This class provides some basic manipulations on openCL devices.
 
     It supports the context protocol. For example, the following code is an
     example of temporarily switching the current device::
@@ -77,19 +79,18 @@ cdef class Device:
         return self.id
 
     def __enter__(self):
-        # TODO(LWisteria): Nothing to do until implement multi device
-        # cdef int id = get_device_id()
-        # self._device_stack.append(id)
-        # if self.id != id:
-        #     self.use()
+        cdef int id = get_device_id()
+        self._device_stack.append(id)
+        if self.id != id:
+            self.use()
         return self
 
     def __exit__(self, *args):
-        pass  # TODO(LWisteria): Nothing to do until implement multi device
-        # runtime.setDevice(self._device_stack.pop())
+        global current_device_id
+        current_device_id = self._device_stack.pop()
 
     def __repr__(self):
-        return '<CUDA Device %d>' % self.id
+        return '<openCL Device %d>' % self.id
 
     cpdef use(self):
         """Makes this device current.
@@ -97,8 +98,8 @@ cdef class Device:
         If you want to switch a device temporarily, use the *with* statement.
 
         """
-        pass  # TODO(LWisteria): Nothing to do until implement multi device
-        # runtime.setDevice(self.id)
+        global current_device_id
+        current_device_id = self.id
 
     cpdef synchronize(self):
         """Synchronizes the current thread to the device."""
