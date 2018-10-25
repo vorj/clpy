@@ -6,6 +6,7 @@ cimport clpy.backend.opencl.types
 from clpy.backend.opencl.types cimport cl_command_queue
 from clpy.backend.opencl.types cimport cl_event
 from clpy.backend.opencl.types cimport cl_mem
+from clpy.backend.opencl.exceptions import OpenCLRuntimeError
 
 
 def getCLBlastErrorName(statuscode):
@@ -195,8 +196,12 @@ cdef void clblast_strsm(
         &command_queue,
         &event)
     if (status == CLBlastSuccess):
-        api.WaitForEvents(1, &event)
-        api.ReleaseEvent(event)
+        try:
+            api.WaitForEvents(1, &event)
+        except OpenCLRuntimeError:
+            pass
+        else:
+            api.ReleaseEvent(event)
     else:
         raise CLBlastRuntimeError(statuscode=status)
     return
