@@ -225,7 +225,6 @@ cpdef strsm(str_layout,
         <cl_mem>b_buffer, B.data.cl_mem_offset() // B.itemsize, ldb)
 
 
-
 CLBLAST_STATUS_CODE = {
     CLBlastSuccess: "CLBlastSuccess",
     CLBlastOpenCLCompilerNotAvailable: "CLBlastOpenCLCompilerNotAvailable",

@@ -945,6 +945,7 @@ TRSM_pairs = [
     ('float32', clblast.strsm)
 ]
 
+
 class TestBlas3TRSM(unittest.TestCase):
     """test class of CLBlast BLAS-3 TRSM functions"""
 
