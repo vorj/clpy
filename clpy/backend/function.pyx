@@ -114,12 +114,16 @@ cdef void _launch(clpy.backend.opencl.types.cl_kernel kernel, global_work_size,
     cdef size_t gws[3]
     for i in range(global_dim):
         gws[i] = global_work_size[i]
+    for i in range(global_dim+1, 3):
+        gws[i] = 1
 
-    # local_work_size is a python list with the size either 0 or 1.
-    cdef size_t lws[1]
+    cdef size_t lws[3]
     cdef size_t* lws_ptr
-    if len(local_work_size) > 0:
-        lws[0] = local_work_size[0]
+    if local_dim > 0:
+        for i in range(local_dim):
+            lws[i] = local_work_size[i]
+        for i in range(local_dim+1, 3):
+            lws[i] = 1
         lws_ptr = &lws[0]
     else:
         lws_ptr = <size_t*>NULL
@@ -144,17 +148,16 @@ cdef class Function:
         self.kernel = clpy.backend.opencl.api.CreateKernel(
             module.program, funcname.encode('utf-8'))
 
-    def __call__(self, tuple grid, tuple block, args, size_t shared_mem=0,
+    def __call__(self, tuple global_work_size, tuple local_work_size, args, size_t local_mem=0,
                  stream=None):
-        raise NotImplementedError("clpy does not support this")
-#        grid = (grid + (1, 1))[:3]
-#        block = (block + (1, 1))[:3]
-#        s = _get_stream(stream)
-#        _launch(
-#            self.ptr,
-#            max(1, grid[0]), max(1, grid[1]), max(1, grid[2]),
-#            max(1, block[0]), max(1, block[1]), max(1, block[2]),
-#            args, shared_mem, s)
+        global_work_size = (global_work_size + (1, 1))[:3]
+        local_work_size = (local_work_size + (1, 1))[:3]
+        # s = _get_stream(stream)
+        if stream is not None:
+            raise NotImplementedError("clpy does not support CUDA stream")
+        gws_3d = [max(1, global_work_size[0]), max(1, global_work_size[1]), max(1, global_work_size[2])]
+        lws_3d = [max(1, local_work_size[0]), max(1, local_work_size[1]), max(1, local_work_size[2])]
+        _launch(self.kernel, gws_3d, lws_3d, args, local_mem)
 
     cpdef linear_launch(self, size_t size, args, size_t local_mem=0,
                         size_t local_size=0):

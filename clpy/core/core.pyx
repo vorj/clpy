@@ -4224,7 +4224,7 @@ cdef _mean = create_reduction_func(
 
 @util.memoize(for_each_device=True)
 def _inclusive_scan_kernel(dtype, block_size):
-    """return Prefix Sum(Scan) cuda kernel
+    """return Prefix Sum(Scan) OpenCL kernel
 
     e.g
     if blocksize * 2 >= len(src)
@@ -4247,41 +4247,43 @@ def _inclusive_scan_kernel(dtype, block_size):
     name = "inclusive_scan_kernel"
     dtype = _get_typename(dtype)
     source = string.Template("""
-    extern "C" __global__ void ${name}(const CArray<${dtype}, 1> src,
-        CArray<${dtype}, 1> dst){
-        long long n = src.size();
-        extern __shared__ ${dtype} temp[];
-        unsigned int thid = threadIdx.x;
-        unsigned int block = 2 * blockIdx.x * blockDim.x;
+    __kernel void ${name}(
+            CArray<${dtype}, 1> src,
+            CArray<${dtype}, 1> dst
+            ){
+        size_t n = src.size();
+        __local ${dtype} temp[${block_size}*2];
+        size_t thid = get_local_id(0);
+        size_t block = 2 * get_group_id(0) * get_local_size(0);
 
-        unsigned int idx0 = thid + block;
-        unsigned int idx1 = thid + blockDim.x + block;
+        size_t idx0 = thid + block;
+        size_t idx1 = thid + get_local_size(0) + block;
 
         temp[thid] = (idx0 < n) ? src[idx0] : (${dtype})0;
-        temp[thid + blockDim.x] = (idx1 < n) ? src[idx1] : (${dtype})0;
-        __syncthreads();
+        temp[thid + get_local_size(0)] = (idx1 < n) ? src[idx1] : (${dtype})0;
+        barrier(CLK_LOCAL_MEM_FENCE);
 
         for(int i = 1; i <= ${block_size}; i <<= 1){
-            int index = (threadIdx.x + 1) * i * 2 - 1;
+            int index = (get_local_id(0) + 1) * i * 2 - 1;
             if (index < (${block_size} << 1)){
                 temp[index] = temp[index] + temp[index - i];
             }
-            __syncthreads();
+            barrier(CLK_LOCAL_MEM_FENCE);
         }
 
         for(int i = ${block_size} >> 1; i > 0; i >>= 1){
-            int index = (threadIdx.x + 1) * i * 2 - 1;
+            int index = (get_local_id(0) + 1) * i * 2 - 1;
             if(index + i < (${block_size} << 1)){
                 temp[index + i] = temp[index + i] + temp[index];
             }
-            __syncthreads();
+            barrier(CLK_LOCAL_MEM_FENCE);
         }
 
         if(idx0 < n){
             dst[idx0] = temp[thid];
         }
         if(idx1 < n){
-            dst[idx1] = temp[thid + blockDim.x];
+            dst[idx1] = temp[thid + get_local_size(0)];
         }
     }
     """).substitute(name=name, dtype=dtype, block_size=block_size)
@@ -4294,11 +4296,13 @@ def _add_scan_blocked_sum_kernel(dtype):
     name = "add_scan_blocked_sum_kernel"
     dtype = _get_typename(dtype)
     source = string.Template("""
-    extern "C" __global__ void ${name}(CArray<${dtype}, 1> src_dst){
-        long long n = src_dst.size();
-        unsigned int idxBase = (blockDim.x + 1) * (blockIdx.x + 1);
-        unsigned int idxAdded = idxBase + threadIdx.x;
-        unsigned int idxAdd = idxBase - 1;
+    __kernel void ${name}(
+            CArray<${dtype}, 1> src_dst
+            ){
+        size_t n = src_dst.size();
+        size_t idxBase = (get_local_size(0) + 1) * (get_group_id(0) + 1);
+        size_t idxAdded = idxBase + get_local_id(0);
+        size_t idxAdd = idxBase - 1;
 
         if(idxAdded < n){
             src_dst[idxAdded] += src_dst[idxAdd];
@@ -4382,7 +4386,7 @@ cpdef ndarray scan(ndarray a, ndarray out=None):
     if a.ndim != 1:
         raise TypeError("Input array should be 1D array.")
 
-    block_size = 256
+    block_size = 128
 
     if out is None:
         out = ndarray(a.shape, dtype=a.dtype)
@@ -4391,16 +4395,18 @@ cpdef ndarray scan(ndarray a, ndarray out=None):
             raise ValueError("Provided out is the wrong size")
 
     kern_scan = _inclusive_scan_kernel(a.dtype, block_size)
-    kern_scan(grid=((a.size - 1) // (2 * block_size) + 1,),
-              block=(block_size,),
+    scan_workgroup_size = block_size
+    kern_scan(global_work_size=(((a.size - 1) // (2 * block_size) + 1) * scan_workgroup_size,),
+              local_work_size=(scan_workgroup_size,),
               args=(a, out),
-              shared_mem=a.itemsize * block_size * 2)
+              local_mem=a.itemsize * block_size * 2)
 
     if (a.size - 1) // (block_size * 2) > 0:
         blocked_sum = out[block_size * 2 - 1:None:block_size * 2]
         scan(blocked_sum, blocked_sum)
         kern_add = _add_scan_blocked_sum_kernel(out.dtype)
-        kern_add(grid=((a.size - 1) // (2 * block_size),),
-                 block=(2 * block_size - 1,),
+        add_workgroup_size = 2 * block_size - 1
+        kern_add(global_work_size=(((a.size - 1) // (2 * block_size)) * add_workgroup_size,),
+                 local_work_size=(add_workgroup_size,),
                  args=(out,))
     return out

@@ -28,6 +28,7 @@ class TestScan(unittest.TestCase):
             a = clpy.zeros((2, 2))
             clpy.core.core.scan(a)
 
+    '''
     @testing.multi_gpu(2)
     def test_multi_gpu(self):
         with backend.Device(0):
@@ -36,6 +37,7 @@ class TestScan(unittest.TestCase):
         with backend.Device(1):
             a = clpy.zeros((10,))
             clpy.core.core.scan(a)
+    '''
 
     @testing.for_all_dtypes()
     def test_scan_out(self, dtype):
