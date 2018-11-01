@@ -4248,7 +4248,7 @@ def _inclusive_scan_kernel(dtype, block_size):
     dtype = _get_typename(dtype)
     source = string.Template("""
     __kernel void ${name}(
-            CArray<${dtype}, 1> src,
+            const CArray<${dtype}, 1> src,
             CArray<${dtype}, 1> dst
             ){
         size_t n = src.size();
