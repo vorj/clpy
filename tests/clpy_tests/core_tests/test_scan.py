@@ -3,7 +3,7 @@
 import unittest
 
 import clpy
-from clpy import backend
+# from clpy import backend
 from clpy import testing
 
 

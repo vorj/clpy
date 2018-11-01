@@ -148,15 +148,27 @@ cdef class Function:
         self.kernel = clpy.backend.opencl.api.CreateKernel(
             module.program, funcname.encode('utf-8'))
 
-    def __call__(self, tuple global_work_size, tuple local_work_size, args, size_t local_mem=0,
+    def __call__(self,
+                 tuple global_work_size,
+                 tuple local_work_size,
+                 args,
+                 size_t local_mem=0,
                  stream=None):
         global_work_size = (global_work_size + (1, 1))[:3]
         local_work_size = (local_work_size + (1, 1))[:3]
         # s = _get_stream(stream)
         if stream is not None:
             raise NotImplementedError("clpy does not support CUDA stream")
-        gws_3d = [max(1, global_work_size[0]), max(1, global_work_size[1]), max(1, global_work_size[2])]
-        lws_3d = [max(1, local_work_size[0]), max(1, local_work_size[1]), max(1, local_work_size[2])]
+        gws_3d = [
+            max(1, global_work_size[0]),
+            max(1, global_work_size[1]),
+            max(1, global_work_size[2])
+        ]
+        lws_3d = [
+            max(1, local_work_size[0]),
+            max(1, local_work_size[1]),
+            max(1, local_work_size[2])
+        ]
         _launch(self.kernel, gws_3d, lws_3d, args, local_mem)
 
     cpdef linear_launch(self, size_t size, args, size_t local_mem=0,
