@@ -4251,13 +4251,13 @@ def _inclusive_scan_kernel(dtype, block_size):
             const CArray<${dtype}, 1> src,
             CArray<${dtype}, 1> dst
             ){
-        size_t n = src.size();
+        const size_t n = src.size();
         __local ${dtype} temp[${block_size}*2];
-        size_t thid = get_local_id(0);
-        size_t block = 2 * get_group_id(0) * get_local_size(0);
+        const size_t thid = get_local_id(0);
+        const size_t block = 2 * get_group_id(0) * get_local_size(0);
 
-        size_t idx0 = thid + block;
-        size_t idx1 = thid + get_local_size(0) + block;
+        const size_t idx0 = thid + block;
+        const size_t idx1 = thid + get_local_size(0) + block;
 
         temp[thid] = (idx0 < n) ? src[idx0] : (${dtype})0;
         temp[thid + get_local_size(0)] = (idx1 < n) ? src[idx1] : (${dtype})0;
@@ -4299,10 +4299,10 @@ def _add_scan_blocked_sum_kernel(dtype):
     __kernel void ${name}(
             CArray<${dtype}, 1> src_dst
             ){
-        size_t n = src_dst.size();
-        size_t idxBase = (get_local_size(0) + 1) * (get_group_id(0) + 1);
-        size_t idxAdded = idxBase + get_local_id(0);
-        size_t idxAdd = idxBase - 1;
+        const size_t n = src_dst.size();
+        const size_t idxBase = (get_local_size(0) + 1) * (get_group_id(0) + 1);
+        const size_t idxAdded = idxBase + get_local_id(0);
+        const size_t idxAdd = idxBase - 1;
 
         if(idxAdded < n){
             src_dst[idxAdded] += src_dst[idxAdd];
