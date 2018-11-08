@@ -68,6 +68,18 @@ cdef extern from "clblast_c.h":
         CLBlastTransposeYes
         CLBlastTransposeConjugate
     ctypedef CLBlastTranspose_ CLBlastTranspose
+    cdef enum CLBlastSide_:
+        CLBlastSideLeft,
+        CLBlastSideRight
+    ctypedef CLBlastSide_ CLBlastSide
+    cdef enum CLBlastDiagonal_:
+        CLBlastDiagonalNonUnit,
+        CLBlastDiagonalUnit
+    ctypedef CLBlastDiagonal_ CLBlastDiagonal
+    cdef enum CLBlastTriangle_:
+        CLBlastTriangleUpper,
+        CLBlastTriangleLower
+    ctypedef CLBlastTriangle_ CLBlastTriangle
 
 cdef extern from "clblast_c.h":
     CLBlastStatusCode CLBlastSgemm(
@@ -86,5 +98,16 @@ cdef extern from "clblast_c.h":
         const cl_mem, const size_t, const size_t,
         const cl_mem, const size_t, const size_t,
         const double,
+        cl_mem, const size_t, const size_t,
+        cl_command_queue*, cl_event*)
+    CLBlastStatusCode CLBlastStrsm(
+        const CLBlastLayout,
+        const CLBlastSide,
+        const CLBlastTriangle,
+        const CLBlastTranspose,
+        const CLBlastDiagonal,
+        const size_t, const size_t,
+        const float,
+        const cl_mem, const size_t, const size_t,
         cl_mem, const size_t, const size_t,
         cl_command_queue*, cl_event*)

@@ -25,7 +25,7 @@ def for_each_dtype_and_blasfunc_pair(pairs):
     return decorator
 
 
-_dtype_and_blasfunc_pairs = [
+GEMM_pairs = [
     ('float32', clblast.sgemm),
     ('float64', clblast.dgemm),
 ]
@@ -34,7 +34,7 @@ _dtype_and_blasfunc_pairs = [
 class TestBlas3GEMM(unittest.TestCase):
     """test class of CLBlast BLAS-3 GEMM functions"""
 
-    @for_each_dtype_and_blasfunc_pair(_dtype_and_blasfunc_pairs)
+    @for_each_dtype_and_blasfunc_pair(GEMM_pairs)
     def test_row_matrix_row_matrix(self, dtype, blasfunc):
         npA = numpy.array([
             [1, 2, 3],
@@ -72,7 +72,7 @@ class TestBlas3GEMM(unittest.TestCase):
         expectedC = numpy.dot(npA, npB)  # row-major caluculation
         self.assertTrue(numpy.allclose(expectedC, actualC))
 
-    @for_each_dtype_and_blasfunc_pair(_dtype_and_blasfunc_pairs)
+    @for_each_dtype_and_blasfunc_pair(GEMM_pairs)
     def test_row_matrix_row_vector(self, dtype, blasfunc):
         npA = numpy.array([
             [1, 2],
@@ -111,7 +111,7 @@ class TestBlas3GEMM(unittest.TestCase):
         self.assertTrue(numpy.allclose(expectedC, actualC))
         m = npA.shape[0]  # op(A) rows = (A in row-major) rows = C rows
 
-    @for_each_dtype_and_blasfunc_pair(_dtype_and_blasfunc_pairs)
+    @for_each_dtype_and_blasfunc_pair(GEMM_pairs)
     def test_row_vector_row_matrix(self, dtype, blasfunc):
         npA = numpy.array([
             [10, 13, 16]
@@ -149,7 +149,7 @@ class TestBlas3GEMM(unittest.TestCase):
         expectedC = numpy.dot(npA, npB)  # row-major caluculation
         self.assertTrue(numpy.allclose(expectedC, actualC))
 
-    @for_each_dtype_and_blasfunc_pair(_dtype_and_blasfunc_pairs)
+    @for_each_dtype_and_blasfunc_pair(GEMM_pairs)
     def test_column_matrix_column_matrix(self, dtype, blasfunc):
         npA = numpy.array([
             [1, 2, 3],
@@ -192,7 +192,7 @@ class TestBlas3GEMM(unittest.TestCase):
         expectedC = numpy.dot(npA.T, npB.T)  # row-major caluculation
         self.assertTrue(numpy.allclose(expectedC, actualC))
 
-    @for_each_dtype_and_blasfunc_pair(_dtype_and_blasfunc_pairs)
+    @for_each_dtype_and_blasfunc_pair(GEMM_pairs)
     def test_column_matrix_column_vector(self, dtype, blasfunc):
         npA = numpy.array([
             [1, 2, 3],
@@ -233,7 +233,7 @@ class TestBlas3GEMM(unittest.TestCase):
         expectedC = numpy.dot(npA.T, npB.T)  # row-major caluculation
         self.assertTrue(numpy.allclose(expectedC, actualC))
 
-    @for_each_dtype_and_blasfunc_pair(_dtype_and_blasfunc_pairs)
+    @for_each_dtype_and_blasfunc_pair(GEMM_pairs)
     def test_column_vector_column_matrix(self, dtype, blasfunc):
         npA = numpy.array([
             [1],
@@ -274,7 +274,7 @@ class TestBlas3GEMM(unittest.TestCase):
         expectedC = numpy.dot(npA.T, npB.T)  # row-major caluculation
         self.assertTrue(numpy.allclose(expectedC, actualC))
 
-    @for_each_dtype_and_blasfunc_pair(_dtype_and_blasfunc_pairs)
+    @for_each_dtype_and_blasfunc_pair(GEMM_pairs)
     def test_row_matrix_column_matrix(self, dtype, blasfunc):
         npA = numpy.array([
             [1, 2],
@@ -316,7 +316,7 @@ class TestBlas3GEMM(unittest.TestCase):
         expectedC = numpy.dot(npA, npB.T)  # row-major caluculation
         self.assertTrue(numpy.allclose(expectedC, actualC))
 
-    @for_each_dtype_and_blasfunc_pair(_dtype_and_blasfunc_pairs)
+    @for_each_dtype_and_blasfunc_pair(GEMM_pairs)
     def test_row_matrix_column_vector(self, dtype, blasfunc):
         npA = numpy.array([
             [1, 2],
@@ -356,7 +356,7 @@ class TestBlas3GEMM(unittest.TestCase):
         expectedC = numpy.dot(npA, npB.T)  # row-major caluculation
         self.assertTrue(numpy.allclose(expectedC, actualC))
 
-    @for_each_dtype_and_blasfunc_pair(_dtype_and_blasfunc_pairs)
+    @for_each_dtype_and_blasfunc_pair(GEMM_pairs)
     def test_row_vector_column_matrix(self, dtype, blasfunc):
         npA = numpy.array([
             [1, 2]], dtype=dtype)  # row-major
@@ -397,7 +397,7 @@ class TestBlas3GEMM(unittest.TestCase):
         expectedC = numpy.dot(npA, npB.T)  # row-major caluculation
         self.assertTrue(numpy.allclose(expectedC, actualC))
 
-    @for_each_dtype_and_blasfunc_pair(_dtype_and_blasfunc_pairs)
+    @for_each_dtype_and_blasfunc_pair(GEMM_pairs)
     def test_column_matrix_row_matrix(self, dtype, blasfunc):
         npA = numpy.array([
             [1, 2, 3],
@@ -439,7 +439,7 @@ class TestBlas3GEMM(unittest.TestCase):
         expectedC = numpy.dot(npA.T, npB)  # row-major caluculation
         self.assertTrue(numpy.allclose(expectedC, actualC))
 
-    @for_each_dtype_and_blasfunc_pair(_dtype_and_blasfunc_pairs)
+    @for_each_dtype_and_blasfunc_pair(GEMM_pairs)
     def test_column_matrix_row_vector(self, dtype, blasfunc):
         npA = numpy.array([
             [1, 2, 3],
@@ -481,7 +481,7 @@ class TestBlas3GEMM(unittest.TestCase):
         expectedC = numpy.dot(npA.T, npB)  # row-major caluculation
         self.assertTrue(numpy.allclose(expectedC, actualC))
 
-    @for_each_dtype_and_blasfunc_pair(_dtype_and_blasfunc_pairs)
+    @for_each_dtype_and_blasfunc_pair(GEMM_pairs)
     def test_column_vector_row_matrix(self, dtype, blasfunc):
         npA = numpy.array([
             [1],
@@ -524,7 +524,7 @@ class TestBlas3GEMM(unittest.TestCase):
         expectedC = numpy.dot(npA.T, npB)  # row-major caluculation
         self.assertTrue(numpy.allclose(expectedC, actualC))
 
-    @for_each_dtype_and_blasfunc_pair(_dtype_and_blasfunc_pairs)
+    @for_each_dtype_and_blasfunc_pair(GEMM_pairs)
     def test_invalid_transa(self, dtype, blasfunc):
         npA = numpy.array([[1, 2, 3], [4, 5, 6], [7, 8, 9]], dtype=dtype)
         npB = numpy.array([[10, 11, 12], [13, 14, 15], [
@@ -550,7 +550,7 @@ class TestBlas3GEMM(unittest.TestCase):
                      C=clpC, ldc=m
                      )
 
-    @for_each_dtype_and_blasfunc_pair(_dtype_and_blasfunc_pairs)
+    @for_each_dtype_and_blasfunc_pair(GEMM_pairs)
     def test_invalid_transb(self, dtype, blasfunc):
         npA = numpy.array([[1, 2, 3], [4, 5, 6], [7, 8, 9]], dtype=dtype)
         npB = numpy.array([[10, 11, 12], [13, 14, 15], [
@@ -576,7 +576,7 @@ class TestBlas3GEMM(unittest.TestCase):
                      C=clpC, ldc=m
                      )
 
-    @for_each_dtype_and_blasfunc_pair(_dtype_and_blasfunc_pairs)
+    @for_each_dtype_and_blasfunc_pair(GEMM_pairs)
     def test_alpha_matrix_matrix(self, dtype, blasfunc):
         npA = numpy.array([[1, 2, 3], [4, 5, 6], [7, 8, 9]],
                           dtype=dtype)  # row-major
@@ -617,7 +617,7 @@ class TestBlas3GEMM(unittest.TestCase):
 
         self.assertTrue(numpy.allclose(expectedC, actualC))
 
-    @for_each_dtype_and_blasfunc_pair(_dtype_and_blasfunc_pairs)
+    @for_each_dtype_and_blasfunc_pair(GEMM_pairs)
     def test_beta_matrix_matrix(self, dtype, blasfunc):
         npA = numpy.array([[1, 2, 3], [4, 5, 6], [7, 8, 9]],
                           dtype=dtype)  # row-major
@@ -664,7 +664,7 @@ class TestBlas3GEMM(unittest.TestCase):
 
         self.assertTrue(numpy.allclose(expectedC, actualC))
 
-    @for_each_dtype_and_blasfunc_pair(_dtype_and_blasfunc_pairs)
+    @for_each_dtype_and_blasfunc_pair(GEMM_pairs)
     def test_beta_0_matrix_matrix(self, dtype, blasfunc):
         npA = numpy.array([[1, 2, 3], [4, 5, 6], [7, 8, 9]],
                           dtype=dtype)  # row-major
@@ -706,7 +706,7 @@ class TestBlas3GEMM(unittest.TestCase):
 
         self.assertTrue(numpy.allclose(expectedC, actualC))
 
-    @for_each_dtype_and_blasfunc_pair(_dtype_and_blasfunc_pairs)
+    @for_each_dtype_and_blasfunc_pair(GEMM_pairs)
     def test_chunk_gemm_A(self, dtype, blasfunc):
         # create chunk and free to prepare chunk in pool
         pool = clpy.backend.memory.SingleDeviceMemoryPool()
@@ -765,7 +765,7 @@ class TestBlas3GEMM(unittest.TestCase):
 
         self.assertTrue(numpy.allclose(expectedC, actualC))
 
-    @for_each_dtype_and_blasfunc_pair(_dtype_and_blasfunc_pairs)
+    @for_each_dtype_and_blasfunc_pair(GEMM_pairs)
     def test_chunk_gemm_B(self, dtype, blasfunc):
         # create chunk and free to prepare chunk in pool
         pool = clpy.backend.memory.SingleDeviceMemoryPool()
@@ -824,7 +824,7 @@ class TestBlas3GEMM(unittest.TestCase):
 
         self.assertTrue(numpy.allclose(expectedC, actualC))
 
-    @for_each_dtype_and_blasfunc_pair(_dtype_and_blasfunc_pairs)
+    @for_each_dtype_and_blasfunc_pair(GEMM_pairs)
     def test_chunk_gemm_C(self, dtype, blasfunc):
         # create chunk and free to prepare chunk in pool
         pool = clpy.backend.memory.SingleDeviceMemoryPool()
@@ -889,7 +889,7 @@ class TestBlas3GEMM(unittest.TestCase):
 
         self.assertTrue(numpy.allclose(expectedC, actualC))
 
-    @for_each_dtype_and_blasfunc_pair(_dtype_and_blasfunc_pairs)
+    @for_each_dtype_and_blasfunc_pair(GEMM_pairs)
     def test_strides_transpose_A(self, dtype, blasfunc):
         npA = numpy.array([[1, 2, 3], [4, 5, 6], [7, 8, 9]],
                           dtype=dtype)  # row-major
@@ -939,6 +939,49 @@ class TestBlas3GEMM(unittest.TestCase):
         actualC = clpC.get().T  # as row-major
 
         self.assertTrue(numpy.allclose(expectedC, actualC))
+
+
+TRSM_pairs = [
+    ('float32', clblast.strsm)
+]
+
+
+class TestBlas3TRSM(unittest.TestCase):
+    """test class of CLBlast BLAS-3 TRSM functions"""
+
+    @for_each_dtype_and_blasfunc_pair(TRSM_pairs)
+    def test_strsm_works(self, dtype, blasfunc):
+        npA = numpy.array([
+            [1, 2, 3],
+            [4, 5, 6],
+            [7, 8, 9]], dtype=dtype)
+        npB = numpy.array([
+            [10, 11, 12],
+            [13, 14, 15],
+            [16, 17, 18]], dtype=dtype)
+
+        m = npA.shape[0]
+        n = npA.shape[1]
+
+        clpA = clpy.ndarray(npA.shape, dtype=dtype)
+        clpA.set(npA)
+        clpB = clpy.ndarray(npB.shape, dtype=dtype)
+        clpB.set(npB)
+
+        alpha = 1.0
+
+        layout = 'R'
+        side = 'L'
+        triangle = 'U'
+        transa = 'N'
+        diagonal = 'N'
+
+        blasfunc(layout, side, triangle, transa, diagonal,
+                 m, n, alpha, clpA, n, clpB, n)
+
+        actualB = clpB.get()
+        expectedB = numpy.dot(numpy.linalg.inv(numpy.triu(npA)), npB)
+        self.assertTrue(numpy.allclose(expectedB, actualB))
 
 
 if __name__ == '__main__':

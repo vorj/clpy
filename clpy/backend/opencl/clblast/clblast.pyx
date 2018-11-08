@@ -6,6 +6,7 @@ cimport clpy.backend.opencl.types
 from clpy.backend.opencl.types cimport cl_command_queue
 from clpy.backend.opencl.types cimport cl_event
 from clpy.backend.opencl.types cimport cl_mem
+from clpy.backend.opencl.exceptions import OpenCLRuntimeError
 
 
 def getCLBlastErrorName(statuscode):
@@ -22,21 +23,45 @@ class CLBlastRuntimeError(RuntimeError):
         super(CLBlastRuntimeError, self).__init__(
             '%s %s' % (name, detail))
 
-cdef CLBlastLayout translate_str_layout(str_layout) except *:
+cdef CLBlastLayout translate_layout(str_layout) except *:
     if (str_layout == 'R'):
         return CLBlastLayoutRowMajor
     elif (str_layout == 'C'):
         return CLBlastLayoutColMajor
     else:
-        raise ValueError("layout should be \'R\' or \'c\'")
+        raise ValueError("layout should be \'R\' or \'C\'")
 
-cdef CLBlastTranspose translate_transpose(trans) except *:
-    if (trans == 'n' or trans == 0):
+cdef CLBlastTranspose translate_transpose(str_transpose) except *:
+    if str_transpose in ['N', 'n', 0]:
         return CLBlastTransposeNo
-    elif (trans == 't' or trans == 1):
+    elif str_transpose in ['T', 't', 1]:
         return CLBlastTransposeYes
     else:
-        raise ValueError("transpose should be n(0) or t(1)")
+        raise ValueError("transpose should be 'N'(0) or 'T'(1)")
+
+cdef CLBlastSide translate_side(str_side) except *:
+    if str_side in ['L', 'l']:
+        return CLBlastSideLeft
+    elif str_side in ['R', 'r']:
+        return CLBlastSideRight
+    else:
+        raise ValueError("side should be \'L\' or \'R\'")
+
+cdef CLBlastDiagonal translate_diagonal(str_diagonal) except *:
+    if str_diagonal in ['U', 'u']:
+        return CLBlastDiagonalUnit
+    elif str_diagonal in ['N', 'n']:
+        return CLBlastDiagonalNonUnit
+    else:
+        raise ValueError("diagonal should be 'U' or 'N'")
+
+cdef CLBlastTriangle translate_triangle(str_triangle) except *:
+    if str_triangle in ['U', 'u']:
+        return CLBlastTriangleUpper
+    elif str_triangle in ['L', 'l']:
+        return CLBlastTriangleLower
+    else:
+        raise ValueError("triangle should be 'U' or 'L'")
 
 cdef void clblast_sgemm(
         CLBlastLayout layout,
@@ -75,7 +100,7 @@ cpdef sgemm(str_layout, transa, transb,
             B, ldb,
             beta,
             C, ldc):
-    cdef CLBlastLayout layout = translate_str_layout(str_layout)
+    cdef CLBlastLayout layout = translate_layout(str_layout)
     cdef CLBlastTranspose a_transpose = translate_transpose(transa)
     cdef CLBlastTranspose b_transpose = translate_transpose(transb)
 
@@ -129,7 +154,7 @@ cpdef dgemm(str_layout, transa, transb,
             B, ldb,
             beta,
             C, ldc):
-    cdef CLBlastLayout layout = translate_str_layout(str_layout)
+    cdef CLBlastLayout layout = translate_layout(str_layout)
     cdef CLBlastTranspose a_transpose = translate_transpose(transa)
     cdef CLBlastTranspose b_transpose = translate_transpose(transb)
 
@@ -144,6 +169,66 @@ cpdef dgemm(str_layout, transa, transb,
         <cl_mem>b_buffer, B.data.cl_mem_offset() // B.itemsize, ldb,
         beta,
         <cl_mem>c_buffer, C.data.cl_mem_offset() // C.itemsize, ldc)
+
+
+cdef void clblast_strsm(
+        CLBlastLayout layout,
+        CLBlastSide side,
+        CLBlastTriangle triangle,
+        CLBlastTranspose a_transpose,
+        CLBlastDiagonal diagonal,
+        size_t m, size_t n, float alpha,
+        cl_mem a_buffer, size_t a_offset, size_t a_ld,
+        cl_mem b_buffer, size_t b_offset, size_t b_ld) except *:
+    cdef cl_event event = NULL
+    cdef cl_command_queue\
+        command_queue=clpy.backend.opencl.env.get_command_queue()
+
+    cdef CLBlastStatusCode status = CLBlastStrsm(
+        layout,
+        side,
+        triangle,
+        a_transpose,
+        diagonal,
+        m, n, alpha,
+        a_buffer, a_offset, a_ld,
+        b_buffer, b_offset, b_ld,
+        &command_queue,
+        &event)
+    if (status == CLBlastSuccess):
+        try:
+            api.WaitForEvents(1, &event)
+        except OpenCLRuntimeError:
+            pass
+        else:
+            api.ReleaseEvent(event)
+    else:
+        raise CLBlastRuntimeError(statuscode=status)
+    return
+
+cpdef strsm(str_layout,
+            str_side,
+            str_triangle,
+            str_a_transpose,
+            str_diagonal,
+            m, n, alpha,
+            A, lda,
+            B, ldb):
+    cdef CLBlastLayout layout = translate_layout(str_layout)
+    cdef CLBlastSide side = translate_side(str_side)
+    cdef CLBlastTriangle triangle = translate_triangle(str_triangle)
+    cdef CLBlastTranspose a_transpose = translate_transpose(str_a_transpose)
+    cdef CLBlastDiagonal diagonal = translate_diagonal(str_diagonal)
+
+    cdef size_t a_buffer = A.data.buf.get()
+    cdef size_t b_buffer = B.data.buf.get()
+
+    clblast_strsm(
+        layout, side, triangle, a_transpose, diagonal,
+        m, n, alpha,
+        <cl_mem>a_buffer, A.data.cl_mem_offset() // A.itemsize, lda,
+        <cl_mem>b_buffer, B.data.cl_mem_offset() // B.itemsize, ldb)
+
 
 CLBLAST_STATUS_CODE = {
     CLBlastSuccess: "CLBlastSuccess",
