@@ -114,16 +114,12 @@ cdef void _launch(clpy.backend.opencl.types.cl_kernel kernel, global_work_size,
     cdef size_t gws[3]
     for i in range(global_dim):
         gws[i] = global_work_size[i]
-    for i in range(global_dim+1, 3):
-        gws[i] = 1
 
     cdef size_t lws[3]
     cdef size_t* lws_ptr
     if local_dim > 0:
         for i in range(local_dim):
             lws[i] = local_work_size[i]
-        for i in range(local_dim+1, 3):
-            lws[i] = 1
         lws_ptr = &lws[0]
     else:
         lws_ptr = <size_t*>NULL
@@ -131,7 +127,7 @@ cdef void _launch(clpy.backend.opencl.types.cl_kernel kernel, global_work_size,
     clpy.backend.opencl.utility.RunNDRangeKernel(
         command_queue=clpy.backend.opencl.env.get_command_queue(),
         kernel=kernel,
-        work_dim=global_dim,
+        work_dim=global_dim,  # asserted to be equal to local_dim
         global_work_offset=<size_t*>NULL,
         global_work_size=&gws[0],
         local_work_size=lws_ptr,
