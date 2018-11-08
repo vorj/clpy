@@ -4223,7 +4223,7 @@ cdef _mean = create_reduction_func(
 # -----------------------------------------------------------------------------
 
 @util.memoize(for_each_device=True)
-def _inclusive_scan_kernel(dtype, block_size):
+def _inclusive_scan_kernel(dtype, hunk_size):
     """return Prefix Sum(Scan) OpenCL kernel
 
     e.g
@@ -4252,7 +4252,7 @@ def _inclusive_scan_kernel(dtype, block_size):
             CArray<${dtype}, 1> dst
             ){
         const size_t n = src.size();
-        __local ${dtype} temp[${block_size}*2];
+        __local ${dtype} temp[${hunk_size}*2];
         const size_t thid = get_local_id(0);
         const size_t block = 2 * get_group_id(0) * get_local_size(0);
 
@@ -4263,17 +4263,17 @@ def _inclusive_scan_kernel(dtype, block_size):
         temp[thid + get_local_size(0)] = (idx1 < n) ? src[idx1] : (${dtype})0;
         barrier(CLK_LOCAL_MEM_FENCE);
 
-        for(int i = 1; i <= ${block_size}; i <<= 1){
+        for(int i = 1; i <= ${hunk_size}; i <<= 1){
             int index = (get_local_id(0) + 1) * i * 2 - 1;
-            if (index < (${block_size} << 1)){
+            if (index < (${hunk_size} << 1)){
                 temp[index] = temp[index] + temp[index - i];
             }
             barrier(CLK_LOCAL_MEM_FENCE);
         }
 
-        for(int i = ${block_size} >> 1; i > 0; i >>= 1){
+        for(int i = ${hunk_size} >> 1; i > 0; i >>= 1){
             int index = (get_local_id(0) + 1) * i * 2 - 1;
-            if(index + i < (${block_size} << 1)){
+            if(index + i < (${hunk_size} << 1)){
                 temp[index + i] = temp[index + i] + temp[index];
             }
             barrier(CLK_LOCAL_MEM_FENCE);
@@ -4286,13 +4286,13 @@ def _inclusive_scan_kernel(dtype, block_size):
             dst[idx1] = temp[thid + get_local_size(0)];
         }
     }
-    """).substitute(name=name, dtype=dtype, block_size=block_size)
+    """).substitute(name=name, dtype=dtype, hunk_size=hunk_size)
     module = compile_with_cache(source)
     return module.get_function(name)
 
 
 @util.memoize(for_each_device=True)
-def _add_scan_blocked_sum_kernel(dtype):
+def _add_scan_hunked_sum_kernel(dtype):
     name = "add_scan_blocked_sum_kernel"
     dtype = _get_typename(dtype)
     source = string.Template("""
@@ -4386,7 +4386,7 @@ cpdef ndarray scan(ndarray a, ndarray out=None):
     if a.ndim != 1:
         raise TypeError("Input array should be 1D array.")
 
-    block_size = 128
+    hunk_size = 128
 
     if out is None:
         out = ndarray(a.shape, dtype=a.dtype)
@@ -4394,20 +4394,20 @@ cpdef ndarray scan(ndarray a, ndarray out=None):
         if a.size != out.size:
             raise ValueError("Provided out is the wrong size")
 
-    kern_scan = _inclusive_scan_kernel(a.dtype, block_size)
-    scan_numof_workgroups = (a.size - 1) // (2 * block_size) + 1
-    scan_workgroup_size = block_size
+    kern_scan = _inclusive_scan_kernel(a.dtype, hunk_size)
+    scan_numof_workgroups = (a.size - 1) // (2 * hunk_size) + 1
+    scan_workgroup_size = hunk_size
     kern_scan(global_work_size=(scan_numof_workgroups * scan_workgroup_size,),
               local_work_size=(scan_workgroup_size,),
               args=(a, out),
-              local_mem=a.itemsize * block_size * 2)
+              local_mem=a.itemsize * hunk_size * 2)
 
-    if (a.size - 1) // (block_size * 2) > 0:
-        blocked_sum = out[block_size * 2 - 1:None:block_size * 2]
-        scan(blocked_sum, blocked_sum)
-        kern_add = _add_scan_blocked_sum_kernel(out.dtype)
-        add_numof_workgroups = (a.size - 1) // (2 * block_size)
-        add_workgroup_size = 2 * block_size - 1
+    if (a.size - 1) // (hunk_size * 2) > 0:
+        hunked_sum = out[hunk_size * 2 - 1:None:hunk_size * 2]
+        scan(hunked_sum, hunked_sum)
+        kern_add = _add_scan_hunked_sum_kernel(out.dtype)
+        add_numof_workgroups = (a.size - 1) // (2 * hunk_size)
+        add_workgroup_size = 2 * hunk_size - 1
         kern_add(global_work_size=(add_numof_workgroups * add_workgroup_size,),
                  local_work_size=(add_workgroup_size,),
                  args=(out,))
