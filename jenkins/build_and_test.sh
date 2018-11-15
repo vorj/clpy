@@ -66,6 +66,7 @@ tests/clpy_tests/core_tests/test_ndarray_owndata.py
 tests/clpy_tests/core_tests/test_ndarray_reduction.py
 tests/clpy_tests/core_tests/test_ndarray_unary_op.py
 tests/clpy_tests/core_tests/test_reduction.py
+tests/clpy_tests/core_tests/test_scan.py
 tests/clpy_tests/core_tests/test_userkernel.py
 tests/clpy_tests/indexing_tests/test_insert.py
 tests/clpy_tests/linalg_tests/test_product.py
@@ -73,9 +74,9 @@ tests/clpy_tests/logic_tests/test_comparison.py
 tests/clpy_tests/logic_tests/test_ops.py
 tests/clpy_tests/logic_tests/test_type_test.py
 tests/clpy_tests/sorting_tests/test_count.py
+tests/clpy_tests/statics_tests/test_correlation.py
 tests/clpy_tests/statics_tests/test_meanvar.py
 tests/clpy_tests/statics_tests/test_order.py
-tests/clpy_tests/statics_tests/test_correlation.py
 "
 
 export CLPY_TEST_GPU_LIMIT=1
