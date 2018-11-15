@@ -2,6 +2,7 @@
 
 from __future__ import division
 import sys
+import math
 
 import numpy
 import six
@@ -4371,6 +4372,17 @@ def _nonzero_kernel(src_dtype, src_ndim, index_dtype, dst_dtype):
     return module.get_function(name)
 
 
+cdef determine_scan_hunk_size():
+    cdef size_t max_workgroup_size
+    cdef size_t param_value_size_ret
+    clpy.backend.opencl.api.GetDeviceInfo(
+        device=clpy.backend.opencl.env.get_primary_device(),
+        param_name=clpy.backend.opencl.api.CL_DEVICE_MAX_WORK_GROUP_SIZE,
+        param_value_size=sizeof(size_t),
+        param_value=&max_workgroup_size,
+        param_value_size_ret=&param_value_size_ret)
+    return 2 ** int(math.log2(max_workgroup_size-1))
+
 cpdef ndarray scan(ndarray a, ndarray out=None):
     """Return the prefix sum(scan) of the elements.
 
@@ -4383,10 +4395,13 @@ cpdef ndarray scan(ndarray a, ndarray out=None):
         clpy.ndarray: A new array holding the result is returned.
 
     """
+
+
+
     if a.ndim != 1:
         raise TypeError("Input array should be 1D array.")
 
-    hunk_size = 128
+    hunk_size = determine_scan_hunk_size()
 
     if out is None:
         out = ndarray(a.shape, dtype=a.dtype)
