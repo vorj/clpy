@@ -4374,13 +4374,12 @@ def _nonzero_kernel(src_dtype, src_ndim, index_dtype, dst_dtype):
 
 cdef determine_scan_hunk_size():
     cdef size_t max_workgroup_size
-    cdef size_t param_value_size_ret
     clpy.backend.opencl.api.GetDeviceInfo(
         device=clpy.backend.opencl.env.get_primary_device(),
         param_name=clpy.backend.opencl.api.CL_DEVICE_MAX_WORK_GROUP_SIZE,
         param_value_size=sizeof(size_t),
         param_value=&max_workgroup_size,
-        param_value_size_ret=&param_value_size_ret)
+        param_value_size_ret=NULL)
     return 2 ** int(math.log2(max_workgroup_size-1))
 
 cpdef ndarray scan(ndarray a, ndarray out=None):
