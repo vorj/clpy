@@ -1,8 +1,8 @@
 # distutils: language = c++
 
 from __future__ import division
-import sys
 import math
+import sys
 
 import numpy
 import six
@@ -4248,46 +4248,45 @@ def _inclusive_scan_kernel(dtype, hunk_size):
     name = "inclusive_scan_kernel"
     dtype = _get_typename(dtype)
     source = string.Template("""
-    __kernel void ${name}(
-            const CArray<${dtype}, 1> src,
-            CArray<${dtype}, 1> dst
-            ){
-        const size_t n = src.size();
-        __local ${dtype} temp[${hunk_size}*2];
-        const size_t local_id = get_local_id(0);
-        const size_t hunk_head = 2 * get_group_id(0) * get_local_size(0);
+__kernel void ${name}(
+        const CArray<${dtype}, 1> src,
+        CArray<${dtype}, 1> dst
+        ){
+    const size_t n = src.size();
+    __local ${dtype} temp[${hunk_size}*2];
+    const size_t local_id = get_local_id(0);
+    const size_t hunk_head = 2 * get_group_id(0) * get_local_size(0);
 
-        const size_t idx0 = local_id + hunk_head;
-        const size_t idx1 = local_id + get_local_size(0) + hunk_head;
+    const size_t idx0 = local_id + hunk_head;
+    const size_t idx1 = local_id + get_local_size(0) + hunk_head;
 
-        temp[local_id] = (idx0 < n) ? src[idx0] : (${dtype})0;
-        temp[local_id + get_local_size(0)] = (idx1 < n) ? src[idx1] : (${dtype})0;
+    temp[local_id] = (idx0 < n) ? src[idx0] : (${dtype})0;
+    temp[local_id + get_local_size(0)] = (idx1 < n) ? src[idx1] : (${dtype})0;
+    barrier(CLK_LOCAL_MEM_FENCE);
+
+    for(int i = 1; i <= ${hunk_size}; i <<= 1){
+        int index = (get_local_id(0) + 1) * i * 2 - 1;
+        if (index < (${hunk_size} << 1)){
+            temp[index] = temp[index] + temp[index - i];
+        }
         barrier(CLK_LOCAL_MEM_FENCE);
-
-        for(int i = 1; i <= ${hunk_size}; i <<= 1){
-            int index = (get_local_id(0) + 1) * i * 2 - 1;
-            if (index < (${hunk_size} << 1)){
-                temp[index] = temp[index] + temp[index - i];
-            }
-            barrier(CLK_LOCAL_MEM_FENCE);
-        }
-
-        for(int i = ${hunk_size} >> 1; i > 0; i >>= 1){
-            int index = (get_local_id(0) + 1) * i * 2 - 1;
-            if(index + i < (${hunk_size} << 1)){
-                temp[index + i] = temp[index + i] + temp[index];
-            }
-            barrier(CLK_LOCAL_MEM_FENCE);
-        }
-
-        if(idx0 < n){
-            dst[idx0] = temp[local_id];
-        }
-        if(idx1 < n){
-            dst[idx1] = temp[local_id + get_local_size(0)];
-        }
     }
-    """).substitute(name=name, dtype=dtype, hunk_size=hunk_size)
+
+    for(int i = ${hunk_size} >> 1; i > 0; i >>= 1){
+        int index = (get_local_id(0) + 1) * i * 2 - 1;
+        if(index + i < (${hunk_size} << 1)){
+            temp[index + i] = temp[index + i] + temp[index];
+        }
+        barrier(CLK_LOCAL_MEM_FENCE);
+    }
+
+    if(idx0 < n){
+        dst[idx0] = temp[local_id];
+    }
+    if(idx1 < n){
+        dst[idx1] = temp[local_id + get_local_size(0)];
+    }
+} """).substitute(name=name, dtype=dtype, hunk_size=hunk_size)
     module = compile_with_cache(source)
     return module.get_function(name)
 
@@ -4394,8 +4393,6 @@ cpdef ndarray scan(ndarray a, ndarray out=None):
         clpy.ndarray: A new array holding the result is returned.
 
     """
-
-
 
     if a.ndim != 1:
         raise TypeError("Input array should be 1D array.")
