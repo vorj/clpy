@@ -6,10 +6,23 @@ include "func_decl.pxi"
 # thin wrappers
 cdef cl_uint GetPlatformIDs(size_t num_entries,
                             cl_platform_id* platforms) except *
-cdef cl_uint GetDeviceIDs(cl_platform_id platform,
-                          size_t device_type,
-                          size_t num_entries,
-                          cl_device_id* devices) except *
+cdef void GetPlatformInfo(
+    cl_platform_id platform,
+    cl_platform_info param_name,
+    size_t param_value_size,
+    void *param_value,
+    size_t *param_value_size_ret) except *
+cdef cl_uint GetDeviceIDs(
+    cl_platform_id platform,
+    size_t device_type,
+    size_t num_entries,
+    cl_device_id* devices) except *
+cdef void GetDeviceInfo(
+    cl_device_id device,
+    cl_platform_info param_name,
+    size_t param_value_size,
+    void *param_value,
+    size_t *param_value_size_ret) except *
 cdef cl_context CreateContext(
     cl_context_properties* properties,
     size_t num_devices,
@@ -92,6 +105,7 @@ cdef void Flush(cl_command_queue command_queue) except *
 cdef void Finish(cl_command_queue command_queue) except *
 cdef void ReleaseKernel(cl_kernel kernel) except *
 cdef void ReleaseProgram(cl_program program) except *
+cdef void ReleaseEvent(cl_event memobj) except *
 cdef void ReleaseMemObject(cl_mem memobj) except *
 cdef void ReleaseCommandQueue(cl_command_queue command_queue) except *
 cdef void ReleaseContext(cl_context context) except *

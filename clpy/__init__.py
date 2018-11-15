@@ -240,11 +240,11 @@ from clpy.manipulation.split import vsplit  # NOQA
 from clpy.manipulation.tiling import repeat  # NOQA
 from clpy.manipulation.tiling import tile  # NOQA
 
-# from clpy.manipulation.rearrange import flip  # NOQA
-# from clpy.manipulation.rearrange import fliplr  # NOQA
-# from clpy.manipulation.rearrange import flipud  # NOQA
-# from clpy.manipulation.rearrange import roll  # NOQA
-# from clpy.manipulation.rearrange import rot90  # NOQA
+from clpy.manipulation.rearrange import flip  # NOQA
+from clpy.manipulation.rearrange import fliplr  # NOQA
+from clpy.manipulation.rearrange import flipud  # NOQA
+from clpy.manipulation.rearrange import roll  # NOQA
+from clpy.manipulation.rearrange import rot90  # NOQA
 
 # -----------------------------------------------------------------------------
 # Binary operations
@@ -344,10 +344,10 @@ def base_repr(number, base=2, padding=0):  # NOQA (needed to avoid redefinition 
 # from clpy.linalg.einsum import einsum  # NOQA
 
 from clpy.linalg.product import dot  # NOQA
-# from clpy.linalg.product import inner  # NOQA
-# from clpy.linalg.product import kron  # NOQA
-# from clpy.linalg.product import matmul  # NOQA
-# from clpy.linalg.product import outer  # NOQA
+from clpy.linalg.product import inner  # NOQA
+from clpy.linalg.product import kron  # NOQA
+from clpy.linalg.product import matmul  # NOQA
+from clpy.linalg.product import outer  # NOQA
 from clpy.linalg.product import tensordot  # NOQA
 from clpy.linalg.product import vdot  # NOQA
 

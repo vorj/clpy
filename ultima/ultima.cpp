@@ -75,7 +75,79 @@ struct ostreams{
   auto_popper scoped_push(llvm::raw_ostream& os){return {*this, os};}
 };
 
-class preprocessor : public clang::PPCallbacks{
+namespace detail{
+
+template<typename PPCallbacks>
+struct pp_callbacks : PPCallbacks{
+  virtual void InclusionDirective(
+    clang::SourceLocation,
+    const clang::Token&,
+    llvm::StringRef,
+    bool,
+    clang::CharSourceRange,
+    const clang::FileEntry*,
+    llvm::StringRef,
+    llvm::StringRef,
+    const clang::Module*
+  ) = 0;
+  void InclusionDirective(
+    clang::SourceLocation hash_loc,
+    const clang::Token& include_tok,
+    llvm::StringRef filename,
+    bool is_angled,
+    clang::CharSourceRange filename_range,
+    const clang::FileEntry* file,
+    llvm::StringRef search_path,
+    llvm::StringRef relative_path,
+    const clang::Module* imported,
+    clang::SrcMgr::CharacteristicKind
+  )override{
+    this->InclusionDirective(hash_loc, include_tok, filename, is_angled, filename_range, file, search_path, relative_path, imported);
+  }
+};
+
+template<typename T>
+struct inclusion_directive_is_callable_with_characteristic_kind{
+  template<typename U>
+  static std::true_type impl(
+    decltype(std::declval<U>().InclusionDirective(
+      std::declval<clang::SourceLocation>(),
+      std::declval<const clang::Token&>(),
+      std::declval<llvm::StringRef>(),
+      std::declval<bool>(),
+      std::declval<clang::CharSourceRange>(),
+      std::declval<const clang::FileEntry*>(),
+      std::declval<llvm::StringRef>(),
+      std::declval<llvm::StringRef>(),
+      std::declval<const clang::Module*>(),
+      std::declval<clang::SrcMgr::CharacteristicKind>()))*
+  );
+  template<typename U>
+  static std::false_type impl(
+    decltype(std::declval<U>().InclusionDirective(
+      std::declval<clang::SourceLocation>(),
+      std::declval<const clang::Token&>(),
+      std::declval<llvm::StringRef>(),
+      std::declval<bool>(),
+      std::declval<clang::CharSourceRange>(),
+      std::declval<const clang::FileEntry*>(),
+      std::declval<llvm::StringRef>(),
+      std::declval<llvm::StringRef>(),
+      std::declval<const clang::Module*>()))*
+  );
+  using type = decltype(impl<T>(nullptr));
+};
+
+}
+
+template<typename PPCallbacks>
+using pp_callbacks = typename std::conditional<
+  detail::inclusion_directive_is_callable_with_characteristic_kind<PPCallbacks>::type::value,
+  detail::pp_callbacks<PPCallbacks>,
+  PPCallbacks
+>::type;
+
+class preprocessor : public pp_callbacks<clang::PPCallbacks>{
   void output(char start, llvm::StringRef filename, char end){
     llvm::outs() << start << filename << end << '\n';
   }

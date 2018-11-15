@@ -106,19 +106,21 @@ MODULES = [
             'clpy.backend.function',
             # 'clpy.backend.runtime',
             'clpy.backend.opencl.api',
-            'clpy.backend.opencl.blas',
             'clpy.backend.opencl.env',
             'clpy.backend.opencl.types',
             'clpy.backend.opencl.utility',
             'clpy.backend.opencl.exceptions',
+            'clpy.backend.opencl.clblast.clblast',
             'clpy.util',
             'clpy.testing.bufio',
         ],
         'include': [
-            'CL/cl.h'
+            'CL/cl.h',
+            'clblast_c.h'
         ],
         'libraries': [
-            'OpenCL'
+            'OpenCL',
+            'clblast'
         ],
         'check_method': build.check_opencl_version,
     },
