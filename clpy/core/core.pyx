@@ -4254,14 +4254,14 @@ def _inclusive_scan_kernel(dtype, hunk_size):
             ){
         const size_t n = src.size();
         __local ${dtype} temp[${hunk_size}*2];
-        const size_t thid = get_local_id(0);
-        const size_t block = 2 * get_group_id(0) * get_local_size(0);
+        const size_t local_id = get_local_id(0);
+        const size_t hunk_head = 2 * get_group_id(0) * get_local_size(0);
 
-        const size_t idx0 = thid + block;
-        const size_t idx1 = thid + get_local_size(0) + block;
+        const size_t idx0 = local_id + hunk_head;
+        const size_t idx1 = local_id + get_local_size(0) + hunk_head;
 
-        temp[thid] = (idx0 < n) ? src[idx0] : (${dtype})0;
-        temp[thid + get_local_size(0)] = (idx1 < n) ? src[idx1] : (${dtype})0;
+        temp[local_id] = (idx0 < n) ? src[idx0] : (${dtype})0;
+        temp[local_id + get_local_size(0)] = (idx1 < n) ? src[idx1] : (${dtype})0;
         barrier(CLK_LOCAL_MEM_FENCE);
 
         for(int i = 1; i <= ${hunk_size}; i <<= 1){
@@ -4281,10 +4281,10 @@ def _inclusive_scan_kernel(dtype, hunk_size):
         }
 
         if(idx0 < n){
-            dst[idx0] = temp[thid];
+            dst[idx0] = temp[local_id];
         }
         if(idx1 < n){
-            dst[idx1] = temp[thid + get_local_size(0)];
+            dst[idx1] = temp[local_id + get_local_size(0)];
         }
     }
     """).substitute(name=name, dtype=dtype, hunk_size=hunk_size)
