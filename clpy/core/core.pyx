@@ -1950,8 +1950,8 @@ min_max_st<T> my_min_float(
         const min_max_st<T> a, const min_max_st<T> b) {
     if (a.index == -1) return b;
     if (b.index == -1) return a;
-    if (is_nan(a.value)) return a;
-    if (is_nan(b.value)) return b;
+    if (is_nan(a.value)) return b;
+    if (is_nan(b.value)) return a;
     min_max_st<T> ret(min(a.value, b.value));
     return ret;
 }
@@ -1969,8 +1969,8 @@ min_max_st<T> my_max_float(
         const min_max_st<T> a, const min_max_st<T> b) {
     if (a.index == -1) return b;
     if (b.index == -1) return a;
-    if (is_nan(a.value)) return a;
-    if (is_nan(b.value)) return b;
+    if (is_nan(a.value)) return b;
+    if (is_nan(b.value)) return a;
     min_max_st<T> ret(max(a.value, b.value));
     return ret;
 }
@@ -2051,7 +2051,9 @@ _amax = create_reduction_func(
 nanmin = create_reduction_func(
     'clpy_nanmin',
     ('?->?', 'b->b', 'B->B', 'h->h', 'H->H', 'i->i', 'I->I', 'l->l', 'L->L',
-     'q->q', 'Q->Q', 'f->f', 'd->d'),
+     'q->q', 'Q->Q',
+     ('f->f', (None, 'my_min_float(a, b)', None, None)),
+     ('d->d', (None, 'my_min_float(a, b)', None, None))),
     ('in0', 'my_min(a, b)', 'out0 = a.value',
      'min_max_st<type_in0_data>'),
     '{}', _min_max_preamble)
@@ -2060,7 +2062,9 @@ nanmin = create_reduction_func(
 nanmax = create_reduction_func(
     'clpy_nanmax',
     ('?->?', 'b->b', 'B->B', 'h->h', 'H->H', 'i->i', 'I->I', 'l->l', 'L->L',
-     'q->q', 'Q->Q', 'f->f', 'd->d'),
+     'q->q', 'Q->Q',
+     ('f->f', (None, 'my_max_float(a, b)', None, None)),
+     ('d->d', (None, 'my_max_float(a, b)', None, None))),
     ('in0', 'my_max(a, b)', 'out0 = a.value',
      'min_max_st<type_in0_data>'),
     '{}', _min_max_preamble)
