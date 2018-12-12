@@ -102,8 +102,7 @@ logging.info("SUCCESS")
 logging.info("%d device(s) found" % __num_devices)
 
 logging.info("Get all devices...", end='')
-cdef cl_device_id* __devices;
-__devices = <cl_device_id*>malloc(sizeof(cl_device_id)*__num_devices)
+cdef cl_device_id* __devices = <cl_device_id*>malloc(sizeof(cl_device_id)*__num_devices)
 api.GetDeviceIDs(
     primary_platform,
     CL_DEVICE_TYPE_ALL,
@@ -113,8 +112,8 @@ num_devices = __num_devices     # provide as pure python interface
 cdef cl_device_id __primary_device = __devices[0]
 logging.info("SUCCESS")
 
-
-check_device_version(__primary_device, required_version=(1, 2))
+for id in range(__num_devices):
+    check_device_version(__devices[id], required_version=(1, 2))
 
 
 logging.info("Create context...", end='')
