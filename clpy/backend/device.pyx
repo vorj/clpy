@@ -43,9 +43,9 @@ cpdef get_cusparse_handle():
 
 cdef class Device:
 
-    """Object that represents a openCL device.
+    """Object that represents a OpenCL device.
 
-    This class provides some basic manipulations on openCL devices.
+    This class provides some basic manipulations on OpenCL devices.
 
     It supports the context protocol. For example, the following code is an
     example of temporarily switching the current device::
@@ -90,7 +90,7 @@ cdef class Device:
         current_device_id = self._device_stack.pop()
 
     def __repr__(self):
-        return '<openCL Device %d>' % self.id
+        return '<OpenCL Device %d>' % self.id
 
     cpdef use(self):
         """Makes this device current.
