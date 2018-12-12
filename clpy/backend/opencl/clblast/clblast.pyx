@@ -1,8 +1,6 @@
 cimport clpy.backend.opencl.api as api
 import clpy.backend.opencl.env
 cimport clpy.backend.opencl.env
-import clpy.backend.opencl.types
-cimport clpy.backend.opencl.types
 from clpy.backend.opencl.types cimport cl_command_queue
 from clpy.backend.opencl.types cimport cl_event
 from clpy.backend.opencl.types cimport cl_mem

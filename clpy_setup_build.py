@@ -107,7 +107,6 @@ MODULES = [
             # 'clpy.backend.runtime',
             'clpy.backend.opencl.api',
             'clpy.backend.opencl.env',
-            'clpy.backend.opencl.types',
             'clpy.backend.opencl.utility',
             'clpy.backend.opencl.exceptions',
             'clpy.backend.opencl.clblast.clblast',

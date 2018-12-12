@@ -10,7 +10,6 @@ from clpy.backend cimport device
 from clpy.backend cimport function
 
 cimport clpy.backend.opencl.api
-import clpy.backend.opencl.types
 cimport clpy.backend.opencl.utility
 
 cpdef _get_simple_elementwise_kernel(
@@ -306,7 +305,7 @@ cdef class ParameterInfo:
             pass
         elif t == 'kernel_arg_size_t':
             self.dtype = numpy.intp
-            self.ctype = clpy.backend.opencl.types.device_typeof_size
+            self.ctype = clpy.backend.opencl.utility.device_typeof_size
         elif len(t) == 1:
             self.ctype = t
         else:

@@ -14,7 +14,6 @@ cimport clpy.backend.opencl.api
 cimport clpy.backend.opencl.utility
 import clpy.backend.opencl.env
 cimport clpy.backend.opencl.env
-import clpy.backend.opencl.types
 from clpy.backend.opencl.types cimport cl_event
 import clpy.core
 
