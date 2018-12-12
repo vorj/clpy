@@ -455,9 +455,6 @@ class TestClpyElementwiseKernelwithChunk(unittest.TestCase):
         actual = w.get()
         expected = x_np + y_np + z_np
 
-        print(actual)
-        print(expected)
-
         self.assertTrue(numpy.allclose(actual, expected))
 
     def test_vectoradd_raw_different_index(self):

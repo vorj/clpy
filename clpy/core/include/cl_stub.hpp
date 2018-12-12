@@ -166,6 +166,7 @@ __attribute__((annotate("clpy_no_mangle"))) static float tgamma(float);
 __attribute__((annotate("clpy_no_mangle"))) static double trunc(double);
 __attribute__((annotate("clpy_no_mangle"))) static float trunc(float);
 __attribute__((annotate("clpy_no_mangle"))) size_t get_local_id(uint);
+__attribute__((annotate("clpy_no_mangle"))) size_t get_local_size(uint);
 __attribute__((annotate("clpy_no_mangle"))) size_t get_group_id(uint);
 __attribute__((annotate("clpy_no_mangle"))) size_t get_global_id(uint);
 __attribute__((annotate("clpy_no_mangle"))) size_t get_num_groups(uint);
@@ -174,3 +175,5 @@ typedef enum{
   CLK_GLOBAL_MEM_FENCE
 }cl_mem_fence_flags;
 __attribute__((annotate("clpy_no_mangle"))) void barrier(cl_mem_fence_flags);
+__attribute__((annotate("clpy_no_mangle"))) int printf(char const* format, ...);
+
