@@ -5,6 +5,7 @@ import time
 
 cimport api
 cimport env
+import cython
 from cpython cimport array
 from exceptions cimport check_status
 from libc.stdlib cimport malloc
@@ -138,3 +139,19 @@ cdef RunNDRangeKernel(
         event=&event[0]
     )
     api.WaitForEvents(1, &event[0])
+
+cdef __device_typeof_size():
+    host_size_t_bits = cython.sizeof(Py_ssize_t)*8
+    device_address_bits = GetDeviceAddressBits(
+        env.get_primary_device())
+    if host_size_t_bits != device_address_bits:
+        raise "Host's size_t is different from device's size_t."
+
+    if device_address_bits == 32:
+        return 'uint'
+    elif device_address_bits == 64:
+        return 'ulong'
+    else:
+        raise "There is no type of size_t."
+
+device_typeof_size = __device_typeof_size()

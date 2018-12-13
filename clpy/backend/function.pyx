@@ -14,7 +14,6 @@ cimport clpy.backend.opencl.api
 cimport clpy.backend.opencl.utility
 import clpy.backend.opencl.env
 cimport clpy.backend.opencl.env
-import clpy.backend.opencl.types
 from clpy.backend.opencl.types cimport cl_event
 import clpy.core
 
@@ -87,10 +86,10 @@ cdef void _launch(clpy.backend.opencl.types.cl_kernel kernel, global_work_size,
                 size = a.get_size()
             else:
                 if isinstance(a, clpy.core.core.Size_t):
-                    if clpy.backend.opencl.types.device_typeof_size \
+                    if clpy.backend.opencl.utility.device_typeof_size \
                             == 'uint':
                         a = numpy.uint32(a.val)
-                    elif clpy.backend.opencl.types.device_typeof_size \
+                    elif clpy.backend.opencl.utility.device_typeof_size \
                             == 'ulong':
                         a = numpy.uint64(a.val)
                     else:
