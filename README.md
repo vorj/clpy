@@ -119,10 +119,10 @@ $ python -m pytest test_you_want.py
 
 ## Future plan
 
-We are developing v0.2.1beta1 for next release.
+We are developing v0.2.1beta2 for next release.
 
-* Map buffer for host memory
-* Support all BLAS APIs and accelerate them
+* Support all BLAS APIs
+* Accelerate chainer's example performance
 * Multiple devices
 * Multiple CommandQueue (Stream)
 * -- and other functions and/or bug fixes that someone develops and/or requests..
