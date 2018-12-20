@@ -3846,9 +3846,10 @@ conj = create_ufunc(
 
 angle = create_ufunc(
     'clpy_angle',
-    ('?->d', 'f->f', 'd->d',
-     ('b->e', 'out0 = convert_float_to_half(arg((float)in0))'),
-     ('B->e', 'out0 = convert_float_to_half(arg((float)in0))'),
+    ('?->d',
+     ('b->e', 'out0 = convert_float_to_half(in0 >= 0 ? 0.f : (float)M_PI)'),
+     ('B->e', 'out0 = convert_float_to_half(0.f)'),
+     'f->f', 'd->d',
      ('F->f', 'out0 = arg(in0)'),
      ('D->d', 'out0 = arg(in0)')),
     'out0 = in0 >= 0 ? 0 : M_PI',
