@@ -70,7 +70,7 @@ modf = core.create_ufunc(
     'clpy_modf',
     (
         ('b->ee', 'float  iptr; '
-                  'out0 = convert_float_to_half(''modf((float)in0, &iptr)); '
+                  'out0 = convert_float_to_half(modf((float)in0, &iptr)); '
                   'out1 = convert_float_to_half(iptr)'),
         ('B->ee', 'float  iptr; '
                   'out0 = convert_float_to_half(modf((float)in0, &iptr)); '
