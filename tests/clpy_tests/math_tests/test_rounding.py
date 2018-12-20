@@ -14,7 +14,7 @@ class TestRounding(unittest.TestCase):
         a = testing.shaped_arange((2, 3), xp, dtype)
         return getattr(xp, name)(a)
 
-    @testing.for_dtypes(['?', 'b', 'h', 'i', 'q', 'e', 'f', 'd'])
+    @testing.for_dtypes(['?', 'b', 'h', 'i', 'q', 'f', 'd'])
     @testing.numpy_clpy_allclose(atol=1e-5)
     def check_unary_negative(self, name, xp, dtype):
         a = xp.array([-3, -2, -1, 1, 2, 3], dtype=dtype)
