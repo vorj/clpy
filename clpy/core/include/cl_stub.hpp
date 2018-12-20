@@ -178,5 +178,5 @@ typedef enum{
 }cl_mem_fence_flags;
 __attribute__((annotate("clpy_no_mangle"))) void barrier(cl_mem_fence_flags);
 __attribute__((annotate("clpy_no_mangle"))) int printf(char const* format, ...);
-static constexpr double M_PI = 3.14;
+static constexpr double M_PI = 3.14; // Ultima needs only the type of the identifier(the value is DUMMY)
 
