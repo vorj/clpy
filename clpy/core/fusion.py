@@ -244,7 +244,7 @@ _kind_score = {
 _dtype_to_ctype = {
     numpy.dtype('float64'): 'double',
     numpy.dtype('float32'): 'float',
-    # numpy.dtype('float16'): 'half', # Extension type
+    numpy.dtype('float16'): 'half',
     # numpy.dtype('complex128'): 'complex<double>', # OpenCL does not support
     # numpy.dtype('complex64'): 'complex<float>', # OpenCL does not support
     numpy.dtype('int64'): 'long',
@@ -260,7 +260,7 @@ _dtype_to_ctype = {
     numpy.dtype('bool'): 'uchar',
 }
 
-_dtype_list = [numpy.dtype(_) for _ in '?bhilqBHILQfd']
+_dtype_list = [numpy.dtype(_) for _ in '?bhilqBHILQfde']
 
 
 def _const_to_str(val):
@@ -547,8 +547,9 @@ def _get_fusion(func, nin, reduce, post_map, identity, input_types, name):
         reduce_code = reduce_op[2][1]
         reduce_type = numpy.dtype(reduce_op[1][0])
         rtype = reduce_op[2][3]
-        post_type = "type_in0_raw" if rtype is None else rtype
-        pre_code += "typedef %s type_in0_raw;\n" % _dtype_to_ctype[reduce_type]
+        post_type = "type_in0_data" if rtype is None else rtype
+        pre_code += "typedef %s type_in0_data;\n" \
+            % _dtype_to_ctype[reduce_type]
 
         # post-map
         post_in = [_FusionVar(0, reduce_type)]
@@ -565,7 +566,7 @@ def _get_fusion(func, nin, reduce, post_map, identity, input_types, name):
         post_code += '\n'.join(_get_operation_code(_) for _ in post_ops)
         post_code = _get_post_code(post_vars, post_code, post_out)
         post_code += (
-            "typedef %s type_out0_raw;\n" % _dtype_to_ctype[reduce_type])
+            "typedef %s type_out0_data;\n" % _dtype_to_ctype[reduce_type])
         post_code += _get_fix_code(post_type, reduce_type, reduce_op[2][2])
 
         submodules = _gather_submodules(op_list + post_ops)

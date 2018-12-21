@@ -22,7 +22,9 @@ expm1 = ufunc.create_math_ufunc(
 
 exp2 = core.create_ufunc(
     'clpy_exp2',
-    ('f->f', 'd->d', 'F->F', 'D->D'),
+    (('b->e', 'out0 = convert_float_to_half(pow((float)2, (float)in0))'),
+     ('B->e', 'out0 = convert_float_to_half(pow((float)2, (float)in0))'),
+     'f->f', 'd->d', 'F->F', 'D->D'),
     'out0 = pow((in0_type)2, in0)',
     doc='''Elementwise exponentiation with base 2.
 
@@ -69,7 +71,11 @@ log1p = ufunc.create_math_ufunc(
 
 logaddexp = core.create_ufunc(
     'clpy_logaddexp',
-    ('ff->f', 'dd->d'),
+    (('bb->e', 'out0 = convert_float_to_half(fmax((float)in0, (float)in1)'
+               ' + log1p(exp(-fabs((float)in0 - (float)in1))))'),
+     ('BB->e', 'out0 = convert_float_to_half(fmax((float)in0, (float)in1)'
+               ' + log1p(exp(-fabs((float)in0 - (float)in1))))'),
+     'ff->f', 'dd->d'),
     'out0 = fmax(in0, in1) + log1p(exp(-fabs(in0 - in1)))',
     doc='''Computes ``log(exp(x1) + exp(x2))`` elementwise.
 
@@ -80,7 +86,11 @@ logaddexp = core.create_ufunc(
 
 logaddexp2 = core.create_ufunc(
     'clpy_logaddexp2',
-    ('ff->f', 'dd->d'),
+    (('bb->e', 'out0 = convert_float_to_half(fmax((float)in0, (float)in1)'
+               ' + log2(1 + exp2(-fabs((float)in0 - (float)in1))))'),
+     ('BB->e', 'out0 = convert_float_to_half(fmax((float)in0, (float)in1)'
+               ' + log2(1 + exp2(-fabs((float)in0 - (float)in1))))'),
+     'ff->f', 'dd->d'),
     'out0 = fmax(in0, in1) + log2(1 + exp2(-fabs(in0 - in1)))',
     doc='''Computes ``log2(exp2(x1) + exp2(x2))`` elementwise.
 

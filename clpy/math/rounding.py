@@ -45,7 +45,14 @@ trunc = ufunc.create_math_ufunc(
 
 
 fix = core.create_ufunc(
-    'clpy_fix', ('f->f', 'd->d'),
+    'clpy_fix',
+    (('b->e', 'out0 = convert_float_to_half((in0 >= 0)'
+              ' ? floor((float)in0)'
+              ' : ceil((float)in0))'),
+     ('B->e', 'out0 = convert_float_to_half((in0 >= 0)'
+              ' ? floor((float)in0)'
+              ' : ceil((float)in0))'),
+     'f->f', 'd->d'),
     'out0 = (in0 >= 0.0) ? floor(in0): ceil(in0)',
     doc='''If given value x is positive, it return floor(x).
     Else, it return ceil(x).

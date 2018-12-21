@@ -178,7 +178,7 @@ class TestFusionTrigonometric(unittest.TestCase):
         b = testing.shaped_reverse_arange((2, 3), xp, dtype)
         return a, b
 
-    @testing.for_dtypes(['e', 'f', 'd'])
+    @testing.for_dtypes(['f', 'd'])
     @testing.numpy_clpy_allclose(atol=1e-5)
     @fusion_default_array_equal()
     def check_unary_unit(self, name, xp, dtype):
@@ -228,14 +228,14 @@ class TestFusionHyperbolic(unittest.TestCase):
         a = testing.shaped_arange((2, 3), xp, dtype)
         return (a,)
 
-    @testing.for_dtypes(['e', 'f', 'd'])
+    @testing.for_dtypes(['f', 'd'])
     @testing.numpy_clpy_allclose(atol=1e-5)
     @fusion_default_array_equal()
     def check_unary_unit1(self, name, xp, dtype):
         a = xp.array([1, 2, 3], dtype=dtype)
         return (a,)
 
-    @testing.for_dtypes(['e', 'f', 'd'])
+    @testing.for_dtypes(['f', 'd'])
     @testing.numpy_clpy_allclose(atol=1e-5)
     @fusion_default_array_equal()
     def check_unary_unit2(self, name, xp, dtype):
@@ -273,7 +273,7 @@ class TestFusionRounding(unittest.TestCase):
         a = testing.shaped_arange((2, 3), xp, dtype)
         return (a,)
 
-    @testing.for_dtypes(['?', 'b', 'h', 'i', 'q', 'e', 'f', 'd'])
+    @testing.for_dtypes(['?', 'b', 'h', 'i', 'q', 'f', 'd'])
     @testing.numpy_clpy_allclose(atol=1e-5)
     @fusion_default_array_equal()
     def check_unary_negative(self, name, xp, dtype):
@@ -446,14 +446,14 @@ class TestFusionArithmetic(unittest.TestCase):
         b = testing.shaped_reverse_arange((2, 3), xp, dtype)
         return a, b
 
-    @testing.for_dtypes(['?', 'b', 'h', 'i', 'q', 'e', 'f', 'd'])
+    @testing.for_dtypes(['?', 'b', 'h', 'i', 'q', 'f', 'd'])
     @testing.numpy_clpy_allclose(atol=1e-5)
     @fusion_default_array_equal()
     def check_unary_negative(self, name, xp, dtype):
         a = xp.array([-3, -2, -1, 1, 2, 3], dtype=dtype)
         return (a,)
 
-    @testing.for_dtypes(['?', 'b', 'h', 'i', 'q', 'e', 'f', 'd'])
+    @testing.for_dtypes(['?', 'b', 'h', 'i', 'q', 'f', 'd'])
     @testing.numpy_clpy_allclose(atol=1e-5)
     @fusion_default_array_equal()
     def check_binary_negative(self, name, xp, dtype):
@@ -461,7 +461,7 @@ class TestFusionArithmetic(unittest.TestCase):
         b = xp.array([4, 3, 2, 1, -1, -2], dtype=dtype)
         return a, b
 
-    @testing.for_dtypes(['e', 'f', 'd'])
+    @testing.for_dtypes(['f', 'd'])
     @testing.numpy_clpy_allclose(atol=1e-5)
     @fusion_default_array_equal()
     def check_binary_negative_float(self, name, xp, dtype):
@@ -859,7 +859,7 @@ class TestFusionMisc(unittest.TestCase):
             return getattr(clpy, name)(x, y)
         return g(a, b)
 
-    @testing.for_dtypes(['?', 'b', 'h', 'i', 'q', 'e', 'f', 'd'])
+    @testing.for_dtypes(['?', 'b', 'h', 'i', 'q', 'f', 'd'])
     @testing.numpy_clpy_allclose(atol=1e-5)
     def check_unary_negative(self, name, xp, dtype, no_bool=False):
         if no_bool and numpy.dtype(dtype).char == '?':

@@ -2469,10 +2469,12 @@ public:
             os << ";\n";
             indent();
           }
-          if(is_simple)
-            os << x.name << "_data[get_CArrayIndex_" << _out_ind->ndim << "(&" << x.name << "_info, &_out_ind)/sizeof(" << x.type << ")] = " << x.name;
+          if(is_simple){
+            const auto in_or_out = x.name.substr(0, std::find_if(x.name.begin(), x.name.end(), [](char c){return ::isdigit(c);})-x.name.begin());
+            os << x.name << "_data[get_CArrayIndex_" << x.ndim << "(&" << x.name << "_info, &_" << in_or_out << "_ind)/sizeof(" << x.type << ")] = " << x.name;
+          }
           else
-            os << x.name << "_data[get_CArrayIndexI_" << _out_ind->ndim << "(&" << x.name << "_info, _i)/sizeof(" << x.type << ")] = " << x.name;
+            os << x.name << "_data[get_CArrayIndexI_" << x.ndim << "(&" << x.name << "_info, _i)/sizeof(" << x.type << ")] = " << x.name;
         }
         return;
       }
@@ -2837,6 +2839,7 @@ public:
   void VisitVarDecl(clang::VarDecl *D, bool parameter = false) {
     bool is_const = false;
     std::string init_str;
+    bool recover_suppress_specifiers = false;
     {
       const auto annons = prettyPrintPragmas(D);
       auto template_type = D->getType()->getAs<clang::TemplateSpecializationType>();
@@ -2874,10 +2877,11 @@ public:
           const bool is_raw = x.find("raw ", clpy_arg_tag_length) == clpy_arg_tag_length;
           const auto name_end = std::min(x.find(' ', tag_prefix_length), x.size());
           const auto var_name = x.substr(tag_prefix_length, name_end - tag_prefix_length);
-          const bool is_input = x.find("const", name_end) != std::string::npos;
+          //const bool is_input = x.find("const", name_end) != std::string::npos;
           if(!template_type || template_type->getTemplateName().getAsTemplateDecl()->getQualifiedNameAsString() != "CArray")
             throw std::runtime_error("invalid \"clpy_arg\" annotation (it is only for CArray argument)");
-          carray_argument(template_type, var_name, is_raw, is_input);
+          //TODO: Add const(is_input == true) if it should be
+          carray_argument(template_type, var_name, is_raw, false);
           return;
         }
         else if(!parameter && x == "clpy_elementwise_tag"){
@@ -2899,6 +2903,10 @@ public:
           const auto& name = var_info->name;
           is_const = var_info->is_input;
           init_str = " = " + name + "_data[get_CArrayIndex_" + std::to_string(var_info->ndim) + "(&" + name + "_info, &_" + x.substr(tag_length) + "_ind)/sizeof(" + var_info->type + ")]";
+          if(x.substr(tag_length) == "in"){
+            policy.SuppressSpecifiers = true;
+            recover_suppress_specifiers = true;
+          }
         }
         else if(!parameter && x.find(clpy_standard_reduction_tag) == 0){
           static constexpr std::size_t tag_length = sizeof(clpy_standard_reduction_tag)-1;
@@ -2910,6 +2918,10 @@ public:
           const auto& name = var_info->name;
           is_const = var_info->is_input;
           init_str = " = " + name + "_data[get_CArrayIndexI_" + std::to_string(var_info->ndim) + "(&" + name + "_info, _" + x.substr(tag_length) + ")/sizeof(" + var_info->type + ")]";
+          if(x.substr(tag_length) == "j"){
+            policy.SuppressSpecifiers = true;
+            recover_suppress_specifiers = true;
+          }
         }
     }
 
@@ -3004,6 +3016,8 @@ public:
     else if(!init_str.empty())
       os << init_str;
     prettyPrintAttributes(D);
+    if(recover_suppress_specifiers)
+      policy.SuppressSpecifiers = false;
   }
 
   void VisitParmVarDecl(clang::ParmVarDecl *D) {

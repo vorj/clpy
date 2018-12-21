@@ -44,7 +44,7 @@ cpdef _get_simple_reduction_kernel(
       for (size_t _i_base = get_group_id(0) * _local_stride;
            _i_base < _out_ind.size();
            _i_base += get_num_groups(0) * _local_stride) {
-        _type_reduce _s = (_type_reduce)${identity};
+        _type_reduce _s = ${identity};
         const size_t  _i = _i_base + lid % _local_stride;
         size_t  _J = _J_offset;
         for (size_t _j = _i + _j_offset; _j < _in_ind.size();
@@ -210,7 +210,8 @@ class simple_reduction_function(object):
             '__attribute__((annotate("clpy_ignore"))) CArray_{ndim_in} in0_info;' \
             '__attribute__((annotate("clpy_ignore"))) type_out0_data* out0_data;' \
             '__attribute__((annotate("clpy_ignore"))) CArray_{ndim_out} ' \
-            'out0_info;'
+            'out0_info;' \
+            'type_in0_data in0;'
         self._output_store = '__attribute__((annotate("clpy_simple_reduction_tag")))' \
                              'void __clpy_reduction_postprocess();'
         self._routine_cache = {}
@@ -310,8 +311,13 @@ def _get_reduction_kernel(
     clpy_variables_declaration = '\n'.join(
         ['__attribute__((annotate("clpy_ignore"))) {type}* {name}_data;'
          '__attribute__((annotate("clpy_ignore"))) CArray_{ndim} {name}_info;'
+         '{type} {name};'
          .format(type=p.ctype, name=p.name, ndim=a[2])
-         for p, a in zip(params, args_info) if a[0] is ndarray])
+         for p, a in zip(params, args_info) if a[0] is ndarray and not p.raw] +
+        ['__attribute__((annotate("clpy_ignore"))) {type}* {name}_data;'
+         '__attribute__((annotate("clpy_ignore"))) CArray_{ndim} {name}_info;'
+         .format(type=p.ctype, name=p.name, ndim=a[2])
+         for p, a in zip(params, args_info) if a[0] is ndarray and p.raw])
     return _get_simple_reduction_kernel(
         name, local_size, reduce_type, kernel_params, identity,
         map_expr, reduce_expr, post_map_expr,
