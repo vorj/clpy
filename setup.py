@@ -125,6 +125,7 @@ setup(
             # 'core/include/clpy/complex/ctanhf.h',
             # 'core/include/clpy/complex/math_private.h',
             'core/include/clpy/carray.clh',
+            'core/include/clpy/fp16.clh',
             'core/include/cupy/carray.hpp',
             'core/include/cuda_stub.hpp',
             'core/include/cl_stub.hpp',

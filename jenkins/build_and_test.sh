@@ -22,7 +22,7 @@ source venv/bin/activate
 
 # Install dependencies
 pip install -U pip
-pip install Cython pytest
+pip install Cython pytest mock
 
 # Ignore occurred errors below
 set +e
@@ -55,6 +55,7 @@ tests/clpy_tests/core_tests/test_cupy_aliased_ndarray.py
 tests/clpy_tests/core_tests/test_elementwise.py
 tests/clpy_tests/core_tests/test_flags.py
 tests/clpy_tests/core_tests/test_function.py
+tests/clpy_tests/core_tests/test_fusion.py
 tests/clpy_tests/core_tests/test_internal.py
 tests/clpy_tests/core_tests/test_ndarray.py
 tests/clpy_tests/core_tests/test_ndarray_contiguity.py

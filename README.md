@@ -8,17 +8,17 @@ In other words, ClPy enables softwares written in CuPy to work also on OpenCL de
 Current ClPy is beta version, forked from [CuPy v2.1.0](https://github.com/cupy/cupy/releases/tag/v2.1.0).
 ClPy is still under development and works on only limited APIs.
 
-* Basic [ndarray](https://docs-cupy.chainer.org/en/stable/reference/ndarray.html) are supported, but not perfectly
-* Basic [universal functions](https://docs-cupy.chainer.org/en/stable/reference/ufunc.html) are supported, but not perfectly
-* Most of [custom kernels](https://docs-cupy.chainer.org/en/stable/reference/kernel.html) are supported, but some custom kernel codes might be fail to compile and/or run
-* Only SGEMM is supported in BLAS library
+* Most of [ndarray](https://docs-cupy.chainer.org/en/v2.5.0/reference/ndarray.html) are supported, but not perfectly
+* Most of [universal functions](https://docs-cupy.chainer.org/en/v2.5.0/reference/ufunc.html) are supported, but not perfectly
+* All [custom kernel](https://docs-cupy.chainer.org/en/v2.5.0/reference/kernel.html)s are supported.
+* All BLAS APIs used by ClPy itself are supported. Other types are currently not.
 * Sparse matrix, dnn, rand libraries are not supported
 * half and complex are not supported
 * Works on only a single device
 * No multiple command queue (Stream on CUDA)
 * Dockerfile and some other files are just neglected thus don't work well
 
-Original CuPy's tests are not passed perfectly. See current [CuPy's test and example results](https://github.com/fixstars/ClPy/wiki/cupy_test_example_results).
+Many original CuPy's tests are passed but not perfectly. See current [CuPy's test and example results](https://github.com/fixstars/ClPy/wiki/cupy_test_example_results).
 
 [Chainer](https://chainer.org/) works with limited situation.
 Some examples are confirmed to work. See current [Chainer's test and example results](https://github.com/fixstars/ClPy/wiki/chainer_test_example_results).
@@ -119,10 +119,10 @@ $ python -m pytest test_you_want.py
 
 ## Future plan
 
-We are developing v0.2.1beta1 for next release.
+We are developing v0.2.1beta2 for next release.
 
-* Map buffer for host memory
-* Support all BLAS APIs and accelerate them
+* Support all BLAS APIs
+* Accelerate chainer's example performance
 * Multiple devices
 * Multiple CommandQueue (Stream)
 * -- and other functions and/or bug fixes that someone develops and/or requests..
