@@ -5,7 +5,7 @@ import six
 
 import clpy
 from clpy import backend
-from clpy.backend.opencl.exceptions import OpenCLProgramBuildError
+# from clpy.backend.opencl.exceptions import OpenCLProgramBuildError
 from clpy.backend.ultima.exceptions import UltimaRuntimeError
 from clpy import core
 from clpy import testing
