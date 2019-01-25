@@ -86,17 +86,20 @@ cdef cl_program CreateProgram(sources, cl_context context, num_devices,
                          <void*>NULL, <void*>NULL)
     except OpenCLRuntimeError as err:
         if err.status == CL_BUILD_PROGRAM_FAILURE:
-            log = GetProgramBuildLog(program)
+            log = str()
+            for id in range(env.num_devices):
+                log += "Device#{0}: {1}".format(id, \
+                    GetProgramBuildLog(program, env.get_devices()[id]))
             err = OpenCLProgramBuildError(err, log)
         raise err
 
     return program
 
-cdef str GetProgramBuildLog(cl_program program):
+cdef str GetProgramBuildLog(cl_program program, cl_device_id device):
     cdef size_t length
     cdef cl_int status = api.clGetProgramBuildInfo(
         program,
-        env.get_primary_device(),
+        device,
         CL_PROGRAM_BUILD_LOG,
         0,
         NULL,
@@ -107,7 +110,7 @@ cdef str GetProgramBuildLog(cl_program program):
     array.resize(info, length)
     status = api.clGetProgramBuildInfo(
         program,
-        env.get_primary_device(),
+        device,
         CL_PROGRAM_BUILD_LOG,
         length,
         info.data.as_voidptr,
