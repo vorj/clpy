@@ -74,8 +74,13 @@ tests/clpy_tests/linalg_tests/test_product.py
 tests/clpy_tests/logic_tests/test_comparison.py
 tests/clpy_tests/logic_tests/test_ops.py
 tests/clpy_tests/logic_tests/test_type_test.py
+tests/clpy_tests/math_tests/test_arithmetic.py
 tests/clpy_tests/math_tests/test_explog.py
 tests/clpy_tests/math_tests/test_floating.py
+tests/clpy_tests/math_tests/test_hyperbolic.py
+tests/clpy_tests/math_tests/test_misc.py
+tests/clpy_tests/math_tests/test_rounding.py
+tests/clpy_tests/math_tests/test_trigonometric.py
 tests/clpy_tests/math_tests/test_window.py
 tests/clpy_tests/random_tests/test_distributions.py
 tests/clpy_tests/sorting_tests/test_count.py
