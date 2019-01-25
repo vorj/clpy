@@ -88,9 +88,7 @@ num_platforms = api.GetPlatformIDs(1, &__platforms_ptr[0])
 cdef cl_platform_id primary_platform = __platforms_ptr[0]
 logging.info("SUCCESS")
 
-
 check_platform_version(primary_platform, required_version=(1, 2))
-
 
 logging.info("Get num_devices...", end='')
 cdef cl_uint __num_devices = api.GetDeviceIDs(
@@ -102,7 +100,8 @@ logging.info("SUCCESS")
 logging.info("%d device(s) found" % __num_devices)
 
 logging.info("Get all devices...", end='')
-cdef cl_device_id* __devices = <cl_device_id*>malloc(sizeof(cl_device_id)*__num_devices)
+cdef cl_device_id* __devices = \
+    <cl_device_id*>malloc(sizeof(cl_device_id)*__num_devices)
 api.GetDeviceIDs(
     primary_platform,
     CL_DEVICE_TYPE_ALL,
@@ -114,7 +113,6 @@ logging.info("SUCCESS")
 for id in range(__num_devices):
     check_device_version(__devices[id], required_version=(1, 2))
 
-
 logging.info("Create context...", end='')
 cdef cl_context __context = api.CreateContext(
     properties=<cl_context_properties*>NULL,
@@ -124,16 +122,23 @@ cdef cl_context __context = api.CreateContext(
     user_data=<void*>NULL)
 logging.info("SUCCESS")
 
-logging.info("Create command_queue...", end='')
-cdef cl_command_queue __command_queue \
-    = api.CreateCommandQueue(__context, __devices[0], 0)
+logging.info("Create command_queues...", end='')
+cdef cl_command_queue* __command_queues = \
+    <cl_command_queue*>malloc(sizeof(cl_command_queue)*__num_devices)
+for id in range(__num_devices):
+    __command_queues[id] = \
+        api.CreateCommandQueue(__context, __devices[id], 0)
 logging.info("SUCCESS")
+
+##########################################
+# Functions
+##########################################
 
 cdef cl_context get_context():
     return __context
 
 cdef cl_command_queue get_command_queue():
-    return __command_queue
+    return __command_queues[0]
 
 cdef cl_device_id* get_devices():
     return &__devices[0]
@@ -144,16 +149,11 @@ cdef cl_device_id get_primary_device():
 
 def release():
     """Release command_queue and context automatically."""
-    logging.info("Flush...", end='')
-    api.Flush(__command_queue)
-    logging.info("SUCCESS")
-
-    logging.info("Finish...", end='')
-    api.Finish(__command_queue)
-    logging.info("SUCCESS")
-
-    logging.info("Release command queue...", end='')
-    api.ReleaseCommandQueue(__command_queue)
+    logging.info("Flush/Finish/Release command queues...", end='')
+    for id in range(__num_devices):
+        api.Flush(__command_queues[id])
+        api.Finish(__command_queues[id])
+        api.ReleaseCommandQueue(__command_queues[id])
     logging.info("SUCCESS")
 
     logging.info("Release context...", end='')
