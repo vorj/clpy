@@ -29,7 +29,7 @@ class TestMisc(unittest.TestCase):
         b = testing.shaped_reverse_arange((2, 3), xp, dtype)
         return getattr(xp, name)(a, b)
 
-    @testing.for_dtypes(['?', 'b', 'h', 'i', 'q', 'e', 'f', 'd'])
+    @testing.for_dtypes(['?', 'b', 'h', 'i', 'q', 'f', 'd'])
     @testing.numpy_clpy_allclose(atol=1e-5)
     def check_unary_negative(self, name, xp, dtype, no_bool=False):
         if no_bool and numpy.dtype(dtype).char == '?':
