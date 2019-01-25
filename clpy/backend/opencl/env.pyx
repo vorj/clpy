@@ -109,7 +109,6 @@ api.GetDeviceIDs(
     __num_devices,
     &__devices[0])
 num_devices = __num_devices     # provide as pure python interface
-cdef cl_device_id __primary_device = __devices[0]
 logging.info("SUCCESS")
 
 for id in range(__num_devices):
@@ -127,7 +126,7 @@ logging.info("SUCCESS")
 
 logging.info("Create command_queue...", end='')
 cdef cl_command_queue __command_queue \
-    = api.CreateCommandQueue(__context, __primary_device, 0)
+    = api.CreateCommandQueue(__context, __devices[0], 0)
 logging.info("SUCCESS")
 
 cdef cl_context get_context():
@@ -140,7 +139,7 @@ cdef cl_device_id* get_devices():
     return &__devices[0]
 
 cdef cl_device_id get_primary_device():
-    return __primary_device
+    return __devices[0]
 
 
 def release():
