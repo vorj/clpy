@@ -88,7 +88,7 @@ cpdef _get_simple_reduction_kernel(
         output_expr=output_expr,
         output_store=output_store,
         preamble=preamble,
-        typeof_size=clpy.backend.opencl.utility.device_typeof_size,
+        typeof_size=clpy.backend.opencl.utility.typeof_size(),
         clpy_variables_declaration=clpy_variables_declaration)
     module = compile_with_cache(module_code, options)
     return module.get_function(name)

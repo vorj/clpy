@@ -5,6 +5,7 @@ import time
 
 cimport api
 cimport env
+import env
 import cython
 from cpython cimport array
 from exceptions cimport check_status
@@ -140,18 +141,18 @@ cdef RunNDRangeKernel(
     )
     api.WaitForEvents(1, &event[0])
 
-cdef __device_typeof_size():
+__typessof_sizes = ['ulong'] * env.num_devices
+for id in range(env.num_devices):
     host_size_t_bits = cython.sizeof(Py_ssize_t)*8
     device_address_bits = GetDeviceAddressBits(
-        env.get_primary_device())
+        env.get_devices()[id])
     if host_size_t_bits != device_address_bits:
         raise "Host's size_t is different from device's size_t."
 
     if device_address_bits == 32:
-        return 'uint'
-    elif device_address_bits == 64:
-        return 'ulong'
-    else:
+        __typessof_sizes[id] = 'uint'
+    elif device_address_bits != 64:
         raise "There is no type of size_t."
 
-device_typeof_size = __device_typeof_size()
+def typeof_size():
+    return __typessof_sizes[0]
