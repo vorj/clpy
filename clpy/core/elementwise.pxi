@@ -134,20 +134,18 @@ cpdef list _preprocess_args(args):
     - Converts Python scalars into NumPy scalars
     """
     cdef list ret = []
-#    cdef int dev_id = device.get_device_id()
+    cdef int dev_id = device.get_device_id()
     cdef type typ
 
     for arg in args:
         typ = type(arg)
         if typ is ndarray:
-            pass
-            # TODO(LWisteria): Implement OpenCL device check
-#            arr_dev = (<ndarray?>arg).data.device
-#            if arr_dev is not None and arr_dev.id != dev_id:
-#                raise ValueError(
-#                    'Array device must be same as the current '
-#                    'device: array device = %d while current = %d'
-#                    % (arr_dev.id, dev_id))
+            arr_dev = (<ndarray?>arg).data.device
+            if arr_dev is not None and arr_dev.id != dev_id:
+                raise ValueError(
+                    'Array device must be same as the current '
+                    'device: array device = %d while current = %d'
+                    % (arr_dev.id, dev_id))
         elif typ in _python_scalar_type_set:
             arg = _python_scalar_to_numpy_scalar(arg)
         elif typ in _numpy_scalar_type_set:

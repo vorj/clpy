@@ -1690,9 +1690,8 @@ cdef class ndarray:
         if self.size == 0:
             return numpy.ndarray(self.shape, dtype=self.dtype)
 
-#        with self.device:
-#            a_gpu = ascontiguousarray(self)
-        a_gpu = ascontiguousarray(self)
+        with self.device:
+            a_gpu = ascontiguousarray(self)
         a_cpu = numpy.empty(self._shape, dtype=self.dtype)
         ptr = a_cpu.ctypes.get_as_parameter()
         if stream is None:
@@ -2131,15 +2130,11 @@ cpdef ndarray array(obj, dtype=None, bint copy=True, str order='K',
         if dtype is None:
             dtype = src.dtype
 
-        # --- device is not implemented ---
-        # dev = src.data.device
-        # if dev is None or dev.id == device.get_device_id():
-        #     a = src.astype(dtype, order=order, copy=copy)
-        # else:
-        #     a = src.copy(order=order).astype(dtype, copy=False)
-        # --- device is not implemented ---
-
-        a = src.astype(dtype, order=order, copy=copy)
+        dev = src.data.device
+        if dev is None or dev.id == device.get_device_id():
+            a = src.astype(dtype, order=order, copy=copy)
+        else:
+            a = src.copy(order=order).astype(dtype, copy=False)
 
         ndim = a._shape.size()
         if ndmin > ndim:
