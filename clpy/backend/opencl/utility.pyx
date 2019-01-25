@@ -92,7 +92,7 @@ cdef cl_program CreateProgram(sources, cl_context context, num_devices,
 
     return program
 
-cdef GetProgramBuildLog(cl_program program):
+cdef str GetProgramBuildLog(cl_program program):
     cdef size_t length
     cdef cl_int status = api.clGetProgramBuildInfo(
         program,
