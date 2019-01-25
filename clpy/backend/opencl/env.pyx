@@ -113,6 +113,8 @@ logging.info("SUCCESS")
 for id in range(__num_devices):
     check_device_version(__devices[id], required_version=(1, 2))
 
+cdef int __current_device_id=0
+
 logging.info("Create context...", end='')
 cdef cl_context __context = api.CreateContext(
     properties=<cl_context_properties*>NULL,
@@ -139,6 +141,14 @@ cdef cl_context get_context():
 
 cdef cl_command_queue get_command_queue():
     return __command_queues[0]
+
+cpdef int get_device_id():
+    global __current_device_id
+    return __current_device_id
+
+cpdef set_device_id(int id):
+    global __current_device_id
+    __current_device_id = id
 
 cdef cl_device_id* get_devices():
     return &__devices[0]

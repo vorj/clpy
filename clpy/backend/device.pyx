@@ -7,18 +7,14 @@ import six
 # from clpy.backend cimport cublas
 # from clpy.backend cimport cusparse
 # from clpy.backend cimport runtime
+from clpy.backend.opencl cimport env
 
-cdef int current_device_id=0
-
-cpdef int get_device_id() except *:
-    global current_device_id
-    return current_device_id
-
+cpdef int get_device_id():
+    return env.get_device_id()
 
 cdef dict _cublas_handles = {}
 cdef dict _cusolver_handles = {}
 cdef dict _cusparse_handles = {}
-
 
 cpdef get_cublas_handle():
     dev_id = get_device_id()
@@ -86,8 +82,7 @@ cdef class Device:
         return self
 
     def __exit__(self, *args):
-        global current_device_id
-        current_device_id = self._device_stack.pop()
+        env.set_device_id(self._device_stack.pop())
 
     def __repr__(self):
         return '<OpenCL Device %d>' % self.id
@@ -98,8 +93,7 @@ cdef class Device:
         If you want to switch a device temporarily, use the *with* statement.
 
         """
-        global current_device_id
-        current_device_id = self.id
+        env.set_device_id(self.id)
 
     cpdef synchronize(self):
         """Synchronizes the current thread to the device."""
