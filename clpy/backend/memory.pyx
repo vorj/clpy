@@ -570,7 +570,7 @@ cdef class SingleDeviceMemoryPool:
         if allocator is None:
             allocator = _malloc
         self._allocation_unit_size = clpy.backend.opencl.utility.GetDeviceMemBaseAddrAlign(
-            clpy.backend.opencl.env.get_primary_device()) // 8
+            clpy.backend.opencl.env.get_device()) // 8
         self._initial_bins_size = 1024
         self._in_use = {}
         self._free = [None] * self._initial_bins_size

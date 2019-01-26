@@ -4278,7 +4278,7 @@ def _nonzero_kernel(src_dtype, src_ndim, index_dtype, dst_dtype):
 cdef determine_scan_hunk_size():
     cdef size_t max_workgroup_size
     clpy.backend.opencl.api.GetDeviceInfo(
-        device=clpy.backend.opencl.env.get_primary_device(),
+        device=clpy.backend.opencl.env.get_device(),
         param_name=clpy.backend.opencl.api.CL_DEVICE_MAX_WORK_GROUP_SIZE,
         param_value_size=sizeof(size_t),
         param_value=&max_workgroup_size,

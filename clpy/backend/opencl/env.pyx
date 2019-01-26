@@ -140,7 +140,8 @@ cdef cl_context get_context():
     return __context
 
 cdef cl_command_queue get_command_queue():
-    return __command_queues[0]
+    global __current_device_id
+    return __command_queues[__current_device_id]
 
 cpdef int get_device_id():
     global __current_device_id
@@ -153,8 +154,9 @@ cpdef set_device_id(int id):
 cdef cl_device_id* get_devices():
     return &__devices[0]
 
-cdef cl_device_id get_primary_device():
-    return __devices[0]
+cdef cl_device_id get_device():
+    global __current_device_id
+    return __devices[__current_device_id]
 
 
 def release():

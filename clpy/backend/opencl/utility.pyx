@@ -158,4 +158,4 @@ for id in range(env.num_devices):
         raise "There is no type of size_t."
 
 def typeof_size():
-    return __typessof_sizes[0]
+    return __typessof_sizes[env.get_device_id()]
