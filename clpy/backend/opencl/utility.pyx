@@ -1,3 +1,4 @@
+import env
 import os
 import re
 import tempfile
@@ -5,7 +6,6 @@ import time
 
 cimport api
 cimport env
-import env
 import cython
 from cpython cimport array
 from exceptions cimport check_status
@@ -88,8 +88,8 @@ cdef cl_program CreateProgram(sources, cl_context context, num_devices,
         if err.status == CL_BUILD_PROGRAM_FAILURE:
             log = str()
             for id in range(env.num_devices):
-                log += "Device#{0}: {1}".format(id, \
-                    GetProgramBuildLog(program, env.get_devices()[id]))
+                l = GetProgramBuildLog(program, env.get_devices()[id])
+                log += "Device#{0}: {1}".format(id, l)
             err = OpenCLProgramBuildError(err, log)
         raise err
 
@@ -156,6 +156,7 @@ for id in range(env.num_devices):
         __typessof_sizes[id] = 'uint'
     elif device_address_bits != 64:
         raise "There is no type of size_t."
+
 
 def typeof_size():
     return __typessof_sizes[env.get_device_id()]
