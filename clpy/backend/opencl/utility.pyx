@@ -138,7 +138,6 @@ cdef RunNDRangeKernel(
         event_wait_list=event_wait_list,
         event=&event[0]
     )
-    api.WaitForEvents(1, &event[0])
 
 cdef __device_typeof_size():
     host_size_t_bits = cython.sizeof(Py_ssize_t)*8
