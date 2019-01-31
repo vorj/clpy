@@ -114,31 +114,6 @@ cdef GetProgramBuildLog(cl_program program):
     check_status(status)
     return info.tobytes().decode('utf8')
 
-
-# Synchronize Running Kernel
-cdef RunNDRangeKernel(
-        cl_command_queue command_queue,
-        cl_kernel kernel,
-        size_t work_dim,
-        size_t* global_work_offset,
-        size_t* global_work_size,
-        size_t* local_work_size,
-        cl_uint num_events_in_wait_list,
-        cl_event* event_wait_list):
-
-    cdef cl_event[1] event
-    api.EnqueueNDRangeKernel(
-        command_queue=command_queue,
-        kernel=kernel,
-        work_dim=work_dim,
-        global_work_offset=global_work_offset,
-        global_work_size=global_work_size,
-        local_work_size=local_work_size,
-        num_events_in_wait_list=num_events_in_wait_list,
-        event_wait_list=event_wait_list,
-        event=&event[0]
-    )
-
 cdef __device_typeof_size():
     host_size_t_bits = cython.sizeof(Py_ssize_t)*8
     device_address_bits = GetDeviceAddressBits(
