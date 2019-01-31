@@ -159,4 +159,4 @@ for id in range(env.num_devices):
 
 
 def typeof_size():
-    return __typesof_sizes[env.get_device_id()]
+    return __typesof_size[env.get_device_id()]
