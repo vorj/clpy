@@ -144,7 +144,7 @@ cdef RunNDRangeKernel(
     )
     api.WaitForEvents(1, &event[0])
 
-__typessof_sizes = ['ulong'] * env.num_devices
+__typesof_size = ['ulong'] * env.num_devices
 for id in range(env.num_devices):
     host_size_t_bits = cython.sizeof(Py_ssize_t)*8
     device_address_bits = GetDeviceAddressBits(
@@ -153,10 +153,10 @@ for id in range(env.num_devices):
         raise "Host's size_t is different from device's size_t."
 
     if device_address_bits == 32:
-        __typessof_sizes[id] = 'uint'
+        __typesof_size[id] = 'uint'
     elif device_address_bits != 64:
         raise "There is no type of size_t."
 
 
 def typeof_size():
-    return __typessof_sizes[env.get_device_id()]
+    return __typesof_sizes[env.get_device_id()]
