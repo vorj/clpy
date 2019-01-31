@@ -123,7 +123,7 @@ cdef void _launch(clpy.backend.opencl.types.cl_kernel kernel, global_work_size,
     else:
         lws_ptr = <size_t*>NULL
 
-    clpy.backend.opencl.utility.RunNDRangeKernel(
+    clpy.backend.opencl.api.EnqueueNDRangeKernel(
         command_queue=clpy.backend.opencl.env.get_command_queue(),
         kernel=kernel,
         work_dim=global_dim,  # asserted to be equal to local_dim
@@ -131,7 +131,8 @@ cdef void _launch(clpy.backend.opencl.types.cl_kernel kernel, global_work_size,
         global_work_size=&gws[0],
         local_work_size=lws_ptr,
         num_events_in_wait_list=0,
-        event_wait_list=<cl_event*>NULL)
+        event_wait_list=<cl_event*>NULL,
+        event=NULL)
 
 
 cdef class Function:
