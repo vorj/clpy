@@ -711,7 +711,7 @@ class TestBlas3GEMM(unittest.TestCase):
         # create chunk and free to prepare chunk in pool
         pool = clpy.backend.memory.SingleDeviceMemoryPool()
         clpy.backend.memory.set_allocator(pool.malloc)
-        pooled_chunk_size = clpy.backend.memory.subbuffer_alignment * 2
+        pooled_chunk_size = pool._allocation_unit_size * 2
         tmp = pool.malloc(pooled_chunk_size)
         pool.free(tmp.buf, pooled_chunk_size, 0)
 
@@ -770,7 +770,7 @@ class TestBlas3GEMM(unittest.TestCase):
         # create chunk and free to prepare chunk in pool
         pool = clpy.backend.memory.SingleDeviceMemoryPool()
         clpy.backend.memory.set_allocator(pool.malloc)
-        pooled_chunk_size = clpy.backend.memory.subbuffer_alignment * 2
+        pooled_chunk_size = pool._allocation_unit_size * 2
         tmp = pool.malloc(pooled_chunk_size)
         pool.free(tmp.buf, pooled_chunk_size, 0)
 
@@ -829,7 +829,7 @@ class TestBlas3GEMM(unittest.TestCase):
         # create chunk and free to prepare chunk in pool
         pool = clpy.backend.memory.SingleDeviceMemoryPool()
         clpy.backend.memory.set_allocator(pool.malloc)
-        pooled_chunk_size = clpy.backend.memory.subbuffer_alignment * 2
+        pooled_chunk_size = pool._allocation_unit_size * 2
         tmp = pool.malloc(pooled_chunk_size)
         pool.free(tmp.buf, pooled_chunk_size, 0)
 

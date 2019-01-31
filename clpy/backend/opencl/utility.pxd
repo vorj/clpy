@@ -12,4 +12,4 @@ cdef is_valid_kernel_name(name)
 cdef cl_program CreateProgram(sources, cl_context context, num_devices,
                               cl_device_id* devices_ptrs,
                               options=*) except *
-cdef GetProgramBuildLog(cl_program program)
+cdef str GetProgramBuildLog(cl_program program, cl_device_id device)

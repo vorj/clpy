@@ -25,9 +25,6 @@ from clpy.backend.opencl.types cimport cl_mem
 
 thread_local = threading.local()
 
-subbuffer_alignment = clpy.backend.opencl.utility.GetDeviceMemBaseAddrAlign(
-    clpy.backend.opencl.env.get_primary_device()) // 8
-
 cdef inline _ensure_context(int device_id):
 
     """Ensure that CUcontext bound to the calling host thread exists.
@@ -572,7 +569,9 @@ cdef class SingleDeviceMemoryPool:
     def __init__(self, allocator=None):
         if allocator is None:
             allocator = _malloc
-        self._allocation_unit_size = subbuffer_alignment
+        self._allocation_unit_size = \
+            clpy.backend.opencl.utility.GetDeviceMemBaseAddrAlign(
+                clpy.backend.opencl.env.get_device()) // 8
         self._initial_bins_size = 1024
         self._in_use = {}
         self._free = [None] * self._initial_bins_size

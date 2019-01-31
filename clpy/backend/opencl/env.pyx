@@ -7,6 +7,8 @@ import re
 from clpy.backend.opencl cimport api
 from cython.view cimport array as cython_array
 
+from libc.stdlib cimport malloc
+
 cdef interpret_versionstr(versionstr):
     version_detector = re.compile('''OpenCL (\d+)\.(\d+)''')
     match = version_detector.match(versionstr)
@@ -86,76 +88,84 @@ num_platforms = api.GetPlatformIDs(1, &__platforms_ptr[0])
 cdef cl_platform_id primary_platform = __platforms_ptr[0]
 logging.info("SUCCESS")
 
-
 check_platform_version(primary_platform, required_version=(1, 2))
-
 
 logging.info("Get num_devices...", end='')
 cdef cl_uint __num_devices = api.GetDeviceIDs(
     primary_platform,
-    CL_DEVICE_TYPE_DEFAULT,
+    CL_DEVICE_TYPE_ALL,
     0,
     <cl_device_id*>NULL)
 logging.info("SUCCESS")
 logging.info("%d device(s) found" % __num_devices)
 
-# clpy now supports only one device.
-__num_devices = 1
-
-logging.info("Get the first device...", end='')
-cdef cl_device_id[1] __devices_ptr
+logging.info("Get all devices...", end='')
+cdef cl_device_id* __devices = \
+    <cl_device_id*>malloc(sizeof(cl_device_id)*__num_devices)
 api.GetDeviceIDs(
     primary_platform,
-    1,
+    CL_DEVICE_TYPE_ALL,
     __num_devices,
-    &__devices_ptr[0])
+    &__devices[0])
 num_devices = __num_devices     # provide as pure python interface
-cdef cl_device_id __primary_device = __devices_ptr[0]
 logging.info("SUCCESS")
 
+for id in range(__num_devices):
+    check_device_version(__devices[id], required_version=(1, 2))
 
-check_device_version(__primary_device, required_version=(1, 2))
-
+cdef int __current_device_id=0
 
 logging.info("Create context...", end='')
 cdef cl_context __context = api.CreateContext(
     properties=<cl_context_properties*>NULL,
     num_devices=__num_devices,
-    devices=&__devices_ptr[0],
+    devices=&__devices[0],
     pfn_notify=<void*>NULL,
     user_data=<void*>NULL)
 logging.info("SUCCESS")
 
-logging.info("Create command_queue...", end='')
-cdef cl_command_queue __command_queue \
-    = api.CreateCommandQueue(__context, __devices_ptr[0], 0)
+logging.info("Create command_queues...", end='')
+cdef cl_command_queue* __command_queues = \
+    <cl_command_queue*>malloc(sizeof(cl_command_queue)*__num_devices)
+for id in range(__num_devices):
+    __command_queues[id] = \
+        api.CreateCommandQueue(__context, __devices[id], 0)
 logging.info("SUCCESS")
+
+##########################################
+# Functions
+##########################################
 
 cdef cl_context get_context():
     return __context
 
 cdef cl_command_queue get_command_queue():
-    return __command_queue
+    global __current_device_id
+    return __command_queues[__current_device_id]
 
-cdef cl_device_id* get_devices_ptrs():
-    return &__devices_ptr[0]
+cpdef int get_device_id():
+    global __current_device_id
+    return __current_device_id
 
-cdef cl_device_id get_primary_device():
-    return __primary_device
+cpdef set_device_id(int id):
+    global __current_device_id
+    __current_device_id = id
+
+cdef cl_device_id* get_devices():
+    return &__devices[0]
+
+cdef cl_device_id get_device():
+    global __current_device_id
+    return __devices[__current_device_id]
 
 
 def release():
     """Release command_queue and context automatically."""
-    logging.info("Flush...", end='')
-    api.Flush(__command_queue)
-    logging.info("SUCCESS")
-
-    logging.info("Finish...", end='')
-    api.Finish(__command_queue)
-    logging.info("SUCCESS")
-
-    logging.info("Release command queue...", end='')
-    api.ReleaseCommandQueue(__command_queue)
+    logging.info("Flush/Finish/Release command queues...", end='')
+    for id in range(__num_devices):
+        api.Flush(__command_queues[id])
+        api.Finish(__command_queues[id])
+        api.ReleaseCommandQueue(__command_queues[id])
     logging.info("SUCCESS")
 
     logging.info("Release context...", end='')

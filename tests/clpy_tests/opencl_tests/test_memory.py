@@ -199,7 +199,7 @@ class TestSingleDeviceMemoryPoolwithChunk(unittest.TestCase):
         # create chunk and free to prepare chunk in pool
         self.pool = clpy.backend.memory.SingleDeviceMemoryPool()
         clpy.backend.memory.set_allocator(self.pool.malloc)
-        self.pooled_chunk_size = clpy.backend.memory.subbuffer_alignment * 2
+        self.pooled_chunk_size = self.pool._allocation_unit_size * 2
         self.tmp = self.pool.malloc(self.pooled_chunk_size)
         self.pool.free(self.tmp.buf, self.pooled_chunk_size, 0)
 
