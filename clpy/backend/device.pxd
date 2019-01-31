@@ -1,4 +1,4 @@
-cpdef int get_device_id() except *
+cpdef int get_device_id()
 cpdef get_cublas_handle()
 
 cdef class Device:

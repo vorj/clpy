@@ -20,4 +20,5 @@ and [original cupy's contributors and others](https://github.com/fixstars/clpy/g
 
 ## Acknowledgment
 
-This work is partially based on results obtained from a project commissioned by the New Energy and Industrial Technology Development Organization (NEDO), Japan.
+* This work is partially based on results obtained from a project commissioned by the New Energy and Industrial Technology Development Organization (NEDO), Japan.
+* The machine to develop [multiple GPU support](https://github.com/fixstars/clpy/pull/160) is voluntarily provided by [SAKURA Internet Inc.](https://www.sakura.ad.jp/koukaryoku/).

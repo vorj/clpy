@@ -190,7 +190,7 @@ cpdef function.Module compile_with_cache(
         [source.encode('utf-8')],
         clpy.backend.opencl.env.get_context(),
         clpy.backend.opencl.env.num_devices,
-        clpy.backend.opencl.env.get_devices_ptrs(),
+        clpy.backend.opencl.env.get_devices(),
         optionStr.encode('utf-8'))
     cdef function.Module module = function.Module()
     module.set(program)

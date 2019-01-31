@@ -1,3 +1,4 @@
+import env
 import os
 import re
 import tempfile
@@ -85,17 +86,20 @@ cdef cl_program CreateProgram(sources, cl_context context, num_devices,
                          <void*>NULL, <void*>NULL)
     except OpenCLRuntimeError as err:
         if err.status == CL_BUILD_PROGRAM_FAILURE:
-            log = GetProgramBuildLog(program)
+            log = str()
+            for id in range(env.num_devices):
+                l = GetProgramBuildLog(program, env.get_devices()[id])
+                log += "Device#{0}: {1}".format(id, l)
             err = OpenCLProgramBuildError(err, log)
         raise err
 
     return program
 
-cdef GetProgramBuildLog(cl_program program):
+cdef str GetProgramBuildLog(cl_program program, cl_device_id device):
     cdef size_t length
     cdef cl_int status = api.clGetProgramBuildInfo(
         program,
-        env.get_primary_device(),
+        device,
         CL_PROGRAM_BUILD_LOG,
         0,
         NULL,
@@ -106,7 +110,7 @@ cdef GetProgramBuildLog(cl_program program):
     array.resize(info, length)
     status = api.clGetProgramBuildInfo(
         program,
-        env.get_primary_device(),
+        device,
         CL_PROGRAM_BUILD_LOG,
         length,
         info.data.as_voidptr,
@@ -139,18 +143,19 @@ cdef RunNDRangeKernel(
         event=&event[0]
     )
 
-cdef __device_typeof_size():
+__typesof_size = ['ulong'] * env.num_devices
+for id in range(env.num_devices):
     host_size_t_bits = cython.sizeof(Py_ssize_t)*8
     device_address_bits = GetDeviceAddressBits(
-        env.get_primary_device())
+        env.get_devices()[id])
     if host_size_t_bits != device_address_bits:
         raise "Host's size_t is different from device's size_t."
 
     if device_address_bits == 32:
-        return 'uint'
-    elif device_address_bits == 64:
-        return 'ulong'
-    else:
+        __typesof_size[id] = 'uint'
+    elif device_address_bits != 64:
         raise "There is no type of size_t."
 
-device_typeof_size = __device_typeof_size()
+
+def typeof_size():
+    return __typesof_size[env.get_device_id()]

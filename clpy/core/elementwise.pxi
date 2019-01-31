@@ -303,7 +303,7 @@ cdef class ParameterInfo:
             pass
         elif t == 'kernel_arg_size_t':
             self.dtype = numpy.intp
-            self.ctype = clpy.backend.opencl.utility.device_typeof_size
+            self.ctype = clpy.backend.opencl.utility.typeof_size()
         elif len(t) == 1:
             self.ctype = t
         else:
