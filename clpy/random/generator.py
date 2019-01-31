@@ -169,18 +169,21 @@ class RandomState(object):
 
         """
         dtype = _check_and_get_dtype(dtype)
-        out = clpy.empty(size, dtype=dtype)
 
         if (not isinstance(self.seed_array, clpy.ndarray)
-                or self.seed_array.size != numpy.prod(size)):
+                or self.seed_array.size < numpy.prod(size)):
             self.seed_array = clpy.empty(size, "uint")
             tmp_seed_array = clpy.empty(size, "uint")
             tmp_seed_array.fill(self.seed_value)
             RandomState._init_kernel(tmp_seed_array, self.seed_array)
             # not to use similar number for the first generation
+            out = clpy.empty(size, dtype=dtype)
             RandomState._lcg_kernel(self.seed_array, out)
-
-        RandomState._lcg_kernel(self.seed_array, out)
+            RandomState._lcg_kernel(self.seed_array, out)
+        else:
+            tmp = clpy.empty(self.seed_array.shape, dtype=dtype)
+            RandomState._lcg_kernel(self.seed_array, tmp)
+            out = tmp[0:numpy.prod(size)].reshape(size)
 
         return out
 
