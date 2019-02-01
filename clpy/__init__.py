@@ -308,10 +308,10 @@ from numpy import typename  # NOQA
 # -----------------------------------------------------------------------------
 # Indexing routines
 # -----------------------------------------------------------------------------
-# from clpy.indexing.generate import c_  # NOQA
+from clpy.indexing.generate import c_  # NOQA
 from clpy.indexing.generate import indices  # NOQA
-# from clpy.indexing.generate import ix_  # NOQA
-# from clpy.indexing.generate import r_  # NOQA
+from clpy.indexing.generate import ix_  # NOQA
+from clpy.indexing.generate import r_  # NOQA
 
 # from clpy.indexing.indexing import choose  # NOQA
 # from clpy.indexing.indexing import diagonal  # NOQA
