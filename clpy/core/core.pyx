@@ -4227,7 +4227,7 @@ def _nonzero_1d_kernel(src_dtype, index_dtype):
     __kernel void ${name}(const CArray<${src_dtype}, 1> src,
         const CArray<${index_dtype}, 1> scaned_index,
         CArray<${index_dtype}, 1> dst){
-        int thid = get_group_id(0) * get_local_size(0) + get_local_id(0);
+        int thid = get_global_id(0);
         ptrdiff_t n = src.size();
         if (thid < n){
             if (src[thid] != 0){
