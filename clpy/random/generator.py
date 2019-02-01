@@ -181,7 +181,8 @@ class RandomState(object):
             RandomState._lcg_kernel(self.seed_array, out)
             RandomState._lcg_kernel(self.seed_array, out)
         else:
-            tmp = self.seed_array.reshape(self.seed_array.size)[0:numpy.prod(size)].reshape(size)
+            tmp = self.seed_array.reshape(self.seed_array.size)[
+                0:numpy.prod(size)].reshape(size)
             RandomState._lcg_kernel(tmp, out)
 
         return out
