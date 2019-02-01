@@ -10,14 +10,14 @@ class TestContent(unittest.TestCase):
 
     _multiprocess_can_split_ = True
 
-    @testing.for_dtypes('efFdD')
+    @testing.for_dtypes('fd')
     @testing.numpy_clpy_array_equal()
     def check_unary_inf(self, name, xp, dtype):
         a = xp.array([-3, numpy.inf, -1, -numpy.inf, 0, 1, 2],
                      dtype=dtype)
         return getattr(xp, name)(a)
 
-    @testing.for_dtypes('efFdD')
+    @testing.for_dtypes('fd')
     @testing.numpy_clpy_array_equal()
     def check_unary_nan(self, name, xp, dtype):
         a = xp.array(
