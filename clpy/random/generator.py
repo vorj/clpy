@@ -170,17 +170,23 @@ class RandomState(object):
         """
         dtype = _check_and_get_dtype(dtype)
         out = clpy.empty(size, dtype=dtype)
+        # 'size' is not a integer, but a tuple.
+        # To compute size of array, numpy.prod(size) is required
+        array_size = numpy.prod(size)
 
         if (not isinstance(self.seed_array, clpy.ndarray)
-                or self.seed_array.size != numpy.prod(size)):
+                or self.seed_array.size < array_size):
             self.seed_array = clpy.empty(size, "uint")
             tmp_seed_array = clpy.empty(size, "uint")
             tmp_seed_array.fill(self.seed_value)
             RandomState._init_kernel(tmp_seed_array, self.seed_array)
             # not to use similar number for the first generation
             RandomState._lcg_kernel(self.seed_array, out)
-
-        RandomState._lcg_kernel(self.seed_array, out)
+            RandomState._lcg_kernel(self.seed_array, out)
+        else:
+            tmp = self.seed_array.reshape(self.seed_array.size)[
+                0:array_size].reshape(size)
+            RandomState._lcg_kernel(tmp, out)
 
         return out
 
