@@ -60,7 +60,7 @@ class TestRealImag(unittest.TestCase):
         return x
 
     '''
-    The reason for comment out is that ClPy does not support to complex
+    The reason for comment out is that ClPy does not support complex
     numbers, and there is no need to perform tests to handle imaginary parts.
     '''
 
