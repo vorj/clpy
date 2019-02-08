@@ -59,12 +59,17 @@ class TestRealImag(unittest.TestCase):
         x.real = testing.shaped_reverse_arange((2, 3), xp, dtype).real
         return x
 
-    @testing.for_dtypes('FD')
-    @testing.numpy_clpy_array_almost_equal(accept_error=False)
-    def test_imag_setter(self, xp, dtype):
-        x = testing.shaped_arange((2, 3), xp, dtype)
-        x.imag = testing.shaped_reverse_arange((2, 3), xp, dtype).real
-        return x
+    '''
+    The reason for comment out is that ClPy does not support complex
+    numbers, and there is no need to perform tests to handle imaginary parts.
+    '''
+
+#    @testing.for_dtypes('FD')
+#    @testing.numpy_clpy_array_almost_equal(accept_error=False)
+#    def test_imag_setter(self, xp, dtype):
+#        x = testing.shaped_arange((2, 3), xp, dtype)
+#        x.imag = testing.shaped_reverse_arange((2, 3), xp, dtype).real
+#        return x
 
     @testing.for_all_dtypes(no_complex=True)
     @testing.numpy_clpy_raises(accept_error=TypeError)
