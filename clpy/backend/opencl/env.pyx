@@ -116,12 +116,15 @@ for id in range(__num_devices):
 cdef int __current_device_id=0
 
 logging.info("Create context...", end='')
-cdef cl_context __context = api.CreateContext(
-    properties=<cl_context_properties*>NULL,
-    num_devices=__num_devices,
-    devices=&__devices[0],
-    pfn_notify=<void*>NULL,
-    user_data=<void*>NULL)
+cdef cl_context* __contexts = \
+    <cl_context*>malloc(sizeof(cl_context)*__num_devices)
+for id in range(__num_devices):
+    __contexts[id] = api.CreateContext(
+        properties=<cl_context_properties*>NULL,
+        num_devices=1,
+        devices=&__devices[id],
+        pfn_notify=<void*>NULL,
+        user_data=<void*>NULL)
 logging.info("SUCCESS")
 
 logging.info("Create command_queues...", end='')
@@ -129,7 +132,7 @@ cdef cl_command_queue* __command_queues = \
     <cl_command_queue*>malloc(sizeof(cl_command_queue)*__num_devices)
 for id in range(__num_devices):
     __command_queues[id] = \
-        api.CreateCommandQueue(__context, __devices[id], 0)
+        api.CreateCommandQueue(__contexts[id], __devices[id], 0)
 logging.info("SUCCESS")
 
 ##########################################
@@ -137,7 +140,8 @@ logging.info("SUCCESS")
 ##########################################
 
 cdef cl_context get_context():
-    return __context
+    global __current_device_id
+    return __contexts[__current_device_id]
 
 cdef cl_command_queue get_command_queue():
     global __current_device_id
@@ -166,10 +170,7 @@ def release():
         api.Flush(__command_queues[id])
         api.Finish(__command_queues[id])
         api.ReleaseCommandQueue(__command_queues[id])
-    logging.info("SUCCESS")
-
-    logging.info("Release context...", end='')
-    api.ReleaseContext(__context)
+        api.ReleaseContext(__contexts[id])
     logging.info("SUCCESS")
 
     # Release kernels, programs here if needed.
