@@ -6,8 +6,10 @@ import six
 
 import clpy
 from clpy import testing
+
 from clpy.backend.opencl.exceptions import OpenCLProgramBuildError
 from clpy.backend.ultima.exceptions import UltimaRuntimeError
+
 
 @testing.gpu
 class TestBuildExceptions(unittest.TestCase):
@@ -25,8 +27,12 @@ class TestBuildExceptions(unittest.TestCase):
     def test_opencl_error(self):
         for id in range(clpy.backend.opencl.env.num_devices):
             with clpy.backend.Device(id):
-                pattern = re.compile('CL_BUILD_PROGRAM_FAILURE .*Device#%d'%id, re.DOTALL)
-                with six.assertRaisesRegex(self, OpenCLProgramBuildError, pattern):
+                pattern = re.compile(
+                    'CL_BUILD_PROGRAM_FAILURE .*Device#%d' % id,
+                    re.DOTALL)
+                with six.assertRaisesRegex(self,
+                                           OpenCLProgramBuildError,
+                                           pattern):
                     x = clpy.core.array(numpy.array([1], dtype="float32"))
                     clpy.ElementwiseKernel(
                         'T x',

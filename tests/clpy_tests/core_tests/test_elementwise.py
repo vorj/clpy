@@ -590,5 +590,6 @@ class TestClpyElementwiseKernelwithChunk(unittest.TestCase):
                 "z = x[i * y;",     # second operation
                 'vector_mul_add')(x, dummy)
 
+
 if __name__ == "__main__":
     unittest.main()
