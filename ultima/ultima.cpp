@@ -218,6 +218,14 @@ class stmt_visitor : public clang::StmtVisitor<stmt_visitor> {
   const std::vector<std::vector<function_special_argument_info>>& func_arg_info;
   const std::unordered_map<clang::FunctionDecl*, std::string>& func_name;
 public:
+  static bool has_annotation(clang::Decl* decl, llvm::StringRef s){
+    if(decl->hasAttrs())
+      for(auto&& x : decl->getAttrs())
+        if(auto a = clang::dyn_cast<clang::AnnotateAttr>(x))
+          if(s == a->getAnnotation())
+            return true;
+    return false;
+  }
   stmt_visitor(ostreams& os,
               clang::PrintingPolicy &Policy,
               unsigned& Indentation, clang::DeclVisitor<decl_visitor>& dv,
@@ -1906,12 +1914,7 @@ public:
 class decl_visitor : public clang::DeclVisitor<decl_visitor>{
   llvm::raw_ostream& indent() { return indent(indentation); }
   static bool has_annotation(clang::Decl* decl, llvm::StringRef s){
-    if(decl->hasAttrs())
-      for(auto&& x : decl->getAttrs())
-        if(auto a = clang::dyn_cast<clang::AnnotateAttr>(x))
-          if(s == a->getAnnotation())
-            return true;
-    return false;
+    return stmt_visitor::has_annotation(decl, s);
   }
   template<typename T>
   static clang::CXXRecordDecl* get_unnamed_record_decl(T* f){
