@@ -24,14 +24,15 @@ class TestBuildExceptions(unittest.TestCase):
 
     def test_opencl_error(self):
         for id in range(clpy.backend.opencl.env.num_devices):
-            pattern = re.compile('CL_BUILD_PROGRAM_FAILURE .*Device#%d'%id, re.DOTALL)
-            with six.assertRaisesRegex(self, OpenCLProgramBuildError, pattern):
-                x = clpy.core.array(numpy.array([1], dtype="float32"))
-                clpy.ElementwiseKernel(
-                    'T x',
-                    '',
-                    '__global T t;',
-                    'test')(x)
+            with clpy.backend.Device(id):
+                pattern = re.compile('CL_BUILD_PROGRAM_FAILURE .*Device#%d'%id, re.DOTALL)
+                with six.assertRaisesRegex(self, OpenCLProgramBuildError, pattern):
+                    x = clpy.core.array(numpy.array([1], dtype="float32"))
+                    clpy.ElementwiseKernel(
+                        'T x',
+                        '',
+                        '__global T t;',
+                        'test')(x)
 
 #    def test_assign_to_const_qualified_variable(self):
 #        with six.assertRaisesRegex(self, OpenCLProgramBuildError,
