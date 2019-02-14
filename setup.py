@@ -129,11 +129,9 @@ setup(
             'core/include/cupy/carray.hpp',
             'core/include/cuda_stub.hpp',
             'core/include/cl_stub.hpp',
-        ],
+            '../ultima/ultima'
+        ]
     },
-    data_files=[
-        ('ultima', ['ultima/ultima']),
-    ],
     zip_safe=False,
     setup_requires=setup_requires,
     install_requires=install_requires,
