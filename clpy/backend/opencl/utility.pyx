@@ -43,6 +43,31 @@ cdef GetDeviceAddressBits(cl_device_id device):
     ret = valptrs[0]
     return ret
 
+cdef GetProgramDevice(cl_program program):
+    cdef size_t max_length = sizeof(cl_device_id)*env.num_devices
+    cdef cl_device_id* val = <cl_device_id*>malloc(max_length)
+    cdef size_t length
+    cdef cl_int status = api.clGetProgramInfo(
+        program,
+        <cl_program_info>CL_PROGRAM_DEVICES,
+        max_length,
+        <void *>&val[0],
+        <size_t *>&length)
+    check_status(status)
+    cdef count = length/sizeof(cl_device_id)
+
+    # Get Number
+    devices = [-1] * count
+    cdef cl_device_id device_i
+    cdef cl_device_id device_j
+    for i in range(env.num_devices):
+        device_i = env.get_devices()[i]
+        for j in range(count):
+            device_j = val[j]
+            if device_j == device_i:
+                devices[j] = i
+                break
+    return devices
 
 ###############################################################################
 # utility
@@ -86,8 +111,9 @@ cdef cl_program CreateProgram(sources, cl_context context, num_devices,
                          <void*>NULL, <void*>NULL)
     except OpenCLRuntimeError as err:
         if err.status == CL_BUILD_PROGRAM_FAILURE:
+            devices = GetProgramDevice(program)
             log = str()
-            for id in range(env.num_devices):
+            for id in devices:
                 l = GetProgramBuildLog(program, env.get_devices()[id])
                 log += "Device#{0}: {1}".format(id, l)
             err = OpenCLProgramBuildError(err, log)
