@@ -1,6 +1,7 @@
 import unittest
 
 import numpy
+import re
 import six
 
 import clpy
@@ -22,14 +23,15 @@ class TestBuildExceptions(unittest.TestCase):
                 'use_of_undeclared_indentifier')(x)
 
     def test_opencl_error(self):
-        with six.assertRaisesRegex(self, OpenCLProgramBuildError,
-                                   'CL_BUILD_PROGRAM_FAILURE Device#'):
-            x = clpy.core.array(numpy.array([1], dtype="float32"))
-            clpy.ElementwiseKernel(
-                'T x',
-                '',
-                '__global T t;',
-                'test')(x)
+        for id in range(clpy.backend.opencl.env.num_devices):
+            pattern = re.compile('CL_BUILD_PROGRAM_FAILURE .*Device#%d'%id, re.DOTALL)
+            with six.assertRaisesRegex(self, OpenCLProgramBuildError, pattern):
+                x = clpy.core.array(numpy.array([1], dtype="float32"))
+                clpy.ElementwiseKernel(
+                    'T x',
+                    '',
+                    '__global T t;',
+                    'test')(x)
 
 #    def test_assign_to_const_qualified_variable(self):
 #        with six.assertRaisesRegex(self, OpenCLProgramBuildError,
