@@ -186,11 +186,12 @@ cpdef function.Module compile_with_cache(
     options += (' -cl-fp32-correctly-rounded-divide-sqrt', )
     optionStr = functools.reduce(operator.add, options)
 
+    device = clpy.backend.opencl.env.get_device()
     program = clpy.backend.opencl.utility.CreateProgram(
         [source.encode('utf-8')],
         clpy.backend.opencl.env.get_context(),
-        clpy.backend.opencl.env.num_devices,
-        clpy.backend.opencl.env.get_devices(),
+        1,
+        &device,
         optionStr.encode('utf-8'))
     cdef function.Module module = function.Module()
     module.set(program)
