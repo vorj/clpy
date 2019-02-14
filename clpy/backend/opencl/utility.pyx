@@ -43,7 +43,6 @@ cdef GetDeviceAddressBits(cl_device_id device):
     ret = valptrs[0]
     return ret
 
-
 ###############################################################################
 # utility
 
