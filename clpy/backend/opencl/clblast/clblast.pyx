@@ -86,7 +86,6 @@ cdef void clblast_sgemm(
         &command_queue,
         &event)
     if (status == CLBlastSuccess):
-        api.WaitForEvents(1, &event)
         api.ReleaseEvent(event)
     else:
         raise CLBlastRuntimeError(statuscode=status)
