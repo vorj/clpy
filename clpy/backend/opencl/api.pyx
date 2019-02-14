@@ -124,6 +124,21 @@ cdef cl_program CreateProgramWithSource(
     exceptions.check_status(status)
     return program
 
+cdef void GetProgramInfo(
+        cl_program program,
+        cl_program_info param_name,
+        size_t param_value_size,
+        void *param_value,
+        size_t *param_value_size_ret) except *:
+    cdef cl_int status
+    status = clGetProgramInfo(
+        program,
+        param_name,
+        param_value_size,
+        param_value,
+        param_value_size_ret)
+    exceptions.check_status(status)
+
 cdef void BuildProgram(
         cl_program program,
         cl_uint num_devices,
