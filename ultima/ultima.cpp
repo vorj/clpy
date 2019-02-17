@@ -3008,8 +3008,6 @@ public:
       else if(Construct){
         if (D->getInitStyle() == clang::VarDecl::CInit && Construct->getConstructor()->isDefaulted())
           os << " = ";
-        else
-          os << ';';
         sv.VisitCXXConstructExpr(Construct, D->getNameAsString().c_str());
       }
     }
