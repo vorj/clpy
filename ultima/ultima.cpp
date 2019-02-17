@@ -218,6 +218,14 @@ class stmt_visitor : public clang::StmtVisitor<stmt_visitor> {
   const std::vector<std::vector<function_special_argument_info>>& func_arg_info;
   const std::unordered_map<clang::FunctionDecl*, std::string>& func_name;
 public:
+  static bool has_annotation(clang::Decl* decl, llvm::StringRef s){
+    if(decl->hasAttrs())
+      for(auto&& x : decl->getAttrs())
+        if(auto a = clang::dyn_cast<clang::AnnotateAttr>(x))
+          if(s == a->getAnnotation())
+            return true;
+    return false;
+  }
   stmt_visitor(ostreams& os,
               clang::PrintingPolicy &Policy,
               unsigned& Indentation, clang::DeclVisitor<decl_visitor>& dv,
@@ -920,8 +928,20 @@ public:
     os << '.';
     os << Node->getAccessor().getName();
   }
+  const char* get_address_space_qualifier(clang::Expr* e){
+    if(auto decl_ref_expr = clang::dyn_cast<clang::DeclRefExpr>(dig_expr(e)))
+    if(auto decl = decl_ref_expr->getDecl()){
+      if(has_annotation(decl, "cl_global"))
+        return "__global ";
+      else if(has_annotation(decl, "cl_local"))
+        return "__local ";
+    }
+    return NULL;
+  }
   void VisitCStyleCastExpr(clang::CStyleCastExpr *Node) {
     os << '(';
+    if(auto asq = get_address_space_qualifier(Node->getSubExpr()))
+      os << asq;
     Node->getTypeAsWritten().print(os, Policy);
     os << ')';
     PrintExpr(Node->getSubExpr());
@@ -1292,6 +1312,8 @@ public:
 
   void VisitCXXNamedCastExpr(clang::CXXNamedCastExpr *Node) {
     os << '(';
+    if(auto asq = get_address_space_qualifier(Node->getSubExpr()))
+      os << asq;
     Node->getTypeAsWritten().print(os, Policy);
     os << ")(";
     PrintExpr(Node->getSubExpr());
@@ -1413,6 +1435,8 @@ public:
 
   void VisitCXXFunctionalCastExpr(clang::CXXFunctionalCastExpr *Node) {
     os << '(';
+    if(auto asq = get_address_space_qualifier(Node->getSubExpr()))
+      os << asq;
     Node->getTypeAsWritten().print(os, Policy);
     os << ')';
     // If there are no parens, this is list-initialization, and the braces are
@@ -1906,12 +1930,7 @@ public:
 class decl_visitor : public clang::DeclVisitor<decl_visitor>{
   llvm::raw_ostream& indent() { return indent(indentation); }
   static bool has_annotation(clang::Decl* decl, llvm::StringRef s){
-    if(decl->hasAttrs())
-      for(auto&& x : decl->getAttrs())
-        if(auto a = clang::dyn_cast<clang::AnnotateAttr>(x))
-          if(s == a->getAnnotation())
-            return true;
-    return false;
+    return stmt_visitor::has_annotation(decl, s);
   }
   template<typename T>
   static clang::CXXRecordDecl* get_unnamed_record_decl(T* f){
