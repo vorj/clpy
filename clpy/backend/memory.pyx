@@ -23,6 +23,8 @@ cimport clpy.backend.opencl.env
 from clpy.backend.opencl.types cimport cl_event
 from clpy.backend.opencl.types cimport cl_mem
 
+cimport libc.stdlib
+
 thread_local = threading.local()
 
 cdef inline _ensure_context(int device_id):
@@ -272,17 +274,45 @@ cdef class MemoryPointer:
             size (int): Size of the sequence in bytes.
 
         """
+        cdef void* tmp
         if size > 0:
-            clpy.backend.opencl.api.EnqueueCopyBuffer(
-                command_queue=clpy.backend.opencl.env.get_command_queue(),
-                src_buffer=src.buf.ptr,
-                dst_buffer=self.buf.ptr,
-                src_offset=src.cl_mem_offset(),
-                dst_offset=self.cl_mem_offset(),
-                cb=size,
-                num_events_in_wait_list=0,
-                event_wait_list=<cl_event*>NULL,
-                event=<cl_event*>NULL)
+            if src.device == self.device:
+                clpy.backend.opencl.api.EnqueueCopyBuffer(
+                    command_queue=clpy.backend.opencl.env.get_command_queue(),
+                    src_buffer=src.buf.ptr,
+                    dst_buffer=self.buf.ptr,
+                    src_offset=src.cl_mem_offset(),
+                    dst_offset=self.cl_mem_offset(),
+                    cb=size,
+                    num_events_in_wait_list=0,
+                    event_wait_list=<cl_event*>NULL,
+                    event=<cl_event*>NULL)
+            else:
+                tmp = libc.stdlib.malloc(size)
+                with src.device:
+                    clpy.backend.opencl.api.EnqueueReadBuffer(
+                        command_queue=clpy.backend.opencl.env.get_command_queue(),
+                        buffer=src.buf.ptr,
+                        blocking_read=clpy.backend.opencl.api.BLOCKING,
+                        offset=src.cl_mem_offset(),
+                        cb=size,
+                        host_ptr=tmp,
+                        num_events_in_wait_list=0,
+                        event_wait_list=<cl_event*>NULL,
+                        event=<cl_event*>NULL)
+                with self.device:
+                    clpy.backend.opencl.api.EnqueueWriteBuffer(
+                        command_queue=clpy.backend.opencl.env.get_command_queue(),
+                        buffer=self.buf.ptr,
+                        blocking_write=clpy.backend.opencl.api.BLOCKING,
+                        offset=self.cl_mem_offset(),
+                        cb=size,
+                        host_ptr=tmp,
+                        num_events_in_wait_list=0,
+                        event_wait_list=<cl_event*>NULL,
+                        event=<cl_event*>NULL)
+                libc.stdlib.free(tmp)
+
 
     cpdef copy_from_device_async(self, MemoryPointer src, size_t size, stream):
         """Copies a memory from a (possibly different) device asynchronously.
