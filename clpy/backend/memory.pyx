@@ -290,8 +290,9 @@ cdef class MemoryPointer:
             else:
                 tmp = libc.stdlib.malloc(size)
                 with src.device:
+                    queue = clpy.backend.opencl.env.get_command_queue()
                     clpy.backend.opencl.api.EnqueueReadBuffer(
-                        command_queue=clpy.backend.opencl.env.get_command_queue(),
+                        command_queue=queue,
                         buffer=src.buf.ptr,
                         blocking_read=clpy.backend.opencl.api.BLOCKING,
                         offset=src.cl_mem_offset(),
@@ -301,8 +302,9 @@ cdef class MemoryPointer:
                         event_wait_list=<cl_event*>NULL,
                         event=<cl_event*>NULL)
                 with self.device:
+                    queue = clpy.backend.opencl.env.get_command_queue()
                     clpy.backend.opencl.api.EnqueueWriteBuffer(
-                        command_queue=clpy.backend.opencl.env.get_command_queue(),
+                        command_queue=queue,
                         buffer=self.buf.ptr,
                         blocking_write=clpy.backend.opencl.api.BLOCKING,
                         offset=self.cl_mem_offset(),
@@ -312,7 +314,6 @@ cdef class MemoryPointer:
                         event_wait_list=<cl_event*>NULL,
                         event=<cl_event*>NULL)
                 libc.stdlib.free(tmp)
-
 
     cpdef copy_from_device_async(self, MemoryPointer src, size_t size, stream):
         """Copies a memory from a (possibly different) device asynchronously.
