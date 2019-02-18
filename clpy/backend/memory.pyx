@@ -277,16 +277,18 @@ cdef class MemoryPointer:
         cdef void* tmp
         if size > 0:
             if src.device == self.device:
-                clpy.backend.opencl.api.EnqueueCopyBuffer(
-                    command_queue=clpy.backend.opencl.env.get_command_queue(),
-                    src_buffer=src.buf.ptr,
-                    dst_buffer=self.buf.ptr,
-                    src_offset=src.cl_mem_offset(),
-                    dst_offset=self.cl_mem_offset(),
-                    cb=size,
-                    num_events_in_wait_list=0,
-                    event_wait_list=<cl_event*>NULL,
-                    event=<cl_event*>NULL)
+                with self.device:
+                    queue = clpy.backend.opencl.env.get_command_queue()
+                    clpy.backend.opencl.api.EnqueueCopyBuffer(
+                        command_queue=queue,
+                        src_buffer=src.buf.ptr,
+                        dst_buffer=self.buf.ptr,
+                        src_offset=src.cl_mem_offset(),
+                        dst_offset=self.cl_mem_offset(),
+                        cb=size,
+                        num_events_in_wait_list=0,
+                        event_wait_list=<cl_event*>NULL,
+                        event=<cl_event*>NULL)
             else:
                 tmp = libc.stdlib.malloc(size)
                 with src.device:
