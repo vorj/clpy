@@ -337,16 +337,17 @@ cdef class MemoryPointer:
         """
         cdef size_t host_ptr = mem.value
         if size > 0:
-            clpy.backend.opencl.api.EnqueueWriteBuffer(
-                command_queue=clpy.backend.opencl.env.get_command_queue(),
-                buffer=self.buf.ptr,
-                blocking_write=clpy.backend.opencl.api.BLOCKING,
-                offset=self.cl_mem_offset(),
-                cb=size,
-                host_ptr=<void*>host_ptr,
-                num_events_in_wait_list=0,
-                event_wait_list=<cl_event*>NULL,
-                event=<cl_event*>NULL)
+            with self.device:
+                clpy.backend.opencl.api.EnqueueWriteBuffer(
+                    command_queue=clpy.backend.opencl.env.get_command_queue(),
+                    buffer=self.buf.ptr,
+                    blocking_write=clpy.backend.opencl.api.BLOCKING,
+                    offset=self.cl_mem_offset(),
+                    cb=size,
+                    host_ptr=<void*>host_ptr,
+                    num_events_in_wait_list=0,
+                    event_wait_list=<cl_event*>NULL,
+                    event=<cl_event*>NULL)
 
     cpdef copy_from_host_async(self, mem, size_t size, stream):
         """Copies a memory sequence from the host memory asynchronously.
@@ -409,16 +410,17 @@ cdef class MemoryPointer:
         """
         cdef size_t host_ptr = mem.value
         if size > 0:
-            clpy.backend.opencl.api.EnqueueReadBuffer(
-                command_queue=clpy.backend.opencl.env.get_command_queue(),
-                buffer=self.buf.ptr,
-                blocking_read=clpy.backend.opencl.api.BLOCKING,
-                offset=self.cl_mem_offset(),
-                cb=size,
-                host_ptr=<void*>host_ptr,
-                num_events_in_wait_list=0,
-                event_wait_list=<cl_event*>NULL,
-                event=<cl_event*>NULL)
+            with self.device:
+                clpy.backend.opencl.api.EnqueueReadBuffer(
+                    command_queue=clpy.backend.opencl.env.get_command_queue(),
+                    buffer=self.buf.ptr,
+                    blocking_read=clpy.backend.opencl.api.BLOCKING,
+                    offset=self.cl_mem_offset(),
+                    cb=size,
+                    host_ptr=<void*>host_ptr,
+                    num_events_in_wait_list=0,
+                    event_wait_list=<cl_event*>NULL,
+                    event=<cl_event*>NULL)
 
     cpdef copy_to_host_async(self, mem, size_t size, stream):
         """Copies a memory sequence to the host memory asynchronously.
