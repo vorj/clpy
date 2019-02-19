@@ -2795,25 +2795,25 @@ cdef _scatter_add_kernel = ElementwiseKernel(
     'clpy_scatter_add')
 
 
-# cdef _scatter_update_mask_kernel = ElementwiseKernel(
-#     'raw T v, bool mask, S mask_scanned',
-#     'T a',
-#     'if (mask) a = v[mask_scanned - 1]',
-#     'clpy_scatter_update_mask')
+cdef _scatter_update_mask_kernel = ElementwiseKernel(
+    'raw T v, bool mask, S mask_scanned',
+    'T a',
+    'if (mask) a = v[mask_scanned - 1]',
+    'clpy_scatter_update_mask')
 
 
-# cdef _scatter_add_mask_kernel = ElementwiseKernel(
-#     'raw T v, bool mask, S mask_scanned',
-#     'T a',
-#     'if (mask) a = a + v[mask_scanned - 1]',
-#     'clpy_scatter_add_mask')
+cdef _scatter_add_mask_kernel = ElementwiseKernel(
+    'raw T v, bool mask, S mask_scanned',
+    'T a',
+    'if (mask) a = a + v[mask_scanned - 1]',
+    'clpy_scatter_add_mask')
 
 
-# cdef _getitem_mask_kernel = ElementwiseKernel(
-#     'T a, bool mask, S mask_scanned',
-#     'raw T out',
-#     'if (mask) out[mask_scanned - 1] = a',
-#     'clpy_getitem_mask')
+cdef _getitem_mask_kernel = ElementwiseKernel(
+    'T a, bool mask, S mask_scanned',
+    'raw T out',
+    'if (mask) out[mask_scanned - 1] = a',
+    'clpy_getitem_mask')
 
 
 cpdef _prepare_mask_indexing_single(ndarray a, ndarray mask, Py_ssize_t axis):
@@ -3014,13 +3014,12 @@ cpdef _scatter_op_mask_single(ndarray a, ndarray mask, v, Py_ssize_t axis, op):
     # broadcast v to shape determined by the mask
     v = broadcast_to(v, masked_shape)
 
-    raise NotImplementedError("clpy does not support this")
-#    if op == 'update':
-#        _scatter_update_mask_kernel(v, mask, mask_scanned, a)
-#    elif op == 'add':
-#        _scatter_add_mask_kernel(v, mask, mask_scanned, a)
-#    else:
-#        raise ValueError('provided op is not supported')
+    if op == 'update':
+        _scatter_update_mask_kernel(v, mask, mask_scanned, a)
+    elif op == 'add':
+        _scatter_add_mask_kernel(v, mask, mask_scanned, a)
+    else:
+        raise ValueError('provided op is not supported')
 
 
 cpdef _scatter_op(ndarray a, slices, value, op):
