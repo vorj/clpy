@@ -313,14 +313,14 @@ static void set_CIndexer_0(CIndexer_0 * const __restrict__ _ind, const size_t i)
 
 typedef struct {
   size_t size_;
-  size_t shape_;
-  size_t index_;
+  size_t shape_[1];
+  size_t index_[1];
 } CIndexer_1;
 static size_t size_CIndexer_1(const CIndexer_1 * const __restrict__ _ind) {
   return _ind->size_;
 }
 static void set_CIndexer_1(CIndexer_1 * const __restrict__ _ind, const size_t i) {
-  _ind->index_ = i;
+  _ind->index_[0] = i;
 }
 
 // CIndexr_0 is defined above
@@ -384,7 +384,7 @@ static size_t get_CArrayIndexRaw_1(const CArray_1* const __restrict__ info, cons
   return info->strides_ * (size_t)idx + info->offset;
 }
 static size_t get_CArrayIndex_1(const CArray_1* const __restrict__ info, const CIndexer_1* const __restrict__ _ind) {
-  return get_CArrayIndexRaw_1(info, _ind->index_);
+  return get_CArrayIndexRaw_1(info, _ind->index_[0]);
 }
 static size_t get_CArrayIndexI_1(const CArray_1* const __restrict__ info, const size_t i) {
   return info->strides_ * i + info->offset;
