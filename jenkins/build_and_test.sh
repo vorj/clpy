@@ -22,7 +22,7 @@ source venv/bin/activate
 
 # Install dependencies
 pip install -U pip
-pip install Cython pytest mock
+pip install Cython pytest mock nose
 
 # Ignore occurred errors below
 set +e
