@@ -66,6 +66,7 @@ tests/clpy_tests/core_tests/test_ndarray_get.py
 tests/clpy_tests/core_tests/test_ndarray_indexing.py
 tests/clpy_tests/core_tests/test_ndarray_owndata.py
 tests/clpy_tests/core_tests/test_ndarray_reduction.py
+tests/clpy_tests/core_tests/test_ndarray_scatter.py
 tests/clpy_tests/core_tests/test_ndarray_unary_op.py
 tests/clpy_tests/core_tests/test_reduction.py
 tests/clpy_tests/core_tests/test_scan.py
