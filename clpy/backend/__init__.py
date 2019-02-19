@@ -8,7 +8,6 @@ from clpy.backend import memory  # NOQA
 # from clpy.backend import memory_hooks  # NOQA
 from clpy.backend import pinned_memory  # NOQA
 # from clpy.backend import profiler  # NOQA
-from clpy.backend.profiler import nvtx_enabled  # NOQA
 # from clpy.backend import runtime  # NOQA
 from clpy.backend import stream  # NOQA
 from clpy.backend.ultima import exceptions  # NOQA
