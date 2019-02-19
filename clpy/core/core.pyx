@@ -4247,22 +4247,23 @@ def _nonzero_kernel(src_dtype, src_ndim, index_dtype, dst_dtype):
     dst_dtype = _get_typename(dst_dtype)
 
     source = string.Template("""
-        extern "C" __global__ void ${name}(const CArray<${src_dtype}, 1> src,
-            CIndexer<${src_ndim}> shape,
+        __kernel void ${name}(
+            const CArray<${src_dtype}, 1> src,
+            CIndexer_${src_ndim} shape,
             const CArray<${index_dtype}, 1> scaned_index,
             CArray<${dst_dtype}, 1> dst){
 
-            int thid = blockIdx.x * blockDim.x + threadIdx.x;
+            int thid = get_group_id(0) * get_local_size(0) + get_local_id(0);
 
             if (thid < src.size()){
                 if (src[thid] != 0){
                     ${index_dtype} idx = scaned_index[thid] - 1;
-                    int s = shape.size();
+                    size_t s = shape.size_;
 
-                    shape.set(thid);
+                    set_CIndexer_${src_ndim}(&shape, thid);
 
-                    for(int i = 0; i < ${src_ndim}; i++){
-                        dst[idx * ${src_ndim} + i] = shape.get()[i];
+                    for(size_t i = 0; i < ${src_ndim}; i++){
+                        dst[idx * ${src_ndim} + i] = shape.index_[i];
                     }
                 }
             }
