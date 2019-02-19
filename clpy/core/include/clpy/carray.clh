@@ -498,7 +498,10 @@ static double _floor_divide_d(const double x, const double y) {
   return floor(x / y);
 }
 
-// atomic operation
+
+#ifdef __ULTIMA
+static void __clpy_begin_print_out() __attribute__((annotate("clpy_begin_print_out")));
+
 static void atomicAdd(__global float* x, float y)
 {
   union {
@@ -513,7 +516,18 @@ static void atomicAdd(__global float* x, float y)
     old_value.u = atomic_cmpxchg((__global uint*)x, new_value.u, p.u);
   } while ( new_value.u != old_value.u );
 }
-// TODO(yoriyuki.kitta): Add another types implementation
+static void atomicAdd(__global int* x, int y)
+{
+  atomic_add(x, y);
+}
+static void atomicAdd(__global uint* x, uint y)
+{
+  atomic_add(x, y);
+}
+
+static void __clpy_end_print_out() __attribute__((annotate("clpy_end_print_out")));
+#endif //__ULTIMA
+
 
 #ifdef __ULTIMA
 __attribute__((annotate("clpy_no_mangle"))) static half convert_float_to_half(float x);

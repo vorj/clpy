@@ -2979,17 +2979,20 @@ cpdef _scatter_op_single(ndarray a, ndarray indices, v,
         #     v, indices, cdim, rdim, adim, a.reduced_view())
         raise NotImplementedError("clpy does not support this")
     elif op == 'add':
-        # There is constraints on types because atomicAdd() in CUDA 7.5
-        # only supports int32, uint32, uint64, and float32.
-        # if not issubclass(v.dtype.type,
-        #                   (numpy.int32, numpy.float32,
-        #                    numpy.uint32, numpy.uint64, numpy.ulonglong)):
-        #     raise TypeError(
-        #         'scatter_add only supports int32, float32, uint32, uint64 as'
-        #         ' data type')
-        # TODO(vorj): fix this after resolve #30
-        if not issubclass(v.dtype.type, numpy.float32):
-            raise NotImplementedError('clpy does not support this')
+        # TODO(nsakabe-fixstars): OpenCL without extension
+        # can't perform 64-bit atomic operations.
+        # Thus we support int32, float32, and uint32.
+        if issubclass(v.dtype.type, numpy.uint64):
+            raise NotImplementedError(
+                'OpenCL without extension'
+                'can\'t perform 64-bit atomic operations.'
+            )
+
+        if not issubclass(v.dtype.type,
+                          (numpy.int32, numpy.float32, numpy.uint32)):
+            raise TypeError(
+                'scatter_add only supports int32, float32, uint32, uint64 as'
+                ' data type')
         _scatter_add_kernel(
             v, indices, cdim, rdim, adim, a.reduced_view())
     else:
