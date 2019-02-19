@@ -39,7 +39,6 @@ from clpy.backend.stream import Event  # NOQA
 # from clpy.backend.stream import get_elapsed_time  # NOQA
 from clpy.backend.stream import Stream  # NOQA
 
-nvtx_enabled = False
 
 @contextlib.contextmanager
 def profile():
