@@ -15,6 +15,38 @@ from clpy.backend.ultima import exceptions  # NOQA
 _available = None
 
 
+try:
+    from clpy.backend import cusolver  # NOQA
+    cusolver_enabled = True
+except ImportError:
+    cusolver_enabled = False
+
+try:
+    from clpy.backend import nvtx  # NOQA
+    nvtx_enabled = True
+except ImportError:
+    nvtx_enabled = False
+
+try:
+    from clpy.backend import thrust  # NOQA
+    thrust_enabled = True
+except ImportError:
+    thrust_enabled = False
+
+
+def is_available():
+    global _available
+    if _available is None:
+        _available = False
+        try:
+            _available = runtime.getDeviceCount() > 0
+        except Exception as e:
+            if (e.args[0] !=
+                    'cudaErrorNoDevice: no CUDA-capable device is detected'):
+                raise
+    return _available
+
+
 # import class and function
 # from clpy.backend.compiler import compile_with_cache  # NOQA
 from clpy.backend.device import Device  # NOQA
