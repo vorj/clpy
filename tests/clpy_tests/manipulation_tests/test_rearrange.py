@@ -174,9 +174,6 @@ class TestFlip(unittest.TestCase):
         x = xp.array([], dtype).reshape((1, 0, 1))
         return xp.flip(x, 1)
 
-    # TODO(tomoharu.kitawaki): revert these test cases
-    #   when flip raise core.core._AxisError instead ValueError
-    '''
     @testing.for_all_dtypes()
     @testing.numpy_clpy_raises()
     def test_flip_insufficient_ndim(self, xp, dtype):
@@ -194,7 +191,6 @@ class TestFlip(unittest.TestCase):
     def test_flip_invalid_negative_axis(self, xp, dtype):
         x = testing.shaped_arange((3, 4), xp, dtype)
         return xp.flip(x, -3)
-    '''
 
 
 @testing.gpu
