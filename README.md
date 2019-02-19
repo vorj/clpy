@@ -106,7 +106,7 @@ It's confirmed that ClPy works with [Chainer v3.3.0](https://github.com/chainer/
 ### Tests
 
 ```console
-$ pip install pytest
+$ pip install pytest nose
 $ cd tests/you/want
 $ python -m pytest test_you_want.py
 ```

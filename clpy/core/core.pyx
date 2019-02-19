@@ -718,18 +718,17 @@ cdef class ndarray:
 
         n_channel = numpy.prod(bcs[0].shape)
 
-        raise NotImplementedError("clpy does not support this")
-#        if mode == 'raise':
-#            if not ((a < n).all() and (0 <= a).all()):
-#                raise ValueError('invalid entry in choice array')
-#            _choose_kernel(ba[0], bcs, n_channel, out)
-#        elif mode == 'wrap':
-#            ba = ba[0] % n
-#            _choose_kernel(ba, bcs, n_channel, out)
-#        elif mode == 'clip':
-#            _choose_clip_kernel(ba[0], bcs, n_channel, n, out)
-#        else:
-#            raise TypeError('clipmode not understood')
+        if mode == 'raise':
+            if not ((a < n).all() and (0 <= a).all()):
+                raise ValueError('invalid entry in choice array')
+            _choose_kernel(ba[0], bcs, n_channel, out)
+        elif mode == 'wrap':
+            ba = ba[0] % n
+            _choose_kernel(ba, bcs, n_channel, out)
+        elif mode == 'clip':
+            _choose_clip_kernel(ba[0], bcs, n_channel, n, out)
+        else:
+            raise TypeError('clipmode not understood')
 
         return out
 
@@ -2747,26 +2746,26 @@ cdef _take_kernel_0axis = ElementwiseKernel(
     'clpy_take_0axis')
 
 
-# cdef _choose_kernel = ElementwiseKernel(
-#     'S a, raw T choices, int32 n_channel',
-#     'T y',
-#     'y = choices[i + n_channel * a]',
-#     'clpy_choose')
+cdef _choose_kernel = ElementwiseKernel(
+    'S a, raw T choices, int32 n_channel',
+    'T y',
+    'y = choices[i + n_channel * a]',
+    'clpy_choose')
 
 
-# cdef _choose_clip_kernel = ElementwiseKernel(
-#     'S a, raw T choices, int32 n_channel, int32 n',
-#     'T y',
-#     '''
-#       S x = a;
-#       if (a < 0) {
-#         x = 0;
-#       } else if (a >= n) {
-#         x = n - 1;
-#       }
-#       y = choices[i + n_channel * x];
-#     ''',
-#     'clpy_choose_clip')
+cdef _choose_clip_kernel = ElementwiseKernel(
+    'S a, raw T choices, int32 n_channel, int32 n',
+    'T y',
+    '''
+      S x = a;
+      if (a < 0) {
+        x = 0;
+      } else if (a >= n) {
+        x = n - 1;
+      }
+      y = choices[i + n_channel * x];
+    ''',
+    'clpy_choose_clip')
 
 
 # cdef _scatter_update_kernel = ElementwiseKernel(

@@ -314,8 +314,8 @@ from clpy.indexing.generate import ix_  # NOQA
 from clpy.indexing.generate import r_  # NOQA
 
 # from clpy.indexing.indexing import choose  # NOQA
-# from clpy.indexing.indexing import diagonal  # NOQA
-# from clpy.indexing.indexing import take  # NOQA
+from clpy.indexing.indexing import diagonal  # NOQA
+from clpy.indexing.indexing import take  # NOQA
 
 from clpy.indexing.insert import fill_diagonal  # NOQA
 # -----------------------------------------------------------------------------
