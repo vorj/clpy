@@ -34,6 +34,8 @@ except ImportError:
     thrust_enabled = False
 
 
+# TODO(tomoharu.kitawaki) use getDeviceCount which is implemented in OpenCL
+'''
 def is_available():
     global _available
     if _available is None:
@@ -45,6 +47,7 @@ def is_available():
                     'cudaErrorNoDevice: no CUDA-capable device is detected'):
                 raise
     return _available
+'''
 
 
 # import class and function
