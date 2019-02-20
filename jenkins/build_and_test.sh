@@ -47,6 +47,7 @@ tests/clpy_tests/padding_tests/
 tests/clpy_tests/creation_tests/
 tests/clpy_tests/manipulation_tests/
 tests/clpy_tests/indexing_tests/
+tests/clpy_tests/prof_tests/
 "
 
 TEST_FILES="
