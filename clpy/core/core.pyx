@@ -4255,7 +4255,7 @@ def _nonzero_kernel(src_dtype, src_ndim, index_dtype, dst_dtype):
             const CArray<${index_dtype}, 1> scaned_index,
             CArray<${dst_dtype}, 1> dst){
 
-            int thid = get_group_id(0) * get_local_size(0) + get_local_id(0);
+            const int thid = get_global_id(0);
 
             if (thid < src.size()){
                 if (src[thid] != 0){
