@@ -16,6 +16,8 @@ typedef half __clpy__half;
 #define half __clpy__half
 
 __attribute__((annotate("clpy_no_mangle"))) static unsigned int atomic_cmpxchg(volatile __global unsigned int*, unsigned int, unsigned int);
+__attribute__((annotate("clpy_no_mangle"))) static int atomic_add(volatile __global int*, int);
+__attribute__((annotate("clpy_no_mangle"))) static uint atomic_add(volatile __global uint*, uint);
 __attribute__((annotate("clpy_no_mangle"))) static double abs(double);
 __attribute__((annotate("clpy_no_mangle"))) static float abs(float);
 __attribute__((annotate("clpy_no_mangle"))) static int abs(int);

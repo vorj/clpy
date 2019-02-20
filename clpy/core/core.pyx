@@ -2794,25 +2794,25 @@ cdef _scatter_add_kernel = ElementwiseKernel(
     'clpy_scatter_add')
 
 
-# cdef _scatter_update_mask_kernel = ElementwiseKernel(
-#     'raw T v, bool mask, S mask_scanned',
-#     'T a',
-#     'if (mask) a = v[mask_scanned - 1]',
-#     'clpy_scatter_update_mask')
+cdef _scatter_update_mask_kernel = ElementwiseKernel(
+    'raw T v, bool mask, S mask_scanned',
+    'T a',
+    'if (mask) a = v[mask_scanned - 1]',
+    'clpy_scatter_update_mask')
 
 
-# cdef _scatter_add_mask_kernel = ElementwiseKernel(
-#     'raw T v, bool mask, S mask_scanned',
-#     'T a',
-#     'if (mask) a = a + v[mask_scanned - 1]',
-#     'clpy_scatter_add_mask')
+cdef _scatter_add_mask_kernel = ElementwiseKernel(
+    'raw T v, bool mask, S mask_scanned',
+    'T a',
+    'if (mask) a = a + v[mask_scanned - 1]',
+    'clpy_scatter_add_mask')
 
 
-# cdef _getitem_mask_kernel = ElementwiseKernel(
-#     'T a, bool mask, S mask_scanned',
-#     'raw T out',
-#     'if (mask) out[mask_scanned - 1] = a',
-#     'clpy_getitem_mask')
+cdef _getitem_mask_kernel = ElementwiseKernel(
+    'T a, bool mask, S mask_scanned',
+    'raw T out',
+    'if (mask) out[mask_scanned - 1] = a',
+    'clpy_getitem_mask')
 
 
 cpdef _prepare_mask_indexing_single(ndarray a, ndarray mask, Py_ssize_t axis):
@@ -2978,17 +2978,21 @@ cpdef _scatter_op_single(ndarray a, ndarray indices, v,
         #     v, indices, cdim, rdim, adim, a.reduced_view())
         raise NotImplementedError("clpy does not support this")
     elif op == 'add':
-        # There is constraints on types because atomicAdd() in CUDA 7.5
-        # only supports int32, uint32, uint64, and float32.
-        # if not issubclass(v.dtype.type,
-        #                   (numpy.int32, numpy.float32,
-        #                    numpy.uint32, numpy.uint64, numpy.ulonglong)):
-        #     raise TypeError(
-        #         'scatter_add only supports int32, float32, uint32, uint64 as'
-        #         ' data type')
-        # TODO(vorj): fix this after resolve #30
-        if not issubclass(v.dtype.type, numpy.float32):
-            raise NotImplementedError('clpy does not support this')
+        # NOTE(clpy):
+        # CuPy had supported
+        # int32, float32, uint32, uint64, numpy.ulonglong.
+        # OpenCL without extension can't perform 64-bit
+        # atomic operations.
+        # Thus we support int32, float32, and uint32.
+
+        if not issubclass(v.dtype.type,
+                          (numpy.int32, numpy.float32, numpy.uint32)):
+            raise TypeError(
+                'scatter_add only supports int32, float32, uint32,'
+                ' and uint64 as data type.\n'
+                'Additionally, current clpy doesn\'t support '
+                'uint64 scatter_add operation.'
+            )
         _scatter_add_kernel(
             v, indices, cdim, rdim, adim, a.reduced_view())
     else:
@@ -3010,13 +3014,12 @@ cpdef _scatter_op_mask_single(ndarray a, ndarray mask, v, Py_ssize_t axis, op):
     # broadcast v to shape determined by the mask
     v = broadcast_to(v, masked_shape)
 
-    raise NotImplementedError("clpy does not support this")
-#    if op == 'update':
-#        _scatter_update_mask_kernel(v, mask, mask_scanned, a)
-#    elif op == 'add':
-#        _scatter_add_mask_kernel(v, mask, mask_scanned, a)
-#    else:
-#        raise ValueError('provided op is not supported')
+    if op == 'update':
+        _scatter_update_mask_kernel(v, mask, mask_scanned, a)
+    elif op == 'add':
+        _scatter_add_mask_kernel(v, mask, mask_scanned, a)
+    else:
+        raise ValueError('provided op is not supported')
 
 
 cpdef _scatter_op(ndarray a, slices, value, op):
