@@ -479,8 +479,8 @@ pad = padding.pad.pad
 # Sorting, searching, and counting
 # -----------------------------------------------------------------------------
 from clpy.sorting.count import count_nonzero  # NOQA
-# from clpy.sorting.search import flatnonzero  # NOQA
-# from clpy.sorting.search import nonzero  # NOQA
+from clpy.sorting.search import flatnonzero  # NOQA
+from clpy.sorting.search import nonzero  # NOQA
 
 from clpy.core.fusion import where  # NOQA
 from clpy.sorting.search import argmax  # NOQA

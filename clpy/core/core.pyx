@@ -2099,7 +2099,9 @@ cdef _argmin = create_reduction_func(
      ('d->q', (None, 'my_argmin_float(a, b)', None, None))),
     ('min_max_st<type_in0_data>(in0, _J)', 'my_argmin(a, b)', 'out0 = a.index',
      'min_max_st<type_in0_data>'),
-    '{}', _min_max_preamble)
+    '{}', _min_max_preamble, default=True)
+# default=True means that
+# the identity value initialized with '{}' will be meaningless.
 
 
 cdef _argmax = create_reduction_func(
@@ -2110,7 +2112,7 @@ cdef _argmax = create_reduction_func(
      ('d->q', (None, 'my_argmax_float(a, b)', None, None))),
     ('min_max_st<type_in0_data>(in0, _J)', 'my_argmax(a, b)', 'out0 = a.index',
      'min_max_st<type_in0_data>'),
-    '{}', _min_max_preamble)
+    '{}', _min_max_preamble, default=True)
 
 
 # -----------------------------------------------------------------------------
@@ -4250,22 +4252,23 @@ def _nonzero_kernel(src_dtype, src_ndim, index_dtype, dst_dtype):
     dst_dtype = _get_typename(dst_dtype)
 
     source = string.Template("""
-        extern "C" __global__ void ${name}(const CArray<${src_dtype}, 1> src,
-            CIndexer<${src_ndim}> shape,
+        __kernel void ${name}(
+            const CArray<${src_dtype}, 1> src,
+            CIndexer_${src_ndim} shape,
             const CArray<${index_dtype}, 1> scaned_index,
             CArray<${dst_dtype}, 1> dst){
 
-            int thid = blockIdx.x * blockDim.x + threadIdx.x;
+            const int thid = get_global_id(0);
 
             if (thid < src.size()){
                 if (src[thid] != 0){
                     ${index_dtype} idx = scaned_index[thid] - 1;
-                    int s = shape.size();
+                    size_t s = shape.size_;
 
-                    shape.set(thid);
+                    set_CIndexer_${src_ndim}(&shape, thid);
 
-                    for(int i = 0; i < ${src_ndim}; i++){
-                        dst[idx * ${src_ndim} + i] = shape.get()[i];
+                    for(size_t i = 0; i < ${src_ndim}; i++){
+                        dst[idx * ${src_ndim} + i] = shape.index_[i];
                     }
                 }
             }
