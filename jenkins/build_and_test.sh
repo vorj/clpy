@@ -86,6 +86,7 @@ tests/clpy_tests/math_tests/test_trigonometric.py
 tests/clpy_tests/math_tests/test_window.py
 tests/clpy_tests/random_tests/test_distributions.py
 tests/clpy_tests/sorting_tests/test_count.py
+tests/clpy_tests/sorting_tests/test_search.py
 tests/clpy_tests/statics_tests/test_correlation.py
 tests/clpy_tests/statics_tests/test_meanvar.py
 tests/clpy_tests/statics_tests/test_order.py
