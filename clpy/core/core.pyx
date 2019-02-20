@@ -2099,7 +2099,9 @@ cdef _argmin = create_reduction_func(
      ('d->q', (None, 'my_argmin_float(a, b)', None, None))),
     ('min_max_st<type_in0_data>(in0, _J)', 'my_argmin(a, b)', 'out0 = a.index',
      'min_max_st<type_in0_data>'),
-    '{}', _min_max_preamble)
+    '{}', _min_max_preamble, default=True)
+# default=True means that
+# the identity value initialized with '{}' will be meaningless.
 
 
 cdef _argmax = create_reduction_func(
@@ -2110,7 +2112,7 @@ cdef _argmax = create_reduction_func(
      ('d->q', (None, 'my_argmax_float(a, b)', None, None))),
     ('min_max_st<type_in0_data>(in0, _J)', 'my_argmax(a, b)', 'out0 = a.index',
      'min_max_st<type_in0_data>'),
-    '{}', _min_max_preamble)
+    '{}', _min_max_preamble, default=True)
 
 
 # -----------------------------------------------------------------------------
