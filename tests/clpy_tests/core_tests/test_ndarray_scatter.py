@@ -111,9 +111,9 @@ from clpy import testing
 @testing.gpu
 class TestScatterAddParametrized(unittest.TestCase):
 
-    @testing.for_dtypes([numpy.float32, numpy.int32, numpy.uint32,
-                         # numpy.uint64, numpy.ulonglong])
-                         ])
+    # TODO(nsakabe-fixstars):
+    # support numpy.uint64, numpy.ulonglong
+    @testing.for_dtypes([numpy.float32, numpy.int32, numpy.uint32])
     @testing.numpy_clpy_array_equal()
     def test_scatter_add(self, xp, dtype):
         a = xp.zeros(self.shape, dtype)
@@ -127,9 +127,9 @@ class TestScatterAddParametrized(unittest.TestCase):
 @testing.gpu
 class TestScatterAdd(unittest.TestCase):
 
-    @testing.for_dtypes([numpy.float32, numpy.int32, numpy.uint32,
-                         # numpy.uint64, numpy.ulonglong])
-                         ])
+    # TODO(nsakabe-fixstars):
+    # support numpy.uint64, numpy.ulonglong
+    @testing.for_dtypes([numpy.float32, numpy.int32, numpy.uint32])
     def test_scatter_add_clpy_arguments(self, dtype):
         shape = (2, 3)
         a = clpy.zeros(shape, dtype)
@@ -138,9 +138,9 @@ class TestScatterAdd(unittest.TestCase):
         testing.assert_array_equal(
             a, clpy.array([[0., 0., 0.], [2., 2., 2.]], dtype))
 
-    @testing.for_dtypes([numpy.float32, numpy.int32, numpy.uint32,
-                         # numpy.uint64, numpy.ulonglong])
-                         ])
+    # TODO(nsakabe-fixstars):
+    # support numpy.uint64, numpy.ulonglong
+    @testing.for_dtypes([numpy.float32, numpy.int32, numpy.uint32])
     def test_scatter_add_clpy_arguments_mask(self, dtype):
         shape = (2, 3)
         a = clpy.zeros(shape, dtype)
@@ -149,10 +149,11 @@ class TestScatterAdd(unittest.TestCase):
         testing.assert_array_equal(
             a, clpy.array([[1., 1., 1.], [0., 0., 0.]], dtype))
 
-    @testing.for_dtypes_combination(
-        [numpy.float32, numpy.int32, numpy.uint32,
-         # numpy.uint64, numpy.ulonglong]
-         ], names=['src_dtype', 'dst_dtype'])
+    # TODO(nsakabe-fixstars):
+    # support numpy.uint64, numpy.ulonglong
+    @testing.for_dtypes_combination([numpy.float32,
+                                     numpy.int32, numpy.uint32],
+                                    names=['src_dtype', 'dst_dtype'])
     def test_scatter_add_differnt_dtypes(self, src_dtype, dst_dtype):
         shape = (2, 3)
         a = clpy.zeros(shape, dtype=src_dtype)
@@ -164,10 +165,11 @@ class TestScatterAdd(unittest.TestCase):
             a.get(),
             numpy.array([[0, 0, 0], [2, 2, 2]], dtype=src_dtype))
 
-    @testing.for_dtypes_combination(
-        [numpy.float32, numpy.int32, numpy.uint32,
-         # numpy.uint64, numpy.ulonglong]
-         ], names=['src_dtype', 'dst_dtype'])
+    # TODO(nsakabe-fixstars):
+    # support numpy.uint64, numpy.ulonglong
+    @testing.for_dtypes_combination([numpy.float32,
+                                     numpy.int32, numpy.uint32],
+                                    names=['src_dtype', 'dst_dtype'])
     def test_scatter_add_differnt_dtypes_mask(self, src_dtype, dst_dtype):
         shape = (2, 3)
         a = clpy.zeros(shape, dtype=src_dtype)
