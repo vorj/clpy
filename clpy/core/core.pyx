@@ -2866,8 +2866,7 @@ cpdef ndarray _getitem_mask_single(ndarray a, ndarray mask, int axis):
     out = ndarray(masked_shape, dtype=a.dtype)
     if out.size == 0:
         return out
-    raise NotImplementedError("clpy does not support this")
-    # return _getitem_mask_kernel(a, mask, mask_scanned, out)
+    return _getitem_mask_kernel(a, mask, mask_scanned, out)
 
 
 cpdef ndarray _take(ndarray a, indices, li=None, ri=None, ndarray out=None):
