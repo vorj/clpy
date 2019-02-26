@@ -3359,21 +3359,18 @@ cpdef ndarray dot(ndarray a, ndarray b, ndarray out=None):
     return tensordot_core(a, b, out, n, m, k, ret_shape)
 
 
-cpdef ndarray _get_all_addresses(size_t start_adr,
-                                 vector.vector[size_t] & shape,
-                                 vector.vector[size_t] & strides):
+cpdef _get_all_addresses(size_t start_adr,
+                         vector.vector[size_t] & shape,
+                         vector.vector[size_t] & strides):
     idx = numpy.array([start_adr])
     for sh_, st_ in zip(shape, strides):
         idx = (idx[:, None] + (numpy.arange(sh_) * st_)[None, :]).ravel()
     idx = idx.astype(numpy.uintp)
-
-    ret = ndarray((idx.size,), dtype=numpy.uintp)
-    ret.set(idx)
-    return ret
+    return idx
 
 
-cdef ndarray _mat_ptrs(ndarray a):
-    """Creates an array of pointers to matrices
+cdef _mat_offsets_in_elements(ndarray a):
+    """Creates an array of offset (in elements) values to matrices
     Args:
         a: A batch of matrices on GPU.
            shape: () -> one ptr
@@ -3385,15 +3382,16 @@ cdef ndarray _mat_ptrs(ndarray a):
     Returns:
         GPU array of pointers to matrices.
     """
-    cdef Py_ssize_t stride, ptr, pointer, i
-    cdef ndarray ret
     if a.ndim <= 2:
-        ret = ndarray((1,), dtype=numpy.uintp)
-        ret.fill(a.data.ptr)
-        return ret
+        return numpy.full(
+            shape=(1,),
+            fill_value=<size_t>(a.data.cl_mem_offset() // a.itemsize),
+            dtype=numpy.uintp)
     else:
-        return _get_all_addresses(a.data.ptr, a.shape[:-2], a.strides[:-2])
-
+        idx = _get_all_addresses(
+            <size_t>a.data.cl_mem_offset(), a.shape[:-2], a.strides[:-2])
+        idx = idx // a.itemsize
+        return idx
 
 cpdef ndarray matmul(ndarray a, ndarray b, ndarray out=None):
     """ Returns the matrix product of two arrays and is the implementation of
@@ -3432,7 +3430,6 @@ cpdef ndarray matmul(ndarray a, ndarray b, ndarray out=None):
 
     cdef Py_ssize_t i, n, m, ka, kb
     cdef Py_ssize_t batchCount
-    cdef ndarray ap, bp, outp
 
     ret_dtype = numpy.result_type(a.dtype, b.dtype)
     dtype = numpy.find_common_type((ret_dtype, 'f'), ())
@@ -3527,30 +3524,34 @@ cpdef ndarray matmul(ndarray a, ndarray b, ndarray out=None):
     for i in la:
         batchCount *= i
 
-    ap = _mat_ptrs(a)
-    bp = _mat_ptrs(b)
-    outp = _mat_ptrs(out_view)
+    # Create Numpy ndarrays which contain
+    # offsets in bytes of batched sub-arrays.
+    ap = _mat_offsets_in_elements(a)
+    bp = _mat_offsets_in_elements(b)
+    outp = _mat_offsets_in_elements(out_view)
 
     if dtype == numpy.float32:
-        raise NotImplementedError("clpy does not support this")
-#        cuda.cublas.sgemmBatched(
-#            cuda.Device().cublas_handle,
-#            0,  # transa
-#            0,  # transb
-#            n, m, ka, 1.0,
-#            ap.data.ptr, lda,
-#            bp.data.ptr, ldb,
-#            0.0, outp.data.ptr, ldout, batchCount)
+        clpy.backend.opencl.clblast.clblast.sgemm_batched(
+            'C',
+            0,  # transa
+            0,  # transb
+            n, m, ka, 1.0,
+            a, ap, lda,
+            b, bp, ldb,
+            0.0,
+            out, outp, ldout,
+            batchCount)
     elif dtype == numpy.float64:
-        raise NotImplementedError("clpy does not support this")
-#        cuda.cublas.dgemmBatched(
-#            cuda.Device().cublas_handle,
-#            0,  # transa
-#            0,  # transb
-#            n, m, ka, 1.0,
-#            ap.data.ptr, lda,
-#            bp.data.ptr, ldb,
-#            0.0, outp.data.ptr, ldout, batchCount)
+        clpy.backend.opencl.clblast.clblast.dgemm_batched(
+            'C',
+            0,  # transa
+            0,  # transb
+            n, m, ka, 1.0,
+            a, ap, lda,
+            b, bp, ldb,
+            0.0,
+            out, outp, ldout,
+            batchCount)
     # elif dtype == numpy.complex64:
     #     cuda.cublas.cgemmBatched(
     #         cuda.Device().cublas_handle,

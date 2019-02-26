@@ -107,6 +107,16 @@ cdef void EnqueueCopyBuffer(
     cl_uint num_events_in_wait_list,
     cl_event* event_wait_list,
     cl_event* event) except *
+cdef void EnqueueFillBuffer(
+    cl_command_queue command_queue,
+    cl_mem buffer,
+    void* pattern,
+    size_t pattern_size,
+    size_t offset,
+    size_t size,
+    cl_uint num_events_in_wait_list,
+    cl_event* event_wait_list,
+    cl_event* event) except *
 cdef void Flush(cl_command_queue command_queue) except *
 cdef void Finish(cl_command_queue command_queue) except *
 cdef void ReleaseKernel(cl_kernel kernel) except *
