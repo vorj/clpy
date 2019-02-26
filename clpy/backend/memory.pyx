@@ -453,7 +453,7 @@ cdef class MemoryPointer:
                 command_queue=queue,
                 buffer=self.buf.ptr,
                 pattern=&value,
-                pattern_size=sizeof(int),
+                pattern_size=sizeof(value),
                 offset=0,
                 size=size,
                 num_events_in_wait_list=0,
