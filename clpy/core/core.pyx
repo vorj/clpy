@@ -3370,7 +3370,7 @@ cpdef _get_all_addresses(size_t start_adr,
 
 
 cdef _mat_offsets_in_elements(ndarray a):
-    """Creates an array of offset (in elements) values to matrices
+    """Creates an array of pointers to matrices
     Args:
         a: A batch of matrices on GPU.
            shape: () -> one ptr
