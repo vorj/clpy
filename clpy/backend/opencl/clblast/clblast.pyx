@@ -6,6 +6,8 @@ from clpy.backend.opencl.types cimport cl_event
 from clpy.backend.opencl.types cimport cl_mem
 from clpy.backend.opencl.exceptions import OpenCLRuntimeError
 
+import numpy
+
 
 def getCLBlastErrorName(statuscode):
     if statuscode in CLBLAST_STATUS_CODE:
@@ -286,15 +288,18 @@ cpdef sgemm_batched(str_layout, transa, transb,
     cdef size_t offsets_b_ptr = offsets_b.ctypes.data
     cdef size_t c_buffer = C.data.buf.get()
     cdef size_t offsets_c_ptr = offsets_c.ctypes.data
-    cdef float alpha_inst = alpha
-    cdef float beta_inst = beta
+
+    np_alphas = numpy.full((batch_count,), alpha, dtype='float32')
+    cdef size_t alphas = np_alphas.ctypes.data
+    np_betas = numpy.full((batch_count,), beta, dtype='float32')
+    cdef size_t betas = np_betas.ctypes.data
 
     clblast_sgemm_batched(
         layout, a_transpose, b_transpose,
-        m, n, k, &alpha_inst,
+        m, n, k, <float*>alphas,
         <cl_mem>a_buffer, <size_t*>offsets_a_ptr, lda,
         <cl_mem>b_buffer, <size_t*>offsets_b_ptr, ldb,
-        &beta_inst,
+        <float*>betas,
         <cl_mem>c_buffer, <size_t*>offsets_c_ptr, ldc,
         batch_count)
 
@@ -357,15 +362,18 @@ cpdef dgemm_batched(str_layout, transa, transb,
     cdef size_t offsets_b_ptr = offsets_b.ctypes.data
     cdef size_t c_buffer = C.data.buf.get()
     cdef size_t offsets_c_ptr = offsets_c.ctypes.data
-    cdef double alpha_inst = alpha
-    cdef double beta_inst = beta
+
+    np_alphas = numpy.full((batch_count,), alpha, dtype='float64')
+    cdef size_t alphas = np_alphas.ctypes.data
+    np_betas = numpy.full((batch_count,), beta, dtype='float64')
+    cdef size_t betas = np_betas.ctypes.data
 
     clblast_dgemm_batched(
         layout, a_transpose, b_transpose,
-        m, n, k, &alpha_inst,
+        m, n, k, <double*>alphas,
         <cl_mem>a_buffer, <size_t*>offsets_a_ptr, lda,
         <cl_mem>b_buffer, <size_t*>offsets_b_ptr, ldb,
-        &beta_inst,
+        <double*>betas,
         <cl_mem>c_buffer, <size_t*>offsets_c_ptr, ldc,
         batch_count)
 

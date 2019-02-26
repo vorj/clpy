@@ -3389,7 +3389,7 @@ cdef _mat_offsets_in_elements(ndarray a):
             dtype=numpy.uintp)
     else:
         idx = _get_all_addresses(
-            <size_t>a.data.cl_mem_offset(), a.shape[:-2], a.strides[:-2])
+            a.data.cl_mem_offset(), a.shape[:-2], a.strides[:-2])
         idx = idx // a.itemsize
         return idx
 
