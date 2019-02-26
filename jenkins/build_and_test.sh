@@ -82,6 +82,7 @@ tests/clpy_tests/math_tests/test_arithmetic.py
 tests/clpy_tests/math_tests/test_explog.py
 tests/clpy_tests/math_tests/test_floating.py
 tests/clpy_tests/math_tests/test_hyperbolic.py
+tests/clpy_tests/math_tests/test_matmul.py
 tests/clpy_tests/math_tests/test_misc.py
 tests/clpy_tests/math_tests/test_rounding.py
 tests/clpy_tests/math_tests/test_trigonometric.py
