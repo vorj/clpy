@@ -3525,7 +3525,7 @@ cpdef ndarray matmul(ndarray a, ndarray b, ndarray out=None):
         batchCount *= i
 
     # Create Numpy ndarrays which contain
-    # offsets in bytes of batched sub-arrays.
+    # offsets in elements of batched sub-arrays.
     ap = _mat_offsets_in_elements(a)
     bp = _mat_offsets_in_elements(b)
     outp = _mat_offsets_in_elements(out_view)
