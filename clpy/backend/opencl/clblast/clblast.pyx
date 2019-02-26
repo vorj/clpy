@@ -230,24 +230,24 @@ cpdef strsm(str_layout,
         <cl_mem>b_buffer, B.data.cl_mem_offset() // B.itemsize, ldb)
 
 cdef void clblast_sgemm_batched(
-    CLBlastLayout layout,
-    CLBlastTranspose a_transpose,
-    CLBlastTranspose b_transpose,
-    size_t m,
-    size_t n,
-    size_t k,
-    float *alphas,
-    cl_mem a_buffer,
-    size_t *a_offsets,
-    size_t a_ld,
-    cl_mem b_buffer,
-    size_t *b_offsets,
-    size_t b_ld,
-    float *betas,
-    cl_mem c_buffer,
-    size_t *c_offsets,
-    size_t c_ld,
-    size_t batch_count) except *:
+        CLBlastLayout layout,
+        CLBlastTranspose a_transpose,
+        CLBlastTranspose b_transpose,
+        size_t m,
+        size_t n,
+        size_t k,
+        float *alphas,
+        cl_mem a_buffer,
+        size_t *a_offsets,
+        size_t a_ld,
+        cl_mem b_buffer,
+        size_t *b_offsets,
+        size_t b_ld,
+        float *betas,
+        cl_mem c_buffer,
+        size_t *c_offsets,
+        size_t c_ld,
+        size_t batch_count) except *:
     cdef cl_event event = NULL
     cdef cl_command_queue\
         command_queue=clpy.backend.opencl.env.get_command_queue()
@@ -271,13 +271,13 @@ cdef void clblast_sgemm_batched(
     return
 
 cpdef sgemm_batched(str_layout, transa, transb,
-            m, n, k,
-            alpha,
-            A, offsets_a, lda,
-            B, offsets_b, ldb,
-            beta,
-            C, offsets_c, ldc,
-            batch_count):
+                    m, n, k,
+                    alpha,
+                    A, offsets_a, lda,
+                    B, offsets_b, ldb,
+                    beta,
+                    C, offsets_c, ldc,
+                    batch_count):
     cdef CLBlastLayout layout = translate_layout(str_layout)
     cdef CLBlastTranspose a_transpose = translate_transpose(transa)
     cdef CLBlastTranspose b_transpose = translate_transpose(transb)
@@ -304,24 +304,24 @@ cpdef sgemm_batched(str_layout, transa, transb,
         batch_count)
 
 cdef void clblast_dgemm_batched(
-    CLBlastLayout layout,
-    CLBlastTranspose a_transpose,
-    CLBlastTranspose b_transpose,
-    size_t m,
-    size_t n,
-    size_t k,
-    double *alphas,
-    cl_mem a_buffer,
-    size_t *a_offsets,
-    size_t a_ld,
-    cl_mem b_buffer,
-    size_t *b_offsets,
-    size_t b_ld,
-    double *betas,
-    cl_mem c_buffer,
-    size_t *c_offsets,
-    size_t c_ld,
-    size_t batch_count) except *:
+        CLBlastLayout layout,
+        CLBlastTranspose a_transpose,
+        CLBlastTranspose b_transpose,
+        size_t m,
+        size_t n,
+        size_t k,
+        double *alphas,
+        cl_mem a_buffer,
+        size_t *a_offsets,
+        size_t a_ld,
+        cl_mem b_buffer,
+        size_t *b_offsets,
+        size_t b_ld,
+        double *betas,
+        cl_mem c_buffer,
+        size_t *c_offsets,
+        size_t c_ld,
+        size_t batch_count) except *:
     cdef cl_event event = NULL
     cdef cl_command_queue\
         command_queue=clpy.backend.opencl.env.get_command_queue()
@@ -345,13 +345,13 @@ cdef void clblast_dgemm_batched(
     return
 
 cpdef dgemm_batched(str_layout, transa, transb,
-            m, n, k,
-            alpha,
-            A, offsets_a, lda,
-            B, offsets_b, ldb,
-            beta,
-            C, offsets_c, ldc,
-            batch_count):
+                    m, n, k,
+                    alpha,
+                    A, offsets_a, lda,
+                    B, offsets_b, ldb,
+                    beta,
+                    C, offsets_c, ldc,
+                    batch_count):
     cdef CLBlastLayout layout = translate_layout(str_layout)
     cdef CLBlastTranspose a_transpose = translate_transpose(transa)
     cdef CLBlastTranspose b_transpose = translate_transpose(transb)

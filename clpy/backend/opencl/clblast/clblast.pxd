@@ -58,13 +58,13 @@ cdef void clblast_sgemm_batched(
     size_t c_ld,
     size_t batch_count) except *
 cpdef sgemm_batched(str_layout, t_a_transpose, t_b_transpose,
-            m, n, k,
-            alpha, # CuPy's api takes single alpha
-            A, offsets_a, lda,
-            B, offsets_b, ldb,
-            beta,  # same as above
-            C, offsets_c, ldc,
-            batch_count)
+                    m, n, k,
+                    alpha,  # CuPy's api takes single alpha
+                    A, offsets_a, lda,
+                    B, offsets_b, ldb,
+                    beta,  # same as above
+                    C, offsets_c, ldc,
+                    batch_count)
 
 cdef void clblast_dgemm_batched(
     CLBlastLayout layout,
@@ -86,10 +86,10 @@ cdef void clblast_dgemm_batched(
     size_t c_ld,
     size_t batch_count) except *
 cpdef dgemm_batched(str_layout, t_a_transpose, t_b_transpose,
-            m, n, k,
-            alpha, # CuPy's api takes single alpha
-            A, offsets_a, lda,
-            B, offsets_b, ldb,
-            beta,  # same as above
-            C, offsets_c, ldc,
-            batch_count)
+                    m, n, k,
+                    alpha,  # CuPy's api takes single alpha
+                    A, offsets_a, lda,
+                    B, offsets_b, ldb,
+                    beta,  # same as above
+                    C, offsets_c, ldc,
+                    batch_count)
