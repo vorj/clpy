@@ -23,18 +23,25 @@ class PinnedMemory(object):
 
     """
 
+    # NOTE(nsakabe-fixstars):
+    # There isn't an equivalent of cudaHostAlloc in OpenCL.
+    # (cudaHostAlloc'ed memory region can be used to
+    #  store data for every device.
+    #  In OpenCL, although there is CL_MEM_ALLOC_HOST_PTR,
+    #  an allocated region is associated to a specific device.)
+    # So it is difficult to implement PinnedMemory
+    # with the same RAII interface.
+
     def __init__(self, Py_ssize_t size, unsigned int flags=0):
         self.size = size
         self.ptr = 0
         if size > 0:
             self.ptr = <size_t>malloc(size)
-            # # TODO(LWisteria): Use clEnqueueMapBuffer
             # self.ptr = runtime.hostAlloc(size, flags)
 
     def __del__(self):
         if self.ptr:
             free(<void*>self.ptr)
-            # # TODO(LWisteria): Use clEnqueueMapBuffer
             # runtime.freeHost(self.ptr)
 
     def __int__(self):

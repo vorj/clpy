@@ -14,6 +14,9 @@ class TestRandomSample(unittest.TestCase):
 
         ones = numpy.ones(n)
         zeros = numpy.zeros(n)
+        # TODO(nsakabe-fixstars):
+        # Fix the order of greater_equal's arguments
+        # and operands of and (not `all`, but `all())
         self.assertTrue(numpy.greater_equal(
             zeros, result).all and numpy.less(result, ones).all())
 
@@ -28,6 +31,9 @@ class TestRandomSample(unittest.TestCase):
         ones = numpy.ones(n)
         zeros = numpy.zeros(n)
 
+        # TODO(nsakabe-fixstars):
+        # Fix the order of greater_equal's arguments
+        # and operands of and (not `all`, but `all())
         self.assertTrue(numpy.greater_equal(
             zeros, result).all and numpy.less(result, ones).all())
 
