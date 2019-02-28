@@ -97,6 +97,7 @@ tests/clpy_tests/opencl_tests/test_memory.py
 tests/clpy_tests/opencl_tests/test_ndarray.py
 tests/clpy_tests/opencl_tests/test_reduction.py
 tests/clpy_tests/opencl_tests/test_rollaxis.py
+tests/clpy_tests/opencl_tests/test_ultima.py
 tests/clpy_tests/random_tests/test_distributions.py
 tests/clpy_tests/sorting_tests/test_count.py
 tests/clpy_tests/sorting_tests/test_search.py
