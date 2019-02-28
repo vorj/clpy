@@ -195,6 +195,11 @@ public:
       Out << "# union declaration(" << D->getName() << ") ignored\n";
       return;
     }
+    const std::regex pthread_detector(R"(.*pthread.*)");
+    if(std::regex_match(D->getNameAsString(), pthread_detector)) {
+      Out << "# pthread-related type ignored\n";
+      return;
+    }
 
     Indent();
     Out << "cdef " << D->getKindName() << " " << D->getName() << ":\n";
