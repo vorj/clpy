@@ -507,7 +507,7 @@ from clpy.statistics.meanvar import mean  # NOQA
 from clpy.statistics.meanvar import std  # NOQA
 from clpy.statistics.meanvar import var  # NOQA
 
-# from clpy.statistics.histogram import bincount  # NOQA
+from clpy.statistics.histogram import bincount  # NOQA
 
 # -----------------------------------------------------------------------------
 # CuPy specific functions
