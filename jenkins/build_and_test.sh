@@ -47,6 +47,7 @@ tests/clpy_tests/creation_tests/
 tests/clpy_tests/manipulation_tests/
 tests/clpy_tests/indexing_tests/
 tests/clpy_tests/prof_tests/
+tests/clpy_tests/statics_tests/
 "
 
 TEST_FILES="
@@ -100,9 +101,6 @@ tests/clpy_tests/opencl_tests/test_rollaxis.py
 tests/clpy_tests/random_tests/test_distributions.py
 tests/clpy_tests/sorting_tests/test_count.py
 tests/clpy_tests/sorting_tests/test_search.py
-tests/clpy_tests/statics_tests/test_correlation.py
-tests/clpy_tests/statics_tests/test_meanvar.py
-tests/clpy_tests/statics_tests/test_order.py
 "
 
 export CLPY_TEST_GPU_LIMIT=1
