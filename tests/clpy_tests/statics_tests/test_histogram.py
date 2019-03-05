@@ -10,7 +10,8 @@ from clpy import testing
 # as it casts an input array to intp.
 # And it does not support uint32, int64 and uint64 on 32-bit environment.
 _all_types = (
-    numpy.float16, numpy.float32, numpy.float64,
+    # numpy.float16,
+    numpy.float32, numpy.float64,
     numpy.int8, numpy.int16, numpy.int32,
     numpy.uint8, numpy.uint16,
     numpy.bool_)
