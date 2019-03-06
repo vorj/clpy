@@ -448,8 +448,17 @@ cdef class MemoryPointer:
 
         """
         if size > 0:
-            raise NotImplementedError("clpy does not support this")
-#            runtime.memset(self.ptr, value, size)
+            queue = clpy.backend.opencl.env.get_command_queue()
+            clpy.backend.opencl.api.EnqueueFillBuffer(
+                command_queue=queue,
+                buffer=self.buf.ptr,
+                pattern=&value,
+                pattern_size=sizeof(value),
+                offset=0,
+                size=size,
+                num_events_in_wait_list=0,
+                event_wait_list=<cl_event*>NULL,
+                event=<cl_event*>NULL)
 
     cpdef memset_async(self, int value, size_t size, stream):
         """Fills a memory sequence by constant byte value asynchronously.

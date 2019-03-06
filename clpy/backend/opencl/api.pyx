@@ -276,6 +276,29 @@ cdef void EnqueueCopyBuffer(
         event)
     exceptions.check_status(status)
 
+cdef void EnqueueFillBuffer(
+        cl_command_queue command_queue,
+        cl_mem buffer,
+        void* pattern,
+        size_t pattern_size,
+        size_t offset,
+        size_t size,
+        cl_uint num_events_in_wait_list,
+        cl_event* event_wait_list,
+        cl_event* event) except *:
+    cdef cl_int status = clEnqueueFillBuffer(
+        command_queue,
+        buffer,
+        pattern,
+        pattern_size,
+        offset,
+        size,
+        num_events_in_wait_list,
+        event_wait_list,
+        event)
+    exceptions.check_status(status)
+
+
 cdef void Flush(cl_command_queue command_queue) except *:
     exceptions.check_status(clFlush(command_queue))
 
