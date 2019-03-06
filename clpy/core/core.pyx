@@ -3526,9 +3526,9 @@ cpdef ndarray matmul(ndarray a, ndarray b, ndarray out=None):
 
     # Create Numpy ndarrays which contain
     # offsets in elements of batched sub-arrays.
-    ap = _mat_offsets_in_elements(a)
-    bp = _mat_offsets_in_elements(b)
-    outp = _mat_offsets_in_elements(out_view)
+    offsets_a = _mat_offsets_in_elements(a)
+    offsets_b = _mat_offsets_in_elements(b)
+    offsets_out = _mat_offsets_in_elements(out_view)
 
     if dtype == numpy.float32:
         clpy.backend.opencl.clblast.clblast.sgemm_batched(
@@ -3536,10 +3536,10 @@ cpdef ndarray matmul(ndarray a, ndarray b, ndarray out=None):
             0,  # transa
             0,  # transb
             n, m, ka, 1.0,
-            a, ap, lda,
-            b, bp, ldb,
+            a, offsets_a, lda,
+            b, offsets_b, ldb,
             0.0,
-            out, outp, ldout,
+            out, offsets_out, ldout,
             batchCount)
     elif dtype == numpy.float64:
         clpy.backend.opencl.clblast.clblast.dgemm_batched(
@@ -3547,10 +3547,10 @@ cpdef ndarray matmul(ndarray a, ndarray b, ndarray out=None):
             0,  # transa
             0,  # transb
             n, m, ka, 1.0,
-            a, ap, lda,
-            b, bp, ldb,
+            a, offsets_a, lda,
+            b, offsets_b, ldb,
             0.0,
-            out, outp, ldout,
+            out, offsets_out, ldout,
             batchCount)
     # elif dtype == numpy.complex64:
     #     cuda.cublas.cgemmBatched(
