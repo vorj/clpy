@@ -2770,17 +2770,17 @@ cdef _choose_clip_kernel = ElementwiseKernel(
     'clpy_choose_clip')
 
 
-# cdef _scatter_update_kernel = ElementwiseKernel(
-#     'T v, S indices, int32 cdim, int32 rdim, int32 adim',
-#     'raw T a',
-#     '''
-#       S wrap_indices = indices % adim;
-#       if (wrap_indices < 0) wrap_indices += adim;
-#       ptrdiff_t li = i / (rdim * cdim);
-#       ptrdiff_t ri = i % rdim;
-#       a[(li * adim + wrap_indices) * rdim + ri] = v;
-#     ''',
-#     'clpy_scatter_update')
+cdef _scatter_update_kernel = ElementwiseKernel(
+    'T v, S indices, int32 cdim, int32 rdim, int32 adim',
+    'raw T a',
+    '''
+      S wrap_indices = indices % adim;
+      if (wrap_indices < 0) wrap_indices += adim;
+      ptrdiff_t li = i / (rdim * cdim);
+      ptrdiff_t ri = i % rdim;
+      a[(li * adim + wrap_indices) * rdim + ri] = v;
+    ''',
+    'clpy_scatter_update')
 
 
 cdef _scatter_add_kernel = ElementwiseKernel(
@@ -2866,8 +2866,7 @@ cpdef ndarray _getitem_mask_single(ndarray a, ndarray mask, int axis):
     out = ndarray(masked_shape, dtype=a.dtype)
     if out.size == 0:
         return out
-    raise NotImplementedError("clpy does not support this")
-    # return _getitem_mask_kernel(a, mask, mask_scanned, out)
+    return _getitem_mask_kernel(a, mask, mask_scanned, out)
 
 
 cpdef ndarray _take(ndarray a, indices, li=None, ri=None, ndarray out=None):
@@ -2976,9 +2975,8 @@ cpdef _scatter_op_single(ndarray a, ndarray indices, v,
     indices = broadcast_to(indices, v_shape)
 
     if op == 'update':
-        # _scatter_update_kernel(
-        #     v, indices, cdim, rdim, adim, a.reduced_view())
-        raise NotImplementedError("clpy does not support this")
+        _scatter_update_kernel(
+            v, indices, cdim, rdim, adim, a.reduced_view())
     elif op == 'add':
         # NOTE(clpy):
         # CuPy had supported

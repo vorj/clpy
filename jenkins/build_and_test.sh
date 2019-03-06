@@ -60,6 +60,7 @@ tests/clpy_tests/core_tests/test_function.py
 tests/clpy_tests/core_tests/test_fusion.py
 tests/clpy_tests/core_tests/test_internal.py
 tests/clpy_tests/core_tests/test_ndarray.py
+tests/clpy_tests/core_tests/test_ndarray_adv_indexing.py
 tests/clpy_tests/core_tests/test_ndarray_complex_ops.py
 tests/clpy_tests/core_tests/test_ndarray_contiguity.py
 tests/clpy_tests/core_tests/test_ndarray_copy_and_view.py
