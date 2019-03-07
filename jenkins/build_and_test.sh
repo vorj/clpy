@@ -48,6 +48,7 @@ tests/clpy_tests/manipulation_tests/
 tests/clpy_tests/indexing_tests/
 tests/clpy_tests/prof_tests/
 tests/clpy_tests/statics_tests/
+tests/clpy_tests/math_tests/
 "
 
 TEST_FILES="
@@ -79,16 +80,6 @@ tests/clpy_tests/logic_tests/test_comparison.py
 tests/clpy_tests/logic_tests/test_content.py
 tests/clpy_tests/logic_tests/test_ops.py
 tests/clpy_tests/logic_tests/test_type_test.py
-tests/clpy_tests/math_tests/test_arithmetic.py
-tests/clpy_tests/math_tests/test_explog.py
-tests/clpy_tests/math_tests/test_floating.py
-tests/clpy_tests/math_tests/test_hyperbolic.py
-tests/clpy_tests/math_tests/test_matmul.py
-tests/clpy_tests/math_tests/test_misc.py
-tests/clpy_tests/math_tests/test_rounding.py
-tests/clpy_tests/math_tests/test_sumprod.py
-tests/clpy_tests/math_tests/test_trigonometric.py
-tests/clpy_tests/math_tests/test_window.py
 tests/clpy_tests/opencl_tests/test_api.py
 tests/clpy_tests/opencl_tests/test_atomicAdd.py
 tests/clpy_tests/opencl_tests/test_carray.py
