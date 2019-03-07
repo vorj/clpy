@@ -1,7 +1,6 @@
 import unittest
 
 import math
-import numpy
 import six
 
 import clpy
