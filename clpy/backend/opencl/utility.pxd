@@ -4,6 +4,7 @@ include "common_decl.pxi"
 # helpers
 cdef cl_uint GetDeviceMemBaseAddrAlign(cl_device_id device)
 cdef GetDeviceAddressBits(cl_device_id device)
+cpdef GetDeviceMaxMemoryAllocation(int device_id)
 
 ###############################################################################
 # utility
