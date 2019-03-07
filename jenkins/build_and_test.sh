@@ -86,6 +86,7 @@ tests/clpy_tests/math_tests/test_hyperbolic.py
 tests/clpy_tests/math_tests/test_matmul.py
 tests/clpy_tests/math_tests/test_misc.py
 tests/clpy_tests/math_tests/test_rounding.py
+tests/clpy_tests/math_tests/test_sumprod.py
 tests/clpy_tests/math_tests/test_trigonometric.py
 tests/clpy_tests/math_tests/test_window.py
 tests/clpy_tests/opencl_tests/test_api.py
