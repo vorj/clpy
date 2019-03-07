@@ -1,5 +1,6 @@
 import unittest
 
+import math
 import numpy
 import six
 
@@ -243,7 +244,13 @@ class TestCumprod(unittest.TestCase):
 
     @testing.slow
     def test_cumprod_huge_array(self):
-        size = 2 ** 32
+        device_max_alloc_bytes =\
+            clpy.backend.opencl.utility.\
+            GetDeviceMaxMemoryAllocation(
+                clpy.backend.opencl.env.get_device_id()
+                )
+
+        size = 2 ** math.floor(math.log2(device_max_alloc_bytes))
         a = clpy.ones(size, 'b')
         result = clpy.cumprod(a, dtype='b')
         del a

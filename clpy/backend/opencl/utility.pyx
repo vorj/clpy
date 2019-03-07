@@ -43,6 +43,19 @@ cdef GetDeviceAddressBits(cl_device_id device):
     ret = valptrs[0]
     return ret
 
+cpdef GetDeviceMaxMemoryAllocation(int device_id):
+    cdef cl_ulong ret
+    cdef size_t actual_size
+    cdef cl_int status = api.clGetDeviceInfo(
+        env.get_devices()[device_id],
+        <cl_device_info>CL_DEVICE_MAX_MEM_ALLOC_SIZE,
+        sizeof(ret),
+        <void *>&ret,
+        &actual_size)
+    check_status(status)
+
+    return ret
+
 cdef GetProgramDevice(cl_program program):
     cdef size_t max_length = sizeof(cl_device_id)*env.num_devices
     cdef cl_device_id* val = <cl_device_id*>malloc(max_length)
