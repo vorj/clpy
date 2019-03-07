@@ -45,13 +45,12 @@ cdef GetDeviceAddressBits(cl_device_id device):
 
 cpdef GetDeviceMaxMemoryAllocation(int device_id):
     cdef cl_ulong ret
-    cdef size_t actual_size
     cdef cl_int status = api.clGetDeviceInfo(
         env.get_devices()[device_id],
         <cl_device_info>CL_DEVICE_MAX_MEM_ALLOC_SIZE,
         sizeof(ret),
         <void *>&ret,
-        &actual_size)
+        <size_t*>NULL)
     check_status(status)
 
     return ret
