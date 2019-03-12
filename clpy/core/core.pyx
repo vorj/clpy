@@ -347,6 +347,10 @@ cdef class ndarray:
             newarray._set_shape_and_strides(self._shape, strides)
         else:
             newarray = ndarray(self.shape, dtype=dtype, order=order)
+
+        if dtype == numpy.bool_:
+            self[clpy.isnan(self)] = True
+
         elementwise_copy(self, newarray)
         return newarray
 
