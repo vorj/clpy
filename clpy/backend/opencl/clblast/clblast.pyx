@@ -71,7 +71,6 @@ cdef void clblast_sgemm(
         cl_mem b_buffer, size_t b_offset, size_t b_ld,
         float beta,
         cl_mem c_buffer, size_t c_offset, size_t c_ld) except *:
-    cdef cl_event event = NULL
     cdef cl_command_queue\
         command_queue=clpy.backend.opencl.env.get_command_queue()
 
@@ -84,10 +83,8 @@ cdef void clblast_sgemm(
         beta,
         c_buffer, c_offset, c_ld,
         &command_queue,
-        &event)
-    if (status == CLBlastSuccess):
-        api.ReleaseEvent(event)
-    else:
+        <cl_event*>NULL)
+    if (status != CLBlastSuccess):
         raise CLBlastRuntimeError(statuscode=status)
     return
 
@@ -124,7 +121,6 @@ cdef void clblast_dgemm(
         cl_mem b_buffer, size_t b_offset, size_t b_ld,
         double beta,
         cl_mem c_buffer, size_t c_offset, size_t c_ld) except *:
-    cdef cl_event event = NULL
     cdef cl_command_queue\
         command_queue=clpy.backend.opencl.env.get_command_queue()
 
@@ -137,11 +133,8 @@ cdef void clblast_dgemm(
         beta,
         c_buffer, c_offset, c_ld,
         &command_queue,
-        &event)
-    if (status == CLBlastSuccess):
-        api.WaitForEvents(1, &event)
-        api.ReleaseEvent(event)
-    else:
+        <cl_event*>NULL)
+    if (status != CLBlastSuccess):
         raise CLBlastRuntimeError(statuscode=status)
     return
 
@@ -177,7 +170,6 @@ cdef void clblast_strsm(
         size_t m, size_t n, float alpha,
         cl_mem a_buffer, size_t a_offset, size_t a_ld,
         cl_mem b_buffer, size_t b_offset, size_t b_ld) except *:
-    cdef cl_event event = NULL
     cdef cl_command_queue\
         command_queue=clpy.backend.opencl.env.get_command_queue()
 
@@ -191,15 +183,8 @@ cdef void clblast_strsm(
         a_buffer, a_offset, a_ld,
         b_buffer, b_offset, b_ld,
         &command_queue,
-        &event)
-    if (status == CLBlastSuccess):
-        try:
-            api.WaitForEvents(1, &event)
-        except OpenCLRuntimeError:
-            pass
-        else:
-            api.ReleaseEvent(event)
-    else:
+        <cl_event*>NULL)
+    if (status != CLBlastSuccess):
         raise CLBlastRuntimeError(statuscode=status)
     return
 
