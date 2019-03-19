@@ -251,7 +251,7 @@ class simple_reduction_function(object):
 
         # TODO(tomoharu.kitawaki): debug 0 size reduction and remove this
         if a.size == 0:
-            if self.identity in ['true','false']:
+            if self.identity in ['true', 'false']:
                 ret_identity = True if self.identity=='true' else False
             else:
                 ret_identity = self.identity
