@@ -349,7 +349,7 @@ cdef class ndarray:
             newarray = ndarray(self.shape, dtype=dtype, order=order)
 
         # In CUDA, nan converted to non 0 (True).
-        # But, in openCL, nan converted to 0 (False).
+        # But, in OpenCL, nan converted to 0 (False).
         # So, convert nan as True.
         if dtype == numpy.bool_:
             self[clpy.isnan(self)] = True
