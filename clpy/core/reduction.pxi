@@ -249,6 +249,18 @@ class simple_reduction_function(object):
             raise ValueError(('zero-size array to reduction operation'
                               ' %s which has no identity') % self.name)
 
+        # TODO(tomoharu.kitawaki): debug 0 size reduction and remove this
+        if a.size == 0:
+            if self.identity in ['true', 'false']:
+                ret_identity = True if self.identity=='true' else False
+            else:
+                ret_identity = self.identity
+            ret = clpy.empty(out_shape, out_types[0])
+            ret.fill(ret_identity)
+            if out is not None:
+                out.fill(ret_identity)
+            return ret
+
         in_args, in_shape = _get_trans_args(
             in_args, laxis + raxis, a_shape, None)
 
