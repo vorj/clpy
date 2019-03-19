@@ -49,6 +49,7 @@ tests/clpy_tests/indexing_tests/
 tests/clpy_tests/prof_tests/
 tests/clpy_tests/statics_tests/
 tests/clpy_tests/math_tests/
+tests/clpy_tests/logic_tests/
 "
 
 TEST_FILES="
@@ -76,10 +77,6 @@ tests/clpy_tests/core_tests/test_reduction.py
 tests/clpy_tests/core_tests/test_scan.py
 tests/clpy_tests/core_tests/test_userkernel.py
 tests/clpy_tests/linalg_tests/test_product.py
-tests/clpy_tests/logic_tests/test_comparison.py
-tests/clpy_tests/logic_tests/test_content.py
-tests/clpy_tests/logic_tests/test_ops.py
-tests/clpy_tests/logic_tests/test_type_test.py
 tests/clpy_tests/opencl_tests/test_api.py
 tests/clpy_tests/opencl_tests/test_atomicAdd.py
 tests/clpy_tests/opencl_tests/test_carray.py
