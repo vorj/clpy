@@ -782,7 +782,7 @@ cdef class ndarray:
             # with grouping using tuple iterator.
             # (The sorting kernel is kicked once.)
             # For simplicity, here we use sort() repeatedly.
-            repeats = functools.reduce(lambda x,y:x*y, data.shape[:-1])
+            repeats = functools.reduce(lambda x, y: x * y, data.shape[:-1])
             len_for_each = data.shape[ndim-1]
             for i in range(repeats):
                 begin = i * len_for_each
@@ -4344,15 +4344,14 @@ cpdef ndarray scan(ndarray a, ndarray out=None):
 cpdef maximum_value(dtype):
     if dtype in [
             numpy.int8, numpy.int16, numpy.int32, numpy.int64,
-            numpy.uint8, numpy.uint16, numpy.uint32, numpy.uint64,
-            ]:
+            numpy.uint8, numpy.uint16, numpy.uint32, numpy.uint64]:
         return numpy.array(numpy.iinfo(dtype).max, dtype=dtype)
     elif dtype in [numpy.float32, numpy.float64]:
         return numpy.array(numpy.inf, dtype=dtype)
     else:
         raise NotImplementedError(
-                'Sorting arrays with dtype \'{}\' is not supported'\
-                .format(dtype))
+            'Sorting arrays with dtype \'{}\' is not supported'
+            .format(dtype))
 
 cpdef sort_prepare_and_kick(ndarray target):
     # (満たしていなければ) 2 べき乗要素数のndarray(prepared)をつくりコピー
@@ -4360,7 +4359,8 @@ cpdef sort_prepare_and_kick(ndarray target):
     if ndim > 1:
         raise NotImplementedError("ndim>=2 not implemented")
     old_shape = target.shape
-    new_shape = target.shape[0:ndim-1] + ( 2 ** math.ceil(math.log2(old_shape[ndim-1])), )
+    new_shape = target.shape[0:ndim-1]\
+        + (2 ** math.ceil(math.log2(old_shape[ndim-1])),)
 
     cdef ndarray prepared = ndarray(new_shape, dtype=target.dtype)
 
@@ -4368,7 +4368,8 @@ cpdef sort_prepare_and_kick(ndarray target):
 
     # target.dtype に応じたパディング
     if old_shape[ndim-1] < new_shape[ndim-1]:
-        prepared[old_shape[ndim-1]:new_shape[ndim-1]] = maximum_value(target.dtype)
+        prepared[old_shape[ndim-1]:new_shape[ndim-1]]\
+            = maximum_value(target.dtype)
     # マージ出力用ndarray(output)をつくる
     cdef ndarray output = clpy.empty_like(prepared)
     # sort_impl(prepared -> output) を呼ぶ
@@ -4428,7 +4429,7 @@ cpdef sort_impl(ndarray prepared, ndarray output):
                 prepared,
                 output,
                 sequence_length
-                ),
+            ),
             local_mem=0)
         workitems = workitems // 2
 
