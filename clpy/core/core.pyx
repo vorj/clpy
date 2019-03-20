@@ -754,8 +754,6 @@ cdef class ndarray:
 
         cdef Py_ssize_t ndim = self.ndim
 
-        raise NotImplementedError("clpy does not support this")
-
         if ndim == 0:
             raise ValueError('Sorting arrays with the rank of zero is not '
                              'supported')  # as numpy.sort() raises
@@ -776,7 +774,7 @@ cdef class ndarray:
             data = clpy.rollaxis(self, axis, ndim).copy()
 
         if ndim == 1:
-            thrust.sort(self.dtype, data.data.ptr, 0, self._shape)
+            sort_prepare_and_kick(self)
         else:
             keys_array = ndarray(data._shape, dtype=numpy.intp)
             thrust.sort(
@@ -4331,3 +4329,88 @@ cpdef ndarray scan(ndarray a, ndarray out=None):
                  local_work_size=(add_workgroup_size,),
                  args=(out,))
     return out
+
+
+
+cpdef sort_prepare_and_kick(ndarray target):
+    # (満たしていなければ) 2 べき乗要素数のndarray(prepared)をつくりコピー
+    ndim = target.ndim
+    if ndim > 1:
+        raise NotImplementedError("ndim>=2 not implemented")
+    old_shape = target.shape
+    if 2 ** math.ceil(math.log2(old_shape[ndim-1])) - old_shape[ndim-1] != 0:
+        raise NotImplementedError("shape must be power of 2")
+    '''
+    new_shape = target.shape
+    new_shape[ndim-1] = 2 ** math.ceil(math.log2(new_shape[ndim-1]))
+    ndarray prepared = ndarray(new_shape, dtype=target.dtype)
+    prepared[ndim-1:old_shape[ndim-1],] = target[ndim-1:old_shape[ndim-1],]
+    '''
+    # target.dtype に応じたパディング
+    '''
+    prepared[old_shape[ndim-1]:new_shape[ndim-1]] = numpy.finfo(numpy.dtype('float32')).max
+    '''
+    # マージ出力用ndarray(output)をつくる
+    cdef ndarray output = target.copy()
+    # sort_impl(prepared -> output) を呼ぶ
+    sort_impl(target, output)
+    # output から target に書き戻す
+    elementwise_copy(output, target)
+
+cpdef sort_impl(ndarray prepared, ndarray output):
+
+    name = "simple_mergesort_kernel"
+    dtype = _get_typename(prepared.dtype)
+    source = string.Template("""
+    __kernel void ${name}(
+            const CArray<${dtype}, 1> in,
+            CArray<${dtype}, 1> out,
+            long sequence_length
+        ){
+        size_t const id = get_global_id(0);
+        size_t const head = id * sequence_length * 2;
+        long const loops = sequence_length * 2;
+
+        size_t const A_begin = head;
+        size_t const A_end = A_begin + sequence_length;
+        size_t const B_begin = A_begin + sequence_length;
+        size_t const B_end = B_begin + sequence_length;
+        size_t A_current = A_begin;
+        size_t B_current = B_begin;
+        size_t out_current = head;
+        for(long i=0; i<loops; ++i){
+            if(B_current == B_end){
+              out[out_current] = in[A_current];
+              A_current++;
+            }else if(A_current == A_end){
+              out[out_current] = in[B_current];
+              B_current++;
+            }else if(in[A_current] <= in[B_current]){
+              out[out_current] = in[A_current];
+              A_current++;
+            }else{
+              out[out_current] = in[B_current];
+              B_current++;
+            }
+            out_current++;
+        }
+
+    } """).substitute(name=name, dtype=dtype)
+    module = compile_with_cache(source)
+    function = module.get_function(name)
+
+    workitems = prepared.shape[0] // 2
+    while workitems >= 1:
+        sequence_length = prepared.shape[0] // workitems // 2
+        function(
+            global_work_size=(workitems,),
+            local_work_size=(1,),
+            args=(
+                prepared,
+                output,
+                sequence_length
+                ),
+            local_mem=0)
+        workitems = workitems // 2
+
+        elementwise_copy(output, prepared)
