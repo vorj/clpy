@@ -1,6 +1,7 @@
 # distutils: language = c++
 
 from __future__ import division
+import functools
 import math
 import sys
 
@@ -776,9 +777,18 @@ cdef class ndarray:
         if ndim == 1:
             sort_prepare_and_kick(data)
         else:
-            keys_array = ndarray(data._shape, dtype=numpy.intp)
-            thrust.sort(
-                self.dtype, data.data.ptr, keys_array.data.ptr, data._shape)
+            # NOTE(nsakabe-fixstars):
+            # Original CuPy implement this n-D range sorting
+            # with grouping using tuple iterator.
+            # (The sorting kernel is kicked once.)
+            # For simplicity, here we use sort() repeatedly.
+            repeats = functools.reduce(lambda x,y:x*y, data.shape[:-1])
+            len_for_each = data.shape[ndim-1]
+            for i in range(repeats):
+                begin = i * len_for_each
+                end = begin + len_for_each
+                partial_view = data.ravel()[begin:end]
+                partial_view[:] = clpy.sort(partial_view)
 
         if axis == ndim - 1:
             pass
