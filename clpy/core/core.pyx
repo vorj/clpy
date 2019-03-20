@@ -4343,8 +4343,8 @@ cpdef ndarray scan(ndarray a, ndarray out=None):
 
 cpdef maximum_value(dtype):
     if dtype in [
-            numpy.int8, numpy.int32, numpy.int64,
-            numpy.uint8, numpy.uint32, numpy.uint64,
+            numpy.int8, numpy.int16, numpy.int32, numpy.int64,
+            numpy.uint8, numpy.uint16, numpy.uint32, numpy.uint64,
             ]:
         return numpy.array(numpy.iinfo(dtype).max, dtype=dtype)
     elif dtype in [numpy.float32, numpy.float64]:
