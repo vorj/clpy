@@ -774,7 +774,7 @@ cdef class ndarray:
             data = clpy.rollaxis(self, axis, ndim).copy()
 
         if ndim == 1:
-            sort_prepare_and_kick(self)
+            sort_prepare_and_kick(data)
         else:
             keys_array = ndarray(data._shape, dtype=numpy.intp)
             thrust.sort(
