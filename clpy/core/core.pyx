@@ -4367,7 +4367,6 @@ cpdef sort_prepare_and_kick(ndarray target):
     # target.dtype に応じたパディング
     if old_shape[ndim-1] < new_shape[ndim-1]:
         prepared[old_shape[ndim-1]:new_shape[ndim-1]] = maximum_value(target.dtype)
-        print(f"pad by {maximum_value(target.dtype)}")
     # マージ出力用ndarray(output)をつくる
     cdef ndarray output = clpy.empty_like(prepared)
     # sort_impl(prepared -> output) を呼ぶ
