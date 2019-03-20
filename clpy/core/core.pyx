@@ -4356,7 +4356,7 @@ cpdef maximum_value(dtype):
 cpdef sort_prepare_and_kick(ndarray target):
     ndim = target.ndim
     if ndim > 1:
-        raise NotImplementedError("ndim>=2 not implemented")
+        raise NotImplementedError("Sorting ndim>=2 array not implemented")
     old_shape = target.shape
     new_shape = target.shape[0:ndim-1]\
         + (2 ** math.ceil(math.log2(old_shape[ndim-1])),)
