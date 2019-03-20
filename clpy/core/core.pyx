@@ -4331,6 +4331,16 @@ cpdef ndarray scan(ndarray a, ndarray out=None):
     return out
 
 
+cpdef maximum_value(dtype):
+    if dtype in [
+            numpy.int8, numpy.int32, numpy.int64,
+            numpy.uint8, numpy.uint32, numpy.uint64,
+            ]:
+        return numpy.array(numpy.iinfo(dtype).max, dtype=dtype)
+    elif dtype in [numpy.float32, numpy.float64]:
+        return numpy.array(numpy.inf, dtype=dtype)
+    else:
+        raise TypeError('dtype {} is not supported'.format(dtype))
 
 cpdef sort_prepare_and_kick(ndarray target):
     # (満たしていなければ) 2 べき乗要素数のndarray(prepared)をつくりコピー
@@ -4338,24 +4348,22 @@ cpdef sort_prepare_and_kick(ndarray target):
     if ndim > 1:
         raise NotImplementedError("ndim>=2 not implemented")
     old_shape = target.shape
-    if 2 ** math.ceil(math.log2(old_shape[ndim-1])) - old_shape[ndim-1] != 0:
-        raise NotImplementedError("shape must be power of 2")
-    '''
-    new_shape = target.shape
-    new_shape[ndim-1] = 2 ** math.ceil(math.log2(new_shape[ndim-1]))
-    ndarray prepared = ndarray(new_shape, dtype=target.dtype)
-    prepared[ndim-1:old_shape[ndim-1],] = target[ndim-1:old_shape[ndim-1],]
-    '''
+    new_shape = target.shape[0:ndim-1] + ( 2 ** math.ceil(math.log2(old_shape[ndim-1])), )
+
+    cdef ndarray prepared = ndarray(new_shape, dtype=target.dtype)
+
+    prepared[0:old_shape[ndim-1]] = target[0:old_shape[ndim-1]]
+
     # target.dtype に応じたパディング
-    '''
-    prepared[old_shape[ndim-1]:new_shape[ndim-1]] = numpy.finfo(numpy.dtype('float32')).max
-    '''
+    if old_shape[ndim-1] < new_shape[ndim-1]:
+        prepared[old_shape[ndim-1]:new_shape[ndim-1]] = maximum_value(target.dtype)
+        print(f"pad by {maximum_value(target.dtype)}")
     # マージ出力用ndarray(output)をつくる
-    cdef ndarray output = target.copy()
+    cdef ndarray output = clpy.empty_like(prepared)
     # sort_impl(prepared -> output) を呼ぶ
-    sort_impl(target, output)
+    sort_impl(prepared, output)
     # output から target に書き戻す
-    elementwise_copy(output, target)
+    target[0:old_shape[ndim-1]] = output[0:old_shape[ndim-1]]
 
 cpdef sort_impl(ndarray prepared, ndarray output):
 
