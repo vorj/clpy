@@ -4361,15 +4361,17 @@ cpdef sort_prepare_and_kick(ndarray target):
     new_shape = target.shape[0:ndim-1]\
         + (2 ** math.ceil(math.log2(old_shape[ndim-1])),)
 
-    # Create a new ndarray with the size of a power of 2.
-    cdef ndarray prepared = ndarray(new_shape, dtype=target.dtype)
+    if old_shape[ndim-1] == new_shape[ndim-1]:
+        prepared = target
+    else:
+        # Create a new ndarray with the size of a power of 2.
+        prepared = ndarray(new_shape, dtype=target.dtype)
 
-    # Copy the content.
-    prepared[0:old_shape[ndim-1]] = target[0:old_shape[ndim-1]]
+        # Copy the content.
+        prepared[0:old_shape[ndim-1]] = target[0:old_shape[ndim-1]]
 
-    # Assign a corresponding maximum value of target.dtype
-    # to the redundant elements.
-    if old_shape[ndim-1] < new_shape[ndim-1]:
+        # Assign a corresponding maximum value of target.dtype
+        # to the redundant elements.
         prepared[old_shape[ndim-1]:new_shape[ndim-1]]\
             = maximum_value(target.dtype)
 
