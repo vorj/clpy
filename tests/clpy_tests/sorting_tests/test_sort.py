@@ -49,13 +49,17 @@ class TestSort(unittest.TestCase):
         a = testing.shaped_random((10,), xp, dtype)
         return xp.sort(a)
 
-    @testing.for_dtypes([numpy.float16, numpy.bool_])
+    @testing.for_dtypes([
+        # numpy.float16,
+        numpy.bool_])
     def test_sort_unsupported_dtype(self, dtype):
         a = testing.shaped_random((10,), clpy, dtype)
         with self.assertRaises(NotImplementedError):
             a.sort()
 
-    @testing.for_dtypes([numpy.float16, numpy.bool_])
+    @testing.for_dtypes([
+        # numpy.float16,
+        numpy.bool_])
     def test_external_sort_unsupported_dtype(self, dtype):
         a = testing.shaped_random((10,), clpy, dtype)
         with self.assertRaises(NotImplementedError):
