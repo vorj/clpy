@@ -4354,7 +4354,6 @@ cpdef maximum_value(dtype):
             .format(dtype))
 
 cpdef sort_prepare_and_kick(ndarray target):
-    # (満たしていなければ) 2 べき乗要素数のndarray(prepared)をつくりコピー
     ndim = target.ndim
     if ndim > 1:
         raise NotImplementedError("ndim>=2 not implemented")
@@ -4362,19 +4361,24 @@ cpdef sort_prepare_and_kick(ndarray target):
     new_shape = target.shape[0:ndim-1]\
         + (2 ** math.ceil(math.log2(old_shape[ndim-1])),)
 
+    # Create a new ndarray with the size of a power of 2.
     cdef ndarray prepared = ndarray(new_shape, dtype=target.dtype)
 
+    # Copy the content.
     prepared[0:old_shape[ndim-1]] = target[0:old_shape[ndim-1]]
 
-    # target.dtype に応じたパディング
+    # Assign a corresponding maximum value of target.dtype
+    # to the redundant elements.
     if old_shape[ndim-1] < new_shape[ndim-1]:
         prepared[old_shape[ndim-1]:new_shape[ndim-1]]\
             = maximum_value(target.dtype)
-    # マージ出力用ndarray(output)をつくる
+
+    # Create a new ndarray as a workspace of merge sort.
     cdef ndarray output = clpy.empty_like(prepared)
-    # sort_impl(prepared -> output) を呼ぶ
+
+    # Call the kernel.
     sort_impl(prepared, output)
-    # output から target に書き戻す
+    # Write back needed elements from output to our target
     target[0:old_shape[ndim-1]] = output[0:old_shape[ndim-1]]
 
 cpdef sort_impl(ndarray prepared, ndarray output):
