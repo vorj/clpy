@@ -4350,7 +4350,9 @@ cpdef maximum_value(dtype):
     elif dtype in [numpy.float32, numpy.float64]:
         return numpy.array(numpy.inf, dtype=dtype)
     else:
-        raise TypeError('dtype {} is not supported'.format(dtype))
+        raise NotImplementedError(
+                'Sorting arrays with dtype \'{}\' is not supported'\
+                .format(dtype))
 
 cpdef sort_prepare_and_kick(ndarray target):
     # (満たしていなければ) 2 べき乗要素数のndarray(prepared)をつくりコピー
