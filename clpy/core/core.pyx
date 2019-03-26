@@ -1,6 +1,7 @@
 # distutils: language = c++
 
 from __future__ import division
+import functools
 import math
 import sys
 
@@ -761,11 +762,23 @@ cdef class ndarray:
 
         cdef Py_ssize_t ndim = self.ndim
 
-        raise NotImplementedError("clpy does not support this")
-
         if ndim == 0:
             raise ValueError('Sorting arrays with the rank of zero is not '
                              'supported')  # as numpy.sort() raises
+
+        # NOTE(nsakabe-fixstars):
+        # Original CuPy had filtered out unsupported dtypes at
+        # the thin wrapper code, in thrust.pyx.
+        # https://github.com/cupy/cupy/blob/
+        # 4867ff1a0245ec5c49d75465ad1625ac8ab4baa4/cupy/cuda/thrust.pyx#L35-L58
+        # Our dtype filtering here was copied from it.
+        if self.dtype not in [
+                numpy.int8, numpy.int16, numpy.int32, numpy.int64,
+                numpy.uint8, numpy.uint16, numpy.uint32, numpy.uint64,
+                numpy.float32, numpy.float64]:
+            raise NotImplementedError(
+                'Sorting arrays with dtype \'{}\' is not supported'
+                .format(self.dtype))
 
         # TODO(takagi): Support sorting views
         if not self._c_contiguous:
@@ -783,11 +796,22 @@ cdef class ndarray:
             data = clpy.rollaxis(self, axis, ndim).copy()
 
         if ndim == 1:
-            thrust.sort(self.dtype, data.data.ptr, 0, self._shape)
+            sort_prepare_and_kick(data)
         else:
-            keys_array = ndarray(data._shape, dtype=numpy.intp)
-            thrust.sort(
-                self.dtype, data.data.ptr, keys_array.data.ptr, data._shape)
+            # TODO(nsakabe-fixstars):
+            # Original CuPy implement this n-D range sorting
+            # with grouping the elements using tuple.
+            # (The sorting kernel is kicked once.)
+            # For simplicity of implementation,
+            # here we use sort() repeatedly.
+            # To improve the performance, refine this behavior.
+            repeats = functools.reduce(lambda x, y: x * y, data.shape[:-1])
+            len_for_each = data.shape[ndim-1]
+            for i in range(repeats):
+                begin = i * len_for_each
+                end = begin + len_for_each
+                partial_view = data.ravel()[begin:end]
+                partial_view[:] = clpy.sort(partial_view)
 
         if axis == ndim - 1:
             pass
@@ -4338,3 +4362,104 @@ cpdef ndarray scan(ndarray a, ndarray out=None):
                  local_work_size=(add_workgroup_size,),
                  args=(out,))
     return out
+
+
+cpdef maximum_value(dtype):
+    if dtype in [
+            numpy.int8, numpy.int16, numpy.int32, numpy.int64,
+            numpy.uint8, numpy.uint16, numpy.uint32, numpy.uint64]:
+        return numpy.array(numpy.iinfo(dtype).max, dtype=dtype)
+    elif dtype in [numpy.float32, numpy.float64]:
+        return numpy.array(numpy.inf, dtype=dtype)
+    else:
+        raise NotImplementedError(
+            'Can not determine the maximum value for dtype: \'{}\'.'
+            .format(dtype))
+
+cpdef sort_prepare_and_kick(ndarray target):
+    ndim = target.ndim
+    if ndim > 1:
+        raise NotImplementedError("Sorting ndim>=2 array not implemented")
+    old_shape = target.shape
+    new_shape = target.shape[0:ndim-1]\
+        + (2 ** math.ceil(math.log2(old_shape[ndim-1])),)
+
+    if old_shape[ndim-1] == new_shape[ndim-1]:
+        prepared = target
+    else:
+        # Create a new ndarray with the size of a power of 2.
+        prepared = ndarray(new_shape, dtype=target.dtype)
+
+        # Copy the content.
+        prepared[0:old_shape[ndim-1]] = target[0:old_shape[ndim-1]]
+
+        # Assign a corresponding maximum value of target.dtype
+        # to the redundant elements.
+        prepared[old_shape[ndim-1]:new_shape[ndim-1]]\
+            = maximum_value(target.dtype)
+
+    # Create a new ndarray as a workspace of merge sort.
+    cdef ndarray output = clpy.empty_like(prepared)
+
+    # Call the kernel.
+    sort_impl(prepared, output)
+    # Write back needed elements from output to our target
+    target[0:old_shape[ndim-1]] = output[0:old_shape[ndim-1]]
+
+cpdef sort_impl(ndarray prepared, ndarray output):
+
+    name = "simple_mergesort_kernel"
+    dtype = _get_typename(prepared.dtype)
+    source = string.Template("""
+    __kernel void ${name}(
+            const CArray<${dtype}, 1> in,
+            CArray<${dtype}, 1> out,
+            long sequence_length
+        ){
+        size_t const id = get_global_id(0);
+        size_t const head = id * sequence_length * 2;
+        long const loops = sequence_length * 2;
+
+        size_t const A_begin = head;
+        size_t const A_end = A_begin + sequence_length;
+        size_t const B_begin = A_begin + sequence_length;
+        size_t const B_end = B_begin + sequence_length;
+        size_t A_current = A_begin;
+        size_t B_current = B_begin;
+        size_t out_current = head;
+        for(long i=0; i<loops; ++i){
+            if(B_current == B_end){
+              out[out_current] = in[A_current];
+              A_current++;
+            }else if(A_current == A_end){
+              out[out_current] = in[B_current];
+              B_current++;
+            }else if(in[A_current] <= in[B_current]){
+              out[out_current] = in[A_current];
+              A_current++;
+            }else{
+              out[out_current] = in[B_current];
+              B_current++;
+            }
+            out_current++;
+        }
+
+    } """).substitute(name=name, dtype=dtype)
+    module = compile_with_cache(source)
+    function = module.get_function(name)
+
+    workitems = prepared.shape[0] // 2
+    while workitems >= 1:
+        sequence_length = prepared.shape[0] // workitems // 2
+        function(
+            global_work_size=(workitems,),
+            local_work_size=(1,),
+            args=(
+                prepared,
+                output,
+                sequence_length
+            ),
+            local_mem=0)
+        workitems = workitems // 2
+
+        elementwise_copy(output, prepared)

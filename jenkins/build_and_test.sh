@@ -92,6 +92,7 @@ tests/clpy_tests/opencl_tests/test_rollaxis.py
 tests/clpy_tests/random_tests/test_distributions.py
 tests/clpy_tests/sorting_tests/test_count.py
 tests/clpy_tests/sorting_tests/test_search.py
+tests/clpy_tests/sorting_tests/test_sort.py::TestSort
 "
 
 export CLPY_TEST_GPU_LIMIT=1
