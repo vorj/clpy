@@ -52,6 +52,10 @@ tests/clpy_tests/math_tests/
 tests/clpy_tests/logic_tests/
 "
 
+TEST_DIRS_IN_ROOT_DIR="
+tests/install_tests/
+"
+
 TEST_FILES="
 tests/clpy_tests/core_tests/test_carray.py
 tests/clpy_tests/core_tests/test_core.py
@@ -107,6 +111,14 @@ for d in $TEST_DIRS; do
     ERROR_HAS_OCCURRED=1
   fi
   popd
+done
+
+for d in $TEST_DIRS_IN_ROOT_DIR; do
+  python -m pytest $d  2>&1 | tee temporary_log
+  if [[ ${PIPESTATUS[0]} -ne 0 ]]; then
+    cat temporary_log >> $ERRORS_FILENAME
+    ERROR_HAS_OCCURRED=1
+  fi
 done
 
 for f in $TEST_FILES; do
