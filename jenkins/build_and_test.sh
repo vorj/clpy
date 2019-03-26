@@ -38,6 +38,8 @@ fi
 
 # Run pytests
 TEST_DIRS="
+tests/clpy_tests/core_tests/
+tests/clpy_tests/opencl_tests/
 tests/clpy_tests/binary_tests/
 tests/clpy_tests/ext_tests/
 tests/clpy_tests/testing_tests/
@@ -53,42 +55,7 @@ tests/clpy_tests/logic_tests/
 "
 
 TEST_FILES="
-tests/clpy_tests/core_tests/test_carray.py
-tests/clpy_tests/core_tests/test_core.py
-tests/clpy_tests/core_tests/test_cupy_aliased_ndarray.py
-tests/clpy_tests/core_tests/test_elementwise.py
-tests/clpy_tests/core_tests/test_flags.py
-tests/clpy_tests/core_tests/test_function.py
-tests/clpy_tests/core_tests/test_fusion.py
-tests/clpy_tests/core_tests/test_internal.py
-tests/clpy_tests/core_tests/test_ndarray.py
-tests/clpy_tests/core_tests/test_ndarray_adv_indexing.py
-tests/clpy_tests/core_tests/test_ndarray_complex_ops.py
-tests/clpy_tests/core_tests/test_ndarray_contiguity.py
-tests/clpy_tests/core_tests/test_ndarray_copy_and_view.py
-tests/clpy_tests/core_tests/test_ndarray_elementwise_op.py
-tests/clpy_tests/core_tests/test_ndarray_get.py
-tests/clpy_tests/core_tests/test_ndarray_indexing.py
-tests/clpy_tests/core_tests/test_ndarray_owndata.py
-tests/clpy_tests/core_tests/test_ndarray_reduction.py
-tests/clpy_tests/core_tests/test_ndarray_scatter.py
-tests/clpy_tests/core_tests/test_ndarray_unary_op.py
-tests/clpy_tests/core_tests/test_reduction.py
-tests/clpy_tests/core_tests/test_scan.py
-tests/clpy_tests/core_tests/test_userkernel.py
 tests/clpy_tests/linalg_tests/test_product.py
-tests/clpy_tests/opencl_tests/test_api.py
-tests/clpy_tests/opencl_tests/test_atomicAdd.py
-tests/clpy_tests/opencl_tests/test_carray.py
-tests/clpy_tests/opencl_tests/test_clblast.py
-tests/clpy_tests/opencl_tests/test_concatenate.py
-tests/clpy_tests/opencl_tests/test_elementwise.py
-tests/clpy_tests/opencl_tests/test_exception.py
-tests/clpy_tests/opencl_tests/test_linalg.py
-tests/clpy_tests/opencl_tests/test_memory.py
-tests/clpy_tests/opencl_tests/test_ndarray.py
-tests/clpy_tests/opencl_tests/test_reduction.py
-tests/clpy_tests/opencl_tests/test_rollaxis.py
 tests/clpy_tests/random_tests/test_distributions.py
 tests/clpy_tests/sorting_tests/test_count.py
 tests/clpy_tests/sorting_tests/test_search.py
