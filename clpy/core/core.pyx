@@ -759,6 +759,20 @@ cdef class ndarray:
             raise ValueError('Sorting arrays with the rank of zero is not '
                              'supported')  # as numpy.sort() raises
 
+        # NOTE(nsakabe-fixstars):
+        # Original CuPy had filtered out unsupported dtypes at
+        # the thin wrapper code, in thrust.pyx.
+        # https://github.com/cupy/cupy/blob/
+        # 4867ff1a0245ec5c49d75465ad1625ac8ab4baa4/cupy/cuda/thrust.pyx#L35-L58
+        # Our dtype filtering here was copied from it.
+        if not self.dtype in [
+                numpy.int8, numpy.int16, numpy.int32, numpy.int64,
+                numpy.uint8, numpy.uint16, numpy.uint32, numpy.uint64,
+                numpy.float32, numpy.float64]:
+            raise NotImplementedError(
+                'Sorting arrays with dtype \'{}\' is not supported'
+                .format(self.dtype))
+
         # TODO(takagi): Support sorting views
         if not self._c_contiguous:
             raise NotImplementedError('Sorting non-contiguous array is not '
@@ -4352,7 +4366,7 @@ cpdef maximum_value(dtype):
         return numpy.array(numpy.inf, dtype=dtype)
     else:
         raise NotImplementedError(
-            'Sorting arrays with dtype \'{}\' is not supported'
+            'Can not determine the maximum value for dtype: \'{}\'.'
             .format(dtype))
 
 cpdef sort_prepare_and_kick(ndarray target):
