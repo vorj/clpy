@@ -765,7 +765,7 @@ cdef class ndarray:
         # https://github.com/cupy/cupy/blob/
         # 4867ff1a0245ec5c49d75465ad1625ac8ab4baa4/cupy/cuda/thrust.pyx#L35-L58
         # Our dtype filtering here was copied from it.
-        if not self.dtype in [
+        if self.dtype not in [
                 numpy.int8, numpy.int16, numpy.int32, numpy.int64,
                 numpy.uint8, numpy.uint16, numpy.uint32, numpy.uint64,
                 numpy.float32, numpy.float64]:
