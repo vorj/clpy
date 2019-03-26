@@ -93,6 +93,8 @@ tests/clpy_tests/random_tests/test_distributions.py
 tests/clpy_tests/sorting_tests/test_count.py
 tests/clpy_tests/sorting_tests/test_search.py
 tests/clpy_tests/sorting_tests/test_sort.py::TestSort
+tests/example_tests/test_gmm.py
+tests/example_tests/test_kmeans.py
 "
 
 export CLPY_TEST_GPU_LIMIT=1
