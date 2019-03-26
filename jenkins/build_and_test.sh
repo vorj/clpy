@@ -39,6 +39,7 @@ fi
 # Run pytests
 TEST_DIRS="
 tests/clpy_tests/core_tests/
+tests/clpy_tests/opencl_tests/
 tests/clpy_tests/binary_tests/
 tests/clpy_tests/ext_tests/
 tests/clpy_tests/testing_tests/
@@ -55,18 +56,6 @@ tests/clpy_tests/logic_tests/
 
 TEST_FILES="
 tests/clpy_tests/linalg_tests/test_product.py
-tests/clpy_tests/opencl_tests/test_api.py
-tests/clpy_tests/opencl_tests/test_atomicAdd.py
-tests/clpy_tests/opencl_tests/test_carray.py
-tests/clpy_tests/opencl_tests/test_clblast.py
-tests/clpy_tests/opencl_tests/test_concatenate.py
-tests/clpy_tests/opencl_tests/test_elementwise.py
-tests/clpy_tests/opencl_tests/test_exception.py
-tests/clpy_tests/opencl_tests/test_linalg.py
-tests/clpy_tests/opencl_tests/test_memory.py
-tests/clpy_tests/opencl_tests/test_ndarray.py
-tests/clpy_tests/opencl_tests/test_reduction.py
-tests/clpy_tests/opencl_tests/test_rollaxis.py
 tests/clpy_tests/random_tests/test_distributions.py
 tests/clpy_tests/sorting_tests/test_count.py
 tests/clpy_tests/sorting_tests/test_search.py
