@@ -6,22 +6,22 @@ In other words, ClPy enables softwares written in CuPy to work also on OpenCL de
 ## Current status
 
 Current ClPy is release-candidate version, forked from [CuPy v2.1.0](https://github.com/cupy/cupy/releases/tag/v2.1.0).
-ClPy support most of CuPy's functions.
+ClPy supports most of CuPy's functions.
 
-* All [ndarray](https://docs-cupy.chainer.org/en/v2.5.0/reference/ndarray.html) core
-* All [universal functions](https://docs-cupy.chainer.org/en/v2.5.0/reference/ufunc.html) core
-* All [custom kernel](https://docs-cupy.chainer.org/en/v2.5.0/reference/kernel.html)s core
+* All core [ndarray](https://docs-cupy.chainer.org/en/v2.5.0/reference/ndarray.html)
+* All core [universal functions](https://docs-cupy.chainer.org/en/v2.5.0/reference/ufunc.html)
+* All core [custom kernels](https://docs-cupy.chainer.org/en/v2.5.0/reference/kernel.html)
 * BLAS library compatible with cuBLAS
-* Multiple device (thus ChainerMN)
+* Multiple devices (thus ChainerMN)
 
 ClPy is still under development and has limitations as followings.
 
 * Other CUDA libraries (cuSPARSE, cuSOLVER, cuDnn, cuRAND, thrust) are not supported
-* half and complex are not supported
+* Half and complex are not supported
 * No multiple command queue (Stream on CUDA)
 * Dockerfile and some other files are just neglected thus don't work well
 
-Therefore, almost all original CuPy's tests are passed excluding unsupported libraries. See current [CuPy's test and example results](https://github.com/fixstars/ClPy/wiki/cupy_test_example_results).
+Therefore, almost all tests from CuPy are passed excluding unsupported libraries. See current [CuPy's test and example results](https://github.com/fixstars/ClPy/wiki/cupy_test_example_results).
 
 Almost all [Chainer](https://chainer.org/) works.
 See current [Chainer's test and example results](https://github.com/fixstars/ClPy/wiki/chainer_test_example_results).
