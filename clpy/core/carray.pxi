@@ -146,7 +146,9 @@ class TempFile(object):
 
 cpdef function.Module compile_with_cache(
         str source, tuple options=(), arch=None, cachd_dir=None):
-    source = _clpy_header + '\n' \
+    kernel_arg_size_t_code = 'typedef ' \
+        + clpy.backend.opencl.utility.typeof_size() + ' __kernel_arg_size_t;\n'
+    source = kernel_arg_size_t_code + _clpy_header + '\n' \
         'static void __clpy_begin_print_out() ' \
         '__attribute__((annotate("clpy_begin_print_out")));\n' \
         + source + '\n' \
@@ -188,7 +190,7 @@ cpdef function.Module compile_with_cache(
 
     device = clpy.backend.opencl.env.get_device()
     program = clpy.backend.opencl.utility.CreateProgram(
-        [source.encode('utf-8')],
+        [(kernel_arg_size_t_code + source).encode('utf-8')],
         clpy.backend.opencl.env.get_context(),
         1,
         &device,
