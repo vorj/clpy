@@ -232,7 +232,6 @@ cdef void clblast_sgemm_batched(
         size_t *c_offsets,
         size_t c_ld,
         size_t batch_count) except *:
-    cdef cl_event event = NULL
     cdef cl_command_queue\
         command_queue=clpy.backend.opencl.env.get_command_queue()
 
@@ -246,11 +245,8 @@ cdef void clblast_sgemm_batched(
         c_buffer, c_offsets, c_ld,
         batch_count,
         &command_queue,
-        &event)
-    if (status == CLBlastSuccess):
-        api.WaitForEvents(1, &event)
-        api.ReleaseEvent(event)
-    else:
+        <cl_event*>NULL)
+    if (status != CLBlastSuccess):
         raise CLBlastRuntimeError(statuscode=status)
     return
 
@@ -306,7 +302,6 @@ cdef void clblast_dgemm_batched(
         size_t *c_offsets,
         size_t c_ld,
         size_t batch_count) except *:
-    cdef cl_event event = NULL
     cdef cl_command_queue\
         command_queue=clpy.backend.opencl.env.get_command_queue()
 
@@ -320,11 +315,8 @@ cdef void clblast_dgemm_batched(
         c_buffer, c_offsets, c_ld,
         batch_count,
         &command_queue,
-        &event)
-    if (status == CLBlastSuccess):
-        api.WaitForEvents(1, &event)
-        api.ReleaseEvent(event)
-    else:
+        <cl_event*>NULL)
+    if (status != CLBlastSuccess):
         raise CLBlastRuntimeError(statuscode=status)
     return
 
