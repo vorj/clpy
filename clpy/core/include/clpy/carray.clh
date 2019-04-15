@@ -283,9 +283,9 @@ __device__ int signbit(float16 x) {return x.signbit();}
 
 #define CREATE_CINDXER(_NDIM) \
 typedef struct { \
-  size_t size_; \
-  size_t shape_[_NDIM]; \
-  size_t index_[_NDIM]; \
+  __kernel_arg_size_t size_; \
+  __kernel_arg_size_t shape_[_NDIM]; \
+  __kernel_arg_size_t index_[_NDIM]; \
 } CIndexer_##_NDIM; \
 \
 static size_t size_CIndexer_##_NDIM(const CIndexer_##_NDIM * const __restrict__ _ind) { \
@@ -303,7 +303,7 @@ static void set_CIndexer_##_NDIM(CIndexer_##_NDIM * const __restrict__ _ind, con
 }
 
 typedef struct {
-  size_t size_;
+  __kernel_arg_size_t size_;
 } CIndexer_0;
 static size_t size_CIndexer_0(const CIndexer_0 * const __restrict__ _ind) {
   return _ind->size_;
@@ -312,9 +312,9 @@ static void set_CIndexer_0(CIndexer_0 * const __restrict__ _ind, const size_t i)
 }
 
 typedef struct {
-  size_t size_;
-  size_t shape_[1];
-  size_t index_[1];
+  __kernel_arg_size_t size_;
+  __kernel_arg_size_t shape_[1];
+  __kernel_arg_size_t index_[1];
 } CIndexer_1;
 static size_t size_CIndexer_1(const CIndexer_1 * const __restrict__ _ind) {
   return _ind->size_;
@@ -344,10 +344,10 @@ CREATE_CINDXER(15)
 
 #define CREATE_CARRAY(_NDIM) \
 typedef struct { \
-  size_t offset; \
-  size_t size_; \
-  size_t shape_[_NDIM]; \
-  size_t strides_[_NDIM]; \
+  __kernel_arg_size_t offset; \
+  __kernel_arg_size_t size_; \
+  __kernel_arg_size_t shape_[_NDIM]; \
+  __kernel_arg_size_t strides_[_NDIM]; \
 } CArray_##_NDIM; \
 size_t get_CArrayIndexI_##_NDIM(const CArray_##_NDIM* const __restrict__ info, const size_t i) { \
   size_t offset = info->offset; \
@@ -361,8 +361,8 @@ size_t get_CArrayIndexI_##_NDIM(const CArray_##_NDIM* const __restrict__ info, c
 }
 
 typedef struct {
-  size_t offset;
-  size_t size_;
+  __kernel_arg_size_t offset;
+  __kernel_arg_size_t size_;
 } CArray_0;
 static size_t get_CArrayIndexRaw_0(const CArray_0* const __restrict__ info, const ptrdiff_t idx) {
   return info->offset;
@@ -375,10 +375,10 @@ static size_t get_CArrayIndexI_0(const CArray_0* const __restrict__ info, const 
 }
 
 typedef struct {
-  size_t offset;
-  size_t size_;
-  size_t shape_;
-  size_t strides_;
+  __kernel_arg_size_t offset;
+  __kernel_arg_size_t size_;
+  __kernel_arg_size_t shape_;
+  __kernel_arg_size_t strides_;
 } CArray_1;
 static size_t get_CArrayIndexRaw_1(const CArray_1* const __restrict__ info, const ptrdiff_t idx) {
   return info->strides_ * (size_t)idx + info->offset;

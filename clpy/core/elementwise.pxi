@@ -181,7 +181,7 @@ cpdef _get_kernel_params(tuple params, tuple args_info):
             t = 'CIndexer<%d>' % ndim
             ndims[name] = ndim
         elif type is Size_t:
-            t = 'kernel_arg_size_t'
+            t = '__kernel_arg_size_t'
         elif type is LocalMem:
             t = '__local _type_reduce* const __restrict__'
         else:
@@ -301,7 +301,7 @@ cdef class ParameterInfo:
             pass
         elif t == 'LocalMem':
             pass
-        elif t == 'kernel_arg_size_t':
+        elif t == '__kernel_arg_size_t':
             self.dtype = numpy.intp
             self.ctype = clpy.backend.opencl.utility.typeof_size()
         elif len(t) == 1:

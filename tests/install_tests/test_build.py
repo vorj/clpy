@@ -15,12 +15,14 @@ class TestCheckVersion(unittest.TestCase):
         self.settings = build.get_compiler_setting()
 
     @pytest.mark.gpu
-    def test_check_cuda_version(self):
-        self.assertTrue(build.check_cuda_version(
+    def test_check_opencl_version(self):
+        self.assertTrue(build.check_opencl_version(
             self.compiler, self.settings))
 
+    '''
     @pytest.mark.gpu
     @pytest.mark.cudnn
     def test_check_cudnn_version(self):
         self.assertTrue(build.check_cudnn_version(
             self.compiler, self.settings))
+    '''

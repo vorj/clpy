@@ -64,9 +64,9 @@ cdef void SetKernelArg(cl_kernel kernel,
 cdef void EnqueueTask(
     cl_command_queue command_queue,
     cl_kernel kernel,
-    cl_uint num_events_in_wait_list,
-    cl_event* event_wait_list,
-    cl_event* event) except *
+    cl_uint num_events_in_wait_list=*,
+    cl_event* event_wait_list=*,
+    cl_event* event=*) except *
 cdef void EnqueueNDRangeKernel(
     cl_command_queue command_queue,
     cl_kernel kernel,
@@ -74,9 +74,9 @@ cdef void EnqueueNDRangeKernel(
     size_t* global_work_offset,
     size_t* global_work_size,
     size_t* local_work_size,
-    cl_uint num_events_in_wait_list,
-    cl_event* event_wait_list,
-    cl_event* event) except *
+    cl_uint num_events_in_wait_list=*,
+    cl_event* event_wait_list=*,
+    cl_event* event=*) except *
 cdef void EnqueueReadBuffer(
     cl_command_queue command_queue,
     cl_mem buffer,
@@ -84,9 +84,9 @@ cdef void EnqueueReadBuffer(
     size_t offset,
     size_t cb,
     void* host_ptr,
-    cl_uint num_events_in_wait_list,
-    cl_event* event_wait_list,
-    cl_event* event) except *
+    cl_uint num_events_in_wait_list=*,
+    cl_event* event_wait_list=*,
+    cl_event* event=*) except *
 cdef void EnqueueWriteBuffer(
     cl_command_queue command_queue,
     cl_mem buffer,
@@ -94,9 +94,9 @@ cdef void EnqueueWriteBuffer(
     size_t offset,
     size_t cb,
     void* host_ptr,
-    cl_uint num_events_in_wait_list,
-    cl_event* event_wait_list,
-    cl_event* event) except *
+    cl_uint num_events_in_wait_list=*,
+    cl_event* event_wait_list=*,
+    cl_event* event=*) except *
 cdef void EnqueueCopyBuffer(
     cl_command_queue command_queue,
     cl_mem src_buffer,
@@ -104,9 +104,19 @@ cdef void EnqueueCopyBuffer(
     size_t src_offset,
     size_t dst_offset,
     size_t cb,
-    cl_uint num_events_in_wait_list,
-    cl_event* event_wait_list,
-    cl_event* event) except *
+    cl_uint num_events_in_wait_list=*,
+    cl_event* event_wait_list=*,
+    cl_event* event=*) except *
+cdef void EnqueueFillBuffer(
+    cl_command_queue command_queue,
+    cl_mem buffer,
+    void* pattern,
+    size_t pattern_size,
+    size_t offset,
+    size_t size,
+    cl_uint num_events_in_wait_list=*,
+    cl_event* event_wait_list=*,
+    cl_event* event=*) except *
 cdef void Flush(cl_command_queue command_queue) except *
 cdef void Finish(cl_command_queue command_queue) except *
 cdef void ReleaseKernel(cl_kernel kernel) except *

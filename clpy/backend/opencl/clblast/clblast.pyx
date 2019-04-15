@@ -6,6 +6,8 @@ from clpy.backend.opencl.types cimport cl_event
 from clpy.backend.opencl.types cimport cl_mem
 from clpy.backend.opencl.exceptions import OpenCLRuntimeError
 
+import numpy
+
 
 def getCLBlastErrorName(statuscode):
     if statuscode in CLBLAST_STATUS_CODE:
@@ -71,7 +73,6 @@ cdef void clblast_sgemm(
         cl_mem b_buffer, size_t b_offset, size_t b_ld,
         float beta,
         cl_mem c_buffer, size_t c_offset, size_t c_ld) except *:
-    cdef cl_event event = NULL
     cdef cl_command_queue\
         command_queue=clpy.backend.opencl.env.get_command_queue()
 
@@ -84,11 +85,8 @@ cdef void clblast_sgemm(
         beta,
         c_buffer, c_offset, c_ld,
         &command_queue,
-        &event)
-    if (status == CLBlastSuccess):
-        api.WaitForEvents(1, &event)
-        api.ReleaseEvent(event)
-    else:
+        <cl_event*>NULL)
+    if (status != CLBlastSuccess):
         raise CLBlastRuntimeError(statuscode=status)
     return
 
@@ -125,7 +123,6 @@ cdef void clblast_dgemm(
         cl_mem b_buffer, size_t b_offset, size_t b_ld,
         double beta,
         cl_mem c_buffer, size_t c_offset, size_t c_ld) except *:
-    cdef cl_event event = NULL
     cdef cl_command_queue\
         command_queue=clpy.backend.opencl.env.get_command_queue()
 
@@ -138,11 +135,8 @@ cdef void clblast_dgemm(
         beta,
         c_buffer, c_offset, c_ld,
         &command_queue,
-        &event)
-    if (status == CLBlastSuccess):
-        api.WaitForEvents(1, &event)
-        api.ReleaseEvent(event)
-    else:
+        <cl_event*>NULL)
+    if (status != CLBlastSuccess):
         raise CLBlastRuntimeError(statuscode=status)
     return
 
@@ -178,7 +172,6 @@ cdef void clblast_strsm(
         size_t m, size_t n, float alpha,
         cl_mem a_buffer, size_t a_offset, size_t a_ld,
         cl_mem b_buffer, size_t b_offset, size_t b_ld) except *:
-    cdef cl_event event = NULL
     cdef cl_command_queue\
         command_queue=clpy.backend.opencl.env.get_command_queue()
 
@@ -192,15 +185,8 @@ cdef void clblast_strsm(
         a_buffer, a_offset, a_ld,
         b_buffer, b_offset, b_ld,
         &command_queue,
-        &event)
-    if (status == CLBlastSuccess):
-        try:
-            api.WaitForEvents(1, &event)
-        except OpenCLRuntimeError:
-            pass
-        else:
-            api.ReleaseEvent(event)
-    else:
+        <cl_event*>NULL)
+    if (status != CLBlastSuccess):
         raise CLBlastRuntimeError(statuscode=status)
     return
 
@@ -227,6 +213,145 @@ cpdef strsm(str_layout,
         <cl_mem>a_buffer, A.data.cl_mem_offset() // A.itemsize, lda,
         <cl_mem>b_buffer, B.data.cl_mem_offset() // B.itemsize, ldb)
 
+cdef void clblast_sgemm_batched(
+        CLBlastLayout layout,
+        CLBlastTranspose a_transpose,
+        CLBlastTranspose b_transpose,
+        size_t m,
+        size_t n,
+        size_t k,
+        float *alphas,
+        cl_mem a_buffer,
+        size_t *a_offsets,
+        size_t a_ld,
+        cl_mem b_buffer,
+        size_t *b_offsets,
+        size_t b_ld,
+        float *betas,
+        cl_mem c_buffer,
+        size_t *c_offsets,
+        size_t c_ld,
+        size_t batch_count) except *:
+    cdef cl_command_queue\
+        command_queue=clpy.backend.opencl.env.get_command_queue()
+
+    cdef CLBlastStatusCode status = CLBlastSgemmBatched(
+        layout, a_transpose, b_transpose,
+        m, n, k,
+        alphas,
+        a_buffer, a_offsets, a_ld,
+        b_buffer, b_offsets, b_ld,
+        betas,
+        c_buffer, c_offsets, c_ld,
+        batch_count,
+        &command_queue,
+        <cl_event*>NULL)
+    if (status != CLBlastSuccess):
+        raise CLBlastRuntimeError(statuscode=status)
+    return
+
+cpdef sgemm_batched(str_layout, transa, transb,
+                    m, n, k,
+                    alpha,
+                    A, offsets_a, lda,
+                    B, offsets_b, ldb,
+                    beta,
+                    C, offsets_c, ldc,
+                    batch_count):
+    cdef CLBlastLayout layout = translate_layout(str_layout)
+    cdef CLBlastTranspose a_transpose = translate_transpose(transa)
+    cdef CLBlastTranspose b_transpose = translate_transpose(transb)
+
+    cdef size_t a_buffer = A.data.buf.get()
+    cdef size_t offsets_a_ptr = offsets_a.ctypes.data
+    cdef size_t b_buffer = B.data.buf.get()
+    cdef size_t offsets_b_ptr = offsets_b.ctypes.data
+    cdef size_t c_buffer = C.data.buf.get()
+    cdef size_t offsets_c_ptr = offsets_c.ctypes.data
+
+    np_alphas = numpy.full((batch_count,), alpha, dtype='float32')
+    cdef size_t alphas = np_alphas.ctypes.data
+    np_betas = numpy.full((batch_count,), beta, dtype='float32')
+    cdef size_t betas = np_betas.ctypes.data
+
+    clblast_sgemm_batched(
+        layout, a_transpose, b_transpose,
+        m, n, k, <float*>alphas,
+        <cl_mem>a_buffer, <size_t*>offsets_a_ptr, lda,
+        <cl_mem>b_buffer, <size_t*>offsets_b_ptr, ldb,
+        <float*>betas,
+        <cl_mem>c_buffer, <size_t*>offsets_c_ptr, ldc,
+        batch_count)
+
+cdef void clblast_dgemm_batched(
+        CLBlastLayout layout,
+        CLBlastTranspose a_transpose,
+        CLBlastTranspose b_transpose,
+        size_t m,
+        size_t n,
+        size_t k,
+        double *alphas,
+        cl_mem a_buffer,
+        size_t *a_offsets,
+        size_t a_ld,
+        cl_mem b_buffer,
+        size_t *b_offsets,
+        size_t b_ld,
+        double *betas,
+        cl_mem c_buffer,
+        size_t *c_offsets,
+        size_t c_ld,
+        size_t batch_count) except *:
+    cdef cl_command_queue\
+        command_queue=clpy.backend.opencl.env.get_command_queue()
+
+    cdef CLBlastStatusCode status = CLBlastDgemmBatched(
+        layout, a_transpose, b_transpose,
+        m, n, k,
+        alphas,
+        a_buffer, a_offsets, a_ld,
+        b_buffer, b_offsets, b_ld,
+        betas,
+        c_buffer, c_offsets, c_ld,
+        batch_count,
+        &command_queue,
+        <cl_event*>NULL)
+    if (status != CLBlastSuccess):
+        raise CLBlastRuntimeError(statuscode=status)
+    return
+
+cpdef dgemm_batched(str_layout, transa, transb,
+                    m, n, k,
+                    alpha,
+                    A, offsets_a, lda,
+                    B, offsets_b, ldb,
+                    beta,
+                    C, offsets_c, ldc,
+                    batch_count):
+    cdef CLBlastLayout layout = translate_layout(str_layout)
+    cdef CLBlastTranspose a_transpose = translate_transpose(transa)
+    cdef CLBlastTranspose b_transpose = translate_transpose(transb)
+
+    cdef size_t a_buffer = A.data.buf.get()
+    cdef size_t offsets_a_ptr = offsets_a.ctypes.data
+    cdef size_t b_buffer = B.data.buf.get()
+    cdef size_t offsets_b_ptr = offsets_b.ctypes.data
+    cdef size_t c_buffer = C.data.buf.get()
+    cdef size_t offsets_c_ptr = offsets_c.ctypes.data
+
+    np_alphas = numpy.full((batch_count,), alpha, dtype='float64')
+    cdef size_t alphas = np_alphas.ctypes.data
+    np_betas = numpy.full((batch_count,), beta, dtype='float64')
+    cdef size_t betas = np_betas.ctypes.data
+
+    clblast_dgemm_batched(
+        layout, a_transpose, b_transpose,
+        m, n, k, <double*>alphas,
+        <cl_mem>a_buffer, <size_t*>offsets_a_ptr, lda,
+        <cl_mem>b_buffer, <size_t*>offsets_b_ptr, ldb,
+        <double*>betas,
+        <cl_mem>c_buffer, <size_t*>offsets_c_ptr, ldc,
+        batch_count)
 
 CLBLAST_STATUS_CODE = {
     CLBlastSuccess: "CLBlastSuccess",

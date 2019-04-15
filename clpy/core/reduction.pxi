@@ -19,7 +19,6 @@ cpdef _get_simple_reduction_kernel(
         identity = '0'
 
     module_code = string.Template(string.Template('''
-    typedef ${typeof_size} kernel_arg_size_t;
     ${type_preamble}
     ${preamble}
     #define REDUCE(a, b) (${reduce_expr})
@@ -88,7 +87,6 @@ cpdef _get_simple_reduction_kernel(
         output_expr=output_expr,
         output_store=output_store,
         preamble=preamble,
-        typeof_size=clpy.backend.opencl.utility.typeof_size(),
         clpy_variables_declaration=clpy_variables_declaration)
     module = compile_with_cache(module_code, options)
     return module.get_function(name)
@@ -197,7 +195,7 @@ class simple_reduction_function(object):
             in_params + out_params +
             _get_param_info(
                 'CIndexer _in_ind, CIndexer _out_ind', False) +
-            _get_param_info('kernel_arg_size_t _local_stride', True) +
+            _get_param_info('__kernel_arg_size_t _local_stride', True) +
             _get_param_info('LocalMem _sdata', True))
         self._input_expr = \
             '__attribute__((annotate("clpy_simple_reduction_tag:in"))) ' \
@@ -248,6 +246,18 @@ class simple_reduction_function(object):
         if a.size == 0 and (self.identity is None or self.default):
             raise ValueError(('zero-size array to reduction operation'
                               ' %s which has no identity') % self.name)
+
+        # TODO(tomoharu.kitawaki): debug 0 size reduction and remove this
+        if a.size == 0:
+            if self.identity in ['true', 'false']:
+                ret_identity = True if self.identity=='true' else False
+            else:
+                ret_identity = self.identity
+            ret = clpy.empty(out_shape, out_types[0])
+            ret.fill(ret_identity)
+            if out is not None:
+                out.fill(ret_identity)
+            return ret
 
         in_args, in_shape = _get_trans_args(
             in_args, laxis + raxis, a_shape, None)
@@ -372,7 +382,7 @@ class ReductionKernel(object):
         self.params = (
             self.in_params + self.out_params +
             _get_param_info('CIndexer _in_ind, CIndexer _out_ind', False) +
-            _get_param_info('kernel_arg_size_t _local_stride', True) +
+            _get_param_info('__kernel_arg_size_t _local_stride', True) +
             _get_param_info('LocalMem _sdata', True))
         self.identity = identity
         self.reduce_expr = reduce_expr

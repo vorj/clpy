@@ -1,6 +1,7 @@
 # distutils: language = c++
 
 from __future__ import division
+import functools
 import math
 import sys
 
@@ -347,6 +348,13 @@ cdef class ndarray:
             newarray._set_shape_and_strides(self._shape, strides)
         else:
             newarray = ndarray(self.shape, dtype=dtype, order=order)
+
+        # In CUDA, nan converted to non 0 (True).
+        # But, in OpenCL, nan converted to 0 (False).
+        # So, convert nan as True.
+        if dtype == numpy.bool_:
+            self[clpy.isnan(self)] = True
+
         elementwise_copy(self, newarray)
         return newarray
 
@@ -754,11 +762,23 @@ cdef class ndarray:
 
         cdef Py_ssize_t ndim = self.ndim
 
-        raise NotImplementedError("clpy does not support this")
-
         if ndim == 0:
             raise ValueError('Sorting arrays with the rank of zero is not '
                              'supported')  # as numpy.sort() raises
+
+        # NOTE(nsakabe-fixstars):
+        # Original CuPy had filtered out unsupported dtypes at
+        # the thin wrapper code, in thrust.pyx.
+        # https://github.com/cupy/cupy/blob/
+        # 4867ff1a0245ec5c49d75465ad1625ac8ab4baa4/cupy/cuda/thrust.pyx#L35-L58
+        # Our dtype filtering here was copied from it.
+        if self.dtype not in [
+                numpy.int8, numpy.int16, numpy.int32, numpy.int64,
+                numpy.uint8, numpy.uint16, numpy.uint32, numpy.uint64,
+                numpy.float32, numpy.float64]:
+            raise NotImplementedError(
+                'Sorting arrays with dtype \'{}\' is not supported'
+                .format(self.dtype))
 
         # TODO(takagi): Support sorting views
         if not self._c_contiguous:
@@ -776,11 +796,22 @@ cdef class ndarray:
             data = clpy.rollaxis(self, axis, ndim).copy()
 
         if ndim == 1:
-            thrust.sort(self.dtype, data.data.ptr, 0, self._shape)
+            sort_prepare_and_kick(data)
         else:
-            keys_array = ndarray(data._shape, dtype=numpy.intp)
-            thrust.sort(
-                self.dtype, data.data.ptr, keys_array.data.ptr, data._shape)
+            # TODO(nsakabe-fixstars):
+            # Original CuPy implement this n-D range sorting
+            # with grouping the elements using tuple.
+            # (The sorting kernel is kicked once.)
+            # For simplicity of implementation,
+            # here we use sort() repeatedly.
+            # To improve the performance, refine this behavior.
+            repeats = functools.reduce(lambda x, y: x * y, data.shape[:-1])
+            len_for_each = data.shape[ndim-1]
+            for i in range(repeats):
+                begin = i * len_for_each
+                end = begin + len_for_each
+                partial_view = data.ravel()[begin:end]
+                partial_view[:] = clpy.sort(partial_view)
 
         if axis == ndim - 1:
             pass
@@ -2770,17 +2801,17 @@ cdef _choose_clip_kernel = ElementwiseKernel(
     'clpy_choose_clip')
 
 
-# cdef _scatter_update_kernel = ElementwiseKernel(
-#     'T v, S indices, int32 cdim, int32 rdim, int32 adim',
-#     'raw T a',
-#     '''
-#       S wrap_indices = indices % adim;
-#       if (wrap_indices < 0) wrap_indices += adim;
-#       ptrdiff_t li = i / (rdim * cdim);
-#       ptrdiff_t ri = i % rdim;
-#       a[(li * adim + wrap_indices) * rdim + ri] = v;
-#     ''',
-#     'clpy_scatter_update')
+cdef _scatter_update_kernel = ElementwiseKernel(
+    'T v, S indices, int32 cdim, int32 rdim, int32 adim',
+    'raw T a',
+    '''
+      S wrap_indices = indices % adim;
+      if (wrap_indices < 0) wrap_indices += adim;
+      ptrdiff_t li = i / (rdim * cdim);
+      ptrdiff_t ri = i % rdim;
+      a[(li * adim + wrap_indices) * rdim + ri] = v;
+    ''',
+    'clpy_scatter_update')
 
 
 cdef _scatter_add_kernel = ElementwiseKernel(
@@ -2866,8 +2897,7 @@ cpdef ndarray _getitem_mask_single(ndarray a, ndarray mask, int axis):
     out = ndarray(masked_shape, dtype=a.dtype)
     if out.size == 0:
         return out
-    raise NotImplementedError("clpy does not support this")
-    # return _getitem_mask_kernel(a, mask, mask_scanned, out)
+    return _getitem_mask_kernel(a, mask, mask_scanned, out)
 
 
 cpdef ndarray _take(ndarray a, indices, li=None, ri=None, ndarray out=None):
@@ -2976,9 +3006,8 @@ cpdef _scatter_op_single(ndarray a, ndarray indices, v,
     indices = broadcast_to(indices, v_shape)
 
     if op == 'update':
-        # _scatter_update_kernel(
-        #     v, indices, cdim, rdim, adim, a.reduced_view())
-        raise NotImplementedError("clpy does not support this")
+        _scatter_update_kernel(
+            v, indices, cdim, rdim, adim, a.reduced_view())
     elif op == 'add':
         # NOTE(clpy):
         # CuPy had supported
@@ -3359,20 +3388,17 @@ cpdef ndarray dot(ndarray a, ndarray b, ndarray out=None):
     return tensordot_core(a, b, out, n, m, k, ret_shape)
 
 
-cpdef ndarray _get_all_addresses(size_t start_adr,
-                                 vector.vector[size_t] & shape,
-                                 vector.vector[size_t] & strides):
+cpdef _get_all_addresses(size_t start_adr,
+                         vector.vector[size_t] & shape,
+                         vector.vector[size_t] & strides):
     idx = numpy.array([start_adr])
     for sh_, st_ in zip(shape, strides):
         idx = (idx[:, None] + (numpy.arange(sh_) * st_)[None, :]).ravel()
     idx = idx.astype(numpy.uintp)
-
-    ret = ndarray((idx.size,), dtype=numpy.uintp)
-    ret.set(idx)
-    return ret
+    return idx
 
 
-cdef ndarray _mat_ptrs(ndarray a):
+cdef _mat_offsets_in_elements(ndarray a):
     """Creates an array of pointers to matrices
     Args:
         a: A batch of matrices on GPU.
@@ -3385,15 +3411,16 @@ cdef ndarray _mat_ptrs(ndarray a):
     Returns:
         GPU array of pointers to matrices.
     """
-    cdef Py_ssize_t stride, ptr, pointer, i
-    cdef ndarray ret
     if a.ndim <= 2:
-        ret = ndarray((1,), dtype=numpy.uintp)
-        ret.fill(a.data.ptr)
-        return ret
+        return numpy.full(
+            shape=(1,),
+            fill_value=<size_t>(a.data.cl_mem_offset() // a.itemsize),
+            dtype=numpy.uintp)
     else:
-        return _get_all_addresses(a.data.ptr, a.shape[:-2], a.strides[:-2])
-
+        idx = _get_all_addresses(
+            a.data.cl_mem_offset(), a.shape[:-2], a.strides[:-2])
+        idx = idx // a.itemsize
+        return idx
 
 cpdef ndarray matmul(ndarray a, ndarray b, ndarray out=None):
     """ Returns the matrix product of two arrays and is the implementation of
@@ -3432,7 +3459,6 @@ cpdef ndarray matmul(ndarray a, ndarray b, ndarray out=None):
 
     cdef Py_ssize_t i, n, m, ka, kb
     cdef Py_ssize_t batchCount
-    cdef ndarray ap, bp, outp
 
     ret_dtype = numpy.result_type(a.dtype, b.dtype)
     dtype = numpy.find_common_type((ret_dtype, 'f'), ())
@@ -3527,30 +3553,34 @@ cpdef ndarray matmul(ndarray a, ndarray b, ndarray out=None):
     for i in la:
         batchCount *= i
 
-    ap = _mat_ptrs(a)
-    bp = _mat_ptrs(b)
-    outp = _mat_ptrs(out_view)
+    # Create Numpy ndarrays which contain
+    # offsets in elements of batched sub-arrays.
+    offsets_a = _mat_offsets_in_elements(a)
+    offsets_b = _mat_offsets_in_elements(b)
+    offsets_out = _mat_offsets_in_elements(out_view)
 
     if dtype == numpy.float32:
-        raise NotImplementedError("clpy does not support this")
-#        cuda.cublas.sgemmBatched(
-#            cuda.Device().cublas_handle,
-#            0,  # transa
-#            0,  # transb
-#            n, m, ka, 1.0,
-#            ap.data.ptr, lda,
-#            bp.data.ptr, ldb,
-#            0.0, outp.data.ptr, ldout, batchCount)
+        clpy.backend.opencl.clblast.clblast.sgemm_batched(
+            'C',
+            0,  # transa
+            0,  # transb
+            n, m, ka, 1.0,
+            a, offsets_a, lda,
+            b, offsets_b, ldb,
+            0.0,
+            out, offsets_out, ldout,
+            batchCount)
     elif dtype == numpy.float64:
-        raise NotImplementedError("clpy does not support this")
-#        cuda.cublas.dgemmBatched(
-#            cuda.Device().cublas_handle,
-#            0,  # transa
-#            0,  # transb
-#            n, m, ka, 1.0,
-#            ap.data.ptr, lda,
-#            bp.data.ptr, ldb,
-#            0.0, outp.data.ptr, ldout, batchCount)
+        clpy.backend.opencl.clblast.clblast.dgemm_batched(
+            'C',
+            0,  # transa
+            0,  # transb
+            n, m, ka, 1.0,
+            a, offsets_a, lda,
+            b, offsets_b, ldb,
+            0.0,
+            out, offsets_out, ldout,
+            batchCount)
     # elif dtype == numpy.complex64:
     #     cuda.cublas.cgemmBatched(
     #         cuda.Device().cublas_handle,
@@ -4332,3 +4362,104 @@ cpdef ndarray scan(ndarray a, ndarray out=None):
                  local_work_size=(add_workgroup_size,),
                  args=(out,))
     return out
+
+
+cpdef maximum_value(dtype):
+    if dtype in [
+            numpy.int8, numpy.int16, numpy.int32, numpy.int64,
+            numpy.uint8, numpy.uint16, numpy.uint32, numpy.uint64]:
+        return numpy.array(numpy.iinfo(dtype).max, dtype=dtype)
+    elif dtype in [numpy.float32, numpy.float64]:
+        return numpy.array(numpy.inf, dtype=dtype)
+    else:
+        raise NotImplementedError(
+            'Can not determine the maximum value for dtype: \'{}\'.'
+            .format(dtype))
+
+cpdef sort_prepare_and_kick(ndarray target):
+    ndim = target.ndim
+    if ndim > 1:
+        raise NotImplementedError("Sorting ndim>=2 array not implemented")
+    old_shape = target.shape
+    new_shape = target.shape[0:ndim-1]\
+        + (2 ** math.ceil(math.log2(old_shape[ndim-1])),)
+
+    if old_shape[ndim-1] == new_shape[ndim-1]:
+        prepared = target
+    else:
+        # Create a new ndarray with the size of a power of 2.
+        prepared = ndarray(new_shape, dtype=target.dtype)
+
+        # Copy the content.
+        prepared[0:old_shape[ndim-1]] = target[0:old_shape[ndim-1]]
+
+        # Assign a corresponding maximum value of target.dtype
+        # to the redundant elements.
+        prepared[old_shape[ndim-1]:new_shape[ndim-1]]\
+            = maximum_value(target.dtype)
+
+    # Create a new ndarray as a workspace of merge sort.
+    cdef ndarray output = clpy.empty_like(prepared)
+
+    # Call the kernel.
+    sort_impl(prepared, output)
+    # Write back needed elements from output to our target
+    target[0:old_shape[ndim-1]] = output[0:old_shape[ndim-1]]
+
+cpdef sort_impl(ndarray prepared, ndarray output):
+
+    name = "simple_mergesort_kernel"
+    dtype = _get_typename(prepared.dtype)
+    source = string.Template("""
+    __kernel void ${name}(
+            const CArray<${dtype}, 1> in,
+            CArray<${dtype}, 1> out,
+            long sequence_length
+        ){
+        size_t const id = get_global_id(0);
+        size_t const head = id * sequence_length * 2;
+        long const loops = sequence_length * 2;
+
+        size_t const A_begin = head;
+        size_t const A_end = A_begin + sequence_length;
+        size_t const B_begin = A_begin + sequence_length;
+        size_t const B_end = B_begin + sequence_length;
+        size_t A_current = A_begin;
+        size_t B_current = B_begin;
+        size_t out_current = head;
+        for(long i=0; i<loops; ++i){
+            if(B_current == B_end){
+              out[out_current] = in[A_current];
+              A_current++;
+            }else if(A_current == A_end){
+              out[out_current] = in[B_current];
+              B_current++;
+            }else if(in[A_current] <= in[B_current]){
+              out[out_current] = in[A_current];
+              A_current++;
+            }else{
+              out[out_current] = in[B_current];
+              B_current++;
+            }
+            out_current++;
+        }
+
+    } """).substitute(name=name, dtype=dtype)
+    module = compile_with_cache(source)
+    function = module.get_function(name)
+
+    workitems = prepared.shape[0] // 2
+    while workitems >= 1:
+        sequence_length = prepared.shape[0] // workitems // 2
+        function(
+            global_work_size=(workitems,),
+            local_work_size=(1,),
+            args=(
+                prepared,
+                output,
+                sequence_length
+            ),
+            local_mem=0)
+        workitems = workitems // 2
+
+        elementwise_copy(output, prepared)

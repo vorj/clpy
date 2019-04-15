@@ -14,7 +14,6 @@ cimport clpy.backend.opencl.api
 cimport clpy.backend.opencl.utility
 import clpy.backend.opencl.env
 cimport clpy.backend.opencl.env
-from clpy.backend.opencl.types cimport cl_event
 import clpy.core
 
 cdef inline size_t _get_stream(strm) except *:
@@ -129,10 +128,7 @@ cdef void _launch(clpy.backend.opencl.types.cl_kernel kernel, global_work_size,
         work_dim=global_dim,  # asserted to be equal to local_dim
         global_work_offset=<size_t*>NULL,
         global_work_size=&gws[0],
-        local_work_size=lws_ptr,
-        num_events_in_wait_list=0,
-        event_wait_list=<cl_event*>NULL,
-        event=NULL)
+        local_work_size=lws_ptr)
 
 
 cdef class Function:

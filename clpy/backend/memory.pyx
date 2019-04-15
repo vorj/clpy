@@ -20,7 +20,6 @@ import clpy.backend.opencl
 cimport clpy.backend.opencl.utility
 import clpy.backend.opencl.env
 cimport clpy.backend.opencl.env
-from clpy.backend.opencl.types cimport cl_event
 from clpy.backend.opencl.types cimport cl_mem
 
 cimport libc.stdlib
@@ -285,10 +284,7 @@ cdef class MemoryPointer:
                         dst_buffer=self.buf.ptr,
                         src_offset=src.cl_mem_offset(),
                         dst_offset=self.cl_mem_offset(),
-                        cb=size,
-                        num_events_in_wait_list=0,
-                        event_wait_list=<cl_event*>NULL,
-                        event=<cl_event*>NULL)
+                        cb=size)
             else:
                 tmp = libc.stdlib.malloc(size)
                 with src.device:
@@ -299,10 +295,7 @@ cdef class MemoryPointer:
                         blocking_read=clpy.backend.opencl.api.BLOCKING,
                         offset=src.cl_mem_offset(),
                         cb=size,
-                        host_ptr=tmp,
-                        num_events_in_wait_list=0,
-                        event_wait_list=<cl_event*>NULL,
-                        event=<cl_event*>NULL)
+                        host_ptr=tmp)
                 with self.device:
                     queue = clpy.backend.opencl.env.get_command_queue()
                     clpy.backend.opencl.api.EnqueueWriteBuffer(
@@ -311,10 +304,7 @@ cdef class MemoryPointer:
                         blocking_write=clpy.backend.opencl.api.BLOCKING,
                         offset=self.cl_mem_offset(),
                         cb=size,
-                        host_ptr=tmp,
-                        num_events_in_wait_list=0,
-                        event_wait_list=<cl_event*>NULL,
-                        event=<cl_event*>NULL)
+                        host_ptr=tmp)
                 libc.stdlib.free(tmp)
 
     cpdef copy_from_device_async(self, MemoryPointer src, size_t size, stream):
@@ -347,10 +337,7 @@ cdef class MemoryPointer:
                     blocking_write=clpy.backend.opencl.api.BLOCKING,
                     offset=self.cl_mem_offset(),
                     cb=size,
-                    host_ptr=<void*>host_ptr,
-                    num_events_in_wait_list=0,
-                    event_wait_list=<cl_event*>NULL,
-                    event=<cl_event*>NULL)
+                    host_ptr=<void*>host_ptr)
 
     cpdef copy_from_host_async(self, mem, size_t size, stream):
         """Copies a memory sequence from the host memory asynchronously.
@@ -420,10 +407,7 @@ cdef class MemoryPointer:
                     blocking_read=clpy.backend.opencl.api.BLOCKING,
                     offset=self.cl_mem_offset(),
                     cb=size,
-                    host_ptr=<void*>host_ptr,
-                    num_events_in_wait_list=0,
-                    event_wait_list=<cl_event*>NULL,
-                    event=<cl_event*>NULL)
+                    host_ptr=<void*>host_ptr)
 
     cpdef copy_to_host_async(self, mem, size_t size, stream):
         """Copies a memory sequence to the host memory asynchronously.
@@ -448,8 +432,14 @@ cdef class MemoryPointer:
 
         """
         if size > 0:
-            raise NotImplementedError("clpy does not support this")
-#            runtime.memset(self.ptr, value, size)
+            queue = clpy.backend.opencl.env.get_command_queue()
+            clpy.backend.opencl.api.EnqueueFillBuffer(
+                command_queue=queue,
+                buffer=self.buf.ptr,
+                pattern=&value,
+                pattern_size=sizeof(value),
+                offset=0,
+                size=size)
 
     cpdef memset_async(self, int value, size_t size, stream):
         """Fills a memory sequence by constant byte value asynchronously.

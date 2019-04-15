@@ -489,9 +489,9 @@ from clpy.sorting.search import argmin  # NOQA
 # from clpy.sorting.sort import argpartition  # NOQA
 # from clpy.sorting.sort import argsort  # NOQA
 # from clpy.sorting.sort import lexsort  # NOQA
-# from clpy.sorting.sort import msort  # NOQA
+from clpy.sorting.sort import msort  # NOQA
 # from clpy.sorting.sort import partition  # NOQA
-# from clpy.sorting.sort import sort  # NOQA
+from clpy.sorting.sort import sort  # NOQA
 
 # -----------------------------------------------------------------------------
 # Statistics
@@ -507,7 +507,7 @@ from clpy.statistics.meanvar import mean  # NOQA
 from clpy.statistics.meanvar import std  # NOQA
 from clpy.statistics.meanvar import var  # NOQA
 
-# from clpy.statistics.histogram import bincount  # NOQA
+from clpy.statistics.histogram import bincount  # NOQA
 
 # -----------------------------------------------------------------------------
 # CuPy specific functions

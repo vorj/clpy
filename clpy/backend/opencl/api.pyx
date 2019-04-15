@@ -177,9 +177,9 @@ cdef void SetKernelArg(cl_kernel kernel, arg_index, arg_size,
 cdef void EnqueueTask(
         cl_command_queue command_queue,
         cl_kernel kernel,
-        cl_uint num_events_in_wait_list,
-        cl_event* event_wait_list,
-        cl_event* event) except *:
+        cl_uint num_events_in_wait_list=0,
+        cl_event* event_wait_list=<cl_event*>NULL,
+        cl_event* event=<cl_event*>NULL) except *:
     cdef cl_int status = clEnqueueTask(
         command_queue,
         kernel,
@@ -194,9 +194,9 @@ cdef void EnqueueNDRangeKernel(
         size_t* global_work_offset,
         size_t* global_work_size,
         size_t* local_work_size,
-        cl_uint num_events_in_wait_list,
-        cl_event* event_wait_list,
-        cl_event* event) except *:
+        cl_uint num_events_in_wait_list=0,
+        cl_event* event_wait_list=<cl_event*>NULL,
+        cl_event* event=<cl_event*>NULL) except *:
 
     cdef cl_int status = clEnqueueNDRangeKernel(
         command_queue,
@@ -217,9 +217,9 @@ cdef void EnqueueReadBuffer(
         size_t offset,
         size_t cb,
         void* host_ptr,
-        cl_uint num_events_in_wait_list,
-        cl_event* event_wait_list,
-        cl_event* event) except *:
+        cl_uint num_events_in_wait_list=0,
+        cl_event* event_wait_list=<cl_event*>NULL,
+        cl_event* event=<cl_event*>NULL) except *:
     cdef cl_int status = clEnqueueReadBuffer(
         command_queue,
         buffer,
@@ -239,9 +239,9 @@ cdef void EnqueueWriteBuffer(
         size_t offset,
         size_t cb,
         void* host_ptr,
-        cl_uint num_events_in_wait_list,
-        cl_event* event_wait_list,
-        cl_event* event) except *:
+        cl_uint num_events_in_wait_list=0,
+        cl_event* event_wait_list=<cl_event*>NULL,
+        cl_event* event=<cl_event*>NULL) except *:
     cdef cl_int status = clEnqueueWriteBuffer(
         command_queue,
         buffer,
@@ -261,9 +261,9 @@ cdef void EnqueueCopyBuffer(
         size_t src_offset,
         size_t dst_offset,
         size_t cb,
-        cl_uint num_events_in_wait_list,
-        cl_event* event_wait_list,
-        cl_event* event) except *:
+        cl_uint num_events_in_wait_list=0,
+        cl_event* event_wait_list=<cl_event*>NULL,
+        cl_event* event=<cl_event*>NULL) except *:
     cdef cl_int status = clEnqueueCopyBuffer(
         command_queue,
         src_buffer,
@@ -275,6 +275,29 @@ cdef void EnqueueCopyBuffer(
         <const cl_event *>event_wait_list,
         event)
     exceptions.check_status(status)
+
+cdef void EnqueueFillBuffer(
+        cl_command_queue command_queue,
+        cl_mem buffer,
+        void* pattern,
+        size_t pattern_size,
+        size_t offset,
+        size_t size,
+        cl_uint num_events_in_wait_list=0,
+        cl_event* event_wait_list=<cl_event*>NULL,
+        cl_event* event=<cl_event*>NULL) except *:
+    cdef cl_int status = clEnqueueFillBuffer(
+        command_queue,
+        buffer,
+        pattern,
+        pattern_size,
+        offset,
+        size,
+        num_events_in_wait_list,
+        event_wait_list,
+        event)
+    exceptions.check_status(status)
+
 
 cdef void Flush(cl_command_queue command_queue) except *:
     exceptions.check_status(clFlush(command_queue))
