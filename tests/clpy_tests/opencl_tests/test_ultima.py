@@ -1,4 +1,7 @@
 # flake8: noqa
+# TODO(vorj): When we will meet flake8 3.7.0+,
+#               we should ignore only W291 for whole file
+#               using --per-file-ignores .
 
 import unittest
 
