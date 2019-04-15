@@ -66,7 +66,6 @@ def _exec_ultima(source, _clpy_header=''):
     return source
 
 
-@testing.gpu
 class TestUltimaCastConversion(unittest.TestCase):
 
     def test_function_style_cast(self):
