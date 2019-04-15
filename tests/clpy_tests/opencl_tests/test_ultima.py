@@ -67,7 +67,7 @@ def _exec_ultima(source, _clpy_header=''):
 
 
 @testing.gpu
-class TestUltima(unittest.TestCase):
+class TestUltimaCastConversion(unittest.TestCase):
 
     def test_function_style_cast(self):
         x = '''
@@ -80,6 +80,55 @@ void f()
             '''
             void f(){
               int(3.F);
+            }
+            ''')
+        self.assertEqual(x[1:], y)
+
+    def test_static_cast(self):
+        x = '''
+void f() 
+{
+    (int)(3.F);
+}
+'''
+        y = _exec_ultima(
+            '''
+            void f(){
+              static_cast<int>(3.F);
+            }
+            ''')
+        self.assertEqual(x[1:], y)
+
+    def test_const_cast(self):
+        x = '''
+void f() 
+{
+    const int a = 3;
+    (int *)(&a);
+}
+'''
+        y = _exec_ultima(
+            '''
+            void f(){
+              const int a = 3;
+              const_cast<int*>(&a);
+            }
+            ''')
+        self.assertEqual(x[1:], y)
+
+    def test_reinterpret_cast(self):
+        x = '''
+void f() 
+{
+    int a = 3;
+    (float *)(&a);
+}
+'''
+        y = _exec_ultima(
+            '''
+            void f(){
+              int a = 3;
+              reinterpret_cast<float*>(&a);
             }
             ''')
         self.assertEqual(x[1:], y)
