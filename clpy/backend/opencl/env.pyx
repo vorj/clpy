@@ -8,6 +8,7 @@ from clpy.backend.opencl cimport api
 from cython.view cimport array as cython_array
 
 from libc.stdlib cimport malloc
+from libcpp cimport bool
 
 cdef interpret_versionstr(versionstr):
     version_detector = re.compile('''OpenCL (\d+)\.(\d+)''')
@@ -71,6 +72,33 @@ cdef void check_device_version(cl_device_id device, required_version) except *:
         .decode(locale.getpreferredencoding())
     if not interpret_versionstr(versionstr) >= required_version:
         raise RuntimeError("Device's OpenCL version must be >= 1.2")
+
+cdef cl_bool check_device_extension(cl_device_id device,
+                                    str extension) except *:
+    cdef size_t param_value_size
+    api.GetDeviceInfo(
+        device,
+        CL_DEVICE_EXTENSIONS,
+        0,
+        NULL,
+        &param_value_size)
+
+    cdef cython_array extensions_buffer =\
+        cython_array(shape=(param_value_size,),
+                     itemsize=sizeof(char),
+                     format='b')
+    api.GetDeviceInfo(
+        device,
+        CL_DEVICE_EXTENSIONS,
+        param_value_size,
+        <void*>extensions_buffer.data,
+        &param_value_size)
+
+    extensions =\
+        extensions_buffer.data[:param_value_size]\
+        .decode(locale.getpreferredencoding())
+
+    return CL_TRUE if extension in extensions else CL_FALSE
 
 
 ##########################################
@@ -163,6 +191,10 @@ cdef cl_device_id* get_devices():
 cdef cl_device_id get_device():
     global __current_device_id
     return __devices[__current_device_id]
+
+cpdef bool supports_cl_khr_fp16() except *:
+    global __current_device_id
+    return check_device_extension(get_device(), 'cl_khr_fp16') == CL_TRUE
 
 
 def release():
