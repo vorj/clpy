@@ -2056,7 +2056,7 @@ public:
     }
     clang::Decl** End = Begin + NumDecls;
     auto backup = policy;
-    auto* TD = clang::dyn_cast<clang::TagDecl>(*Begin);
+    auto TD = clang::isa<clang::TagDecl>(*Begin);
     if (TD)
       ++Begin;
 
