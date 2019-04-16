@@ -2515,10 +2515,6 @@ public:
       if (D->isVirtualAsWritten()) os << "virtual ";
       if (D->isModulePrivate())    os << "__module_private__ ";
       if (D->isConstexpr() && !D->isExplicitlyDefaulted()) os << "constexpr ";
-      if ((CDecl && CDecl->isExplicitSpecified())
-       || (ConversionDecl && ConversionDecl->isExplicitSpecified())
-         )
-        os << "explicit ";
     }
 
     std::string Proto;
