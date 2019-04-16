@@ -11,8 +11,10 @@ typedef unsigned long ulong;
 typedef unsigned long size_t;
 typedef long ptrdiff_t;
 
+#ifdef __CLPY_ENABLE_CL_KHR_FP16
 typedef float half;
 typedef half __clpy__half;
+#endif
 #define half __clpy__half
 
 __attribute__((annotate("clpy_no_mangle"))) static unsigned int atomic_cmpxchg(volatile __global unsigned int*, unsigned int, unsigned int);
