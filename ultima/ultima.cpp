@@ -2231,14 +2231,8 @@ public:
         continue;
       }
 
-      if (clang::isa<clang::AccessSpecDecl>(x)) {
-        indentation -= policy.Indentation;
-        this->indent();
-        Print(x->getAccess());
-        os << ":\n";
-        indentation += policy.Indentation;
+      if (clang::isa<clang::AccessSpecDecl>(x))
         continue;
-      }
 
       this->indent();
       Visit(x);
@@ -3147,7 +3141,6 @@ public:
       }
 
       // Print the class definition
-      // FIXME: Doesn't print access specifiers, e.g., "public:"
       if (policy.TerseOutput) {
         os << " {}";
       } else {
