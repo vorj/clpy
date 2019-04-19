@@ -217,6 +217,7 @@ class stmt_visitor : public clang::StmtVisitor<stmt_visitor> {
   clang::DeclVisitor<decl_visitor>& dv;
   const std::vector<std::vector<function_special_argument_info>>& func_arg_info;
   const std::unordered_map<clang::FunctionDecl*, std::string>& func_name;
+  std::vector<std::string>& delayed_outputs;
 public:
   static bool has_annotation(clang::Decl* decl, llvm::StringRef s){
     if(decl->hasAttrs())
@@ -230,8 +231,9 @@ public:
               clang::PrintingPolicy &Policy,
               unsigned& Indentation, clang::DeclVisitor<decl_visitor>& dv,
               const std::vector<std::vector<function_special_argument_info>>& func_arg_info,
-              const std::unordered_map<clang::FunctionDecl*, std::string>& func_name)
-    : os(os), IndentLevel(Indentation), Policy(Policy), dv{dv}, func_arg_info{func_arg_info}, func_name{func_name} {}
+              const std::unordered_map<clang::FunctionDecl*, std::string>& func_name,
+              std::vector<std::string>& delayed_outputs)
+    : os(os), IndentLevel(Indentation), Policy(Policy), dv{dv}, func_arg_info{func_arg_info}, func_name{func_name}, delayed_outputs{delayed_outputs} {}
 
   void PrintStmt(clang::Stmt *S) {
     PrintStmt(S, Policy.Indentation);
@@ -298,7 +300,12 @@ public:
   void VisitDeclStmt(clang::DeclStmt *Node) {
     Indent();
     PrintRawDeclStmt(Node);
-    os << ";\n";
+    os << ';';
+    if(!delayed_outputs.back().empty()){
+      os << delayed_outputs.back();
+      delayed_outputs.pop_back();
+    }
+    os << '\n';
   }
 
   void VisitCompoundStmt(clang::CompoundStmt *Node) {
@@ -1967,7 +1974,7 @@ public:
   decl_visitor(llvm::raw_ostream& os, const clang::PrintingPolicy& policy,
                unsigned indentation = 0)
     : os(os), policy(policy), indentation(indentation),
-      sv{this->os, this->policy, this->indentation, *this, this->func_arg_info, this->func_name} { }
+      sv{this->os, this->policy, this->indentation, *this, this->func_arg_info, this->func_name, this->delayed_outputs} { }
 
   llvm::raw_ostream& indent(unsigned indentation) {
     for (unsigned i = 0; i != indentation; ++i)
@@ -2050,13 +2057,15 @@ public:
   }
 
   void printGroup(clang::Decl** Begin, unsigned NumDecls) {
+    delayed_outputs.push_back("");
+
     if (NumDecls == 1) {
       Visit(*Begin);
       return;
     }
     clang::Decl** End = Begin + NumDecls;
     auto backup = policy;
-    auto* TD = clang::dyn_cast<clang::TagDecl>(*Begin);
+    auto TD = clang::isa<clang::TagDecl>(*Begin);
     if (TD)
       ++Begin;
 
@@ -2231,14 +2240,8 @@ public:
         continue;
       }
 
-      if (clang::isa<clang::AccessSpecDecl>(x)) {
-        indentation -= policy.Indentation;
-        this->indent();
-        Print(x->getAccess());
-        os << ":\n";
-        indentation += policy.Indentation;
+      if (clang::isa<clang::AccessSpecDecl>(x))
         continue;
-      }
 
       this->indent();
       Visit(x);
@@ -2521,10 +2524,6 @@ public:
       if (D->isVirtualAsWritten()) os << "virtual ";
       if (D->isModulePrivate())    os << "__module_private__ ";
       if (D->isConstexpr() && !D->isExplicitlyDefaulted()) os << "constexpr ";
-      if ((CDecl && CDecl->isExplicitSpecified())
-       || (ConversionDecl && ConversionDecl->isExplicitSpecified())
-         )
-        os << "explicit ";
     }
 
     std::string Proto;
@@ -2707,8 +2706,13 @@ public:
                                           = clang::dyn_cast<clang::CXXConstructExpr>(Init)) {
               Args = Construct->getArgs();
               NumArgs = Construct->getNumArgs();
-            } else
+            } else {
+              if(clang::InitListExpr* InitList = clang::dyn_cast<clang::InitListExpr>(Init)) {
+                if(InitList->getNumInits() == 1 && !BMInitializer->getAnyMember()->getType().getLocalUnqualifiedType().getTypePtr()->isCompoundType())
+                  Init = InitList->getInit(0);
+              }
               SimpleInit = Init;
+            }
             
             if (SimpleInit)
               sv.Visit(SimpleInit);
@@ -3011,7 +3015,7 @@ public:
         }
       }
       if (!ImplicitInit) {
-        if (D->getInitStyle() == clang::VarDecl::CInit && (!Construct || Construct->getConstructor()->isDefaulted()))
+        if ((D->getInitStyle() == clang::VarDecl::CInit || D->getInitStyle() == clang::VarDecl::ListInit) && (!Construct || Construct->getConstructor()->isDefaulted()))
           os << " = ";
         else
           os << ';';
@@ -3025,9 +3029,21 @@ public:
         policy = backup;
       }
       else if(Construct){
-        if (D->getInitStyle() == clang::VarDecl::CInit && Construct->getConstructor()->isDefaulted())
+        const bool needs_equal = (D->getInitStyle() == clang::VarDecl::CInit || D->getInitStyle() == clang::VarDecl::ListInit) && Construct->getConstructor()->isDefaulted();
+        if(needs_equal)
           os << " = ";
+        std::string str;
+        llvm::raw_string_ostream ss(str);
+        os.push(ss);
         sv.VisitCXXConstructExpr(Construct, D->getNameAsString().c_str());
+        os.pop();
+        ss.flush();
+        if(!str.empty() && !needs_equal){
+          llvm::raw_string_ostream ros{delayed_outputs.back()};
+          ros << str << ';';
+        }
+        else
+          os << str;
       }
     }
     else if(!init_str.empty())
@@ -3147,7 +3163,6 @@ public:
       }
 
       // Print the class definition
-      // FIXME: Doesn't print access specifiers, e.g., "public:"
       if (policy.TerseOutput) {
         os << " {}";
       } else {
