@@ -187,6 +187,20 @@ class preprocessor : public pp_callbacks<clang::PPCallbacks>{
   }
 };
 
+namespace detail{
+
+template<typename PredefinedExpr>
+decltype(PredefinedExpr::getIdentTypeName(std::declval<PredefinedExpr>().getIdentType())) getIdentTypeName(PredefinedExpr* pe){
+  return PredefinedExpr::getIdentTypeName(pe->getIdentType());
+}
+
+template<typename PredefinedExpr>
+decltype(PredefinedExpr::getIdentKindName(std::declval<PredefinedExpr>().getIdentKind())) getIdentTypeName(PredefinedExpr* pe){
+  return PredefinedExpr::getIdentKindName(pe->getIdentKind());
+}
+
+}
+
 class decl_visitor;
 
 template<typename T>
@@ -655,7 +669,7 @@ public:
   }
 
   void VisitPredefinedExpr(clang::PredefinedExpr *Node) {
-    os << clang::PredefinedExpr::getIdentTypeName(Node->getIdentType());
+    os << detail::getIdentTypeName(Node);
   }
 
   void VisitCharacterLiteral(clang::CharacterLiteral *Node) {
@@ -671,7 +685,7 @@ public:
     llvm::SmallString<16> Str;
     Node->getValue().toString(Str);
     os << Str;
-    if (Str.find_first_not_of("-0123456789") == StringRef::npos)
+    if (Str.find_first_not_of("-0123456789") == llvm::StringRef::npos)
       os << '.'; // Trailing dot in order to separate from ints.
 
     if (!PrintSuffix)
