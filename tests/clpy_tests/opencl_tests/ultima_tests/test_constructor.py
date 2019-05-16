@@ -4,7 +4,7 @@
 #               using --per-file-ignores .
 
 import unittest
-from utility import _exec_ultima
+from utility import exec_ultima
 
 
 class TestUltimaConstructor(unittest.TestCase):
@@ -21,7 +21,7 @@ void f()
     A a;constructor_A(&a);
 }
 '''
-        y = _exec_ultima(
+        y = exec_ultima(
             '''
             class A{
             public:
@@ -47,7 +47,7 @@ void f()
     A a;constructor_A(&a, 3);
 }
 '''
-        y = _exec_ultima(
+        y = exec_ultima(
             '''
             class A{
               int a;
@@ -74,7 +74,7 @@ void f()
     A a;constructor_A(&a, 3);
 }
 '''
-        y = _exec_ultima(
+        y = exec_ultima(
             '''
             class A{
               int a;
@@ -101,7 +101,7 @@ void f()
     A a;constructor_A(&a, 3);
 }
 '''
-        y = _exec_ultima(
+        y = exec_ultima(
             '''
             class A{
               int a;
@@ -130,7 +130,7 @@ void f()
     A a;constructor_A(&a, 42, 3.1400001F);
 }
 '''
-        y = _exec_ultima(
+        y = exec_ultima(
             '''
             class A{
               int a;
@@ -160,7 +160,7 @@ void f()
     A a;constructor_A(&a, 42, 3.1400001F);
 }
 '''
-        y = _exec_ultima(
+        y = exec_ultima(
             '''
             class A{
               int a;
@@ -183,7 +183,7 @@ void f()
     A a;
 }
 '''
-        y = _exec_ultima(
+        y = exec_ultima(
             '''
             struct A{
             };
@@ -203,7 +203,7 @@ void f()
     A a;
 }
 '''
-        y = _exec_ultima(
+        y = exec_ultima(
             '''
             struct A{
               A() = default;
@@ -223,7 +223,7 @@ void f()
     A a, b;
 }
 '''
-        y = _exec_ultima(
+        y = exec_ultima(
             '''
             struct A{
             };
@@ -245,7 +245,7 @@ void f()
     A a, b;constructor_A(&a);constructor_A(&b);
 }
 '''
-        y = _exec_ultima(
+        y = exec_ultima(
             '''
             struct A{
               A(){}
@@ -265,7 +265,7 @@ void f()
     } a,  b = {4},  c = {3};
 }
 '''
-        y = _exec_ultima(
+        y = exec_ultima(
             '''
             void f(){
               struct{

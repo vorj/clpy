@@ -4,7 +4,7 @@
 #               using --per-file-ignores .
 
 import unittest
-from utility import _exec_ultima
+from utility import exec_ultima
 
 
 class TestUltimaCastConversion(unittest.TestCase):
@@ -16,7 +16,7 @@ void f()
     (int)(3.F);
 }
 '''
-        y = _exec_ultima(
+        y = exec_ultima(
             '''
             void f(){
               int(3.F);
@@ -31,7 +31,7 @@ void f()
     (int)(3.F);
 }
 '''
-        y = _exec_ultima(
+        y = exec_ultima(
             '''
             void f(){
               static_cast<int>(3.F);
@@ -47,7 +47,7 @@ void f()
     (int *)(&a);
 }
 '''
-        y = _exec_ultima(
+        y = exec_ultima(
             '''
             void f(){
               const int a = 3;
@@ -64,7 +64,7 @@ void f()
     (float *)(&a);
 }
 '''
-        y = _exec_ultima(
+        y = exec_ultima(
             '''
             void f(){
               int a = 3;

@@ -4,7 +4,7 @@
 #               using --per-file-ignores .
 
 import unittest
-from utility import _exec_ultima
+from utility import exec_ultima
 
 
 class TestUltimaTemplateInstantiation(unittest.TestCase):
@@ -12,7 +12,7 @@ class TestUltimaTemplateInstantiation(unittest.TestCase):
     def test_template_function_definition(self):
         x = '''
 '''
-        y = _exec_ultima(
+        y = exec_ultima(
             '''
             template<typename>
             void f(){}
@@ -29,7 +29,7 @@ int main()
     f___left_angle__int__right_angle__();
 }
 '''
-        y = _exec_ultima(
+        y = exec_ultima(
             '''
             template<typename>
             void f(){}
@@ -49,7 +49,7 @@ int main()
     f___left_angle__int__right_angle__(42);
 }
 '''
-        y = _exec_ultima(
+        y = exec_ultima(
             '''
             template<typename T>
             void f(T t){}
@@ -63,7 +63,7 @@ int main()
         x = '''
 ;
 '''
-        y = _exec_ultima(
+        y = exec_ultima(
             '''
             template<typename>
             struct A{};
@@ -77,7 +77,7 @@ typedef struct A___left_angle__int__right_angle__ {
 }A___left_angle__int__right_angle__;
 A___left_angle__int__right_angle__ a;
 '''
-        y = _exec_ultima(
+        y = exec_ultima(
             '''
             template<typename>
             struct A{};
@@ -97,7 +97,7 @@ void f()
     a.t = 0;
 }
 '''
-        y = _exec_ultima(
+        y = exec_ultima(
             '''
             template<typename T>
             struct A{
@@ -121,7 +121,7 @@ int main()
     int a = f___left_angle__30__right_angle__();
 }
 '''
-        y = _exec_ultima(
+        y = exec_ultima(
             '''
             template<int N>
             int f(){
@@ -145,7 +145,7 @@ int main()
     f___left_angle__int__right_angle____left_angle__double__right_angle__();
 }
 '''
-        y = _exec_ultima(
+        y = exec_ultima(
             '''
             template<typename T, typename U>
             void f(){
