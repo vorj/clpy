@@ -23,6 +23,8 @@
 #include <memory>
 #include <utility>
 #include <sstream>
+#include <iostream>
+#include <fstream>
 
 namespace ultima{
 
@@ -316,7 +318,10 @@ public:
     PrintRawDeclStmt(Node);
     os << ';';
     if(!delayed_outputs.back().empty()){
+      os << "\n/*delayed_outputs layer:" << delayed_outputs.size() << " begin*/\n";
+      os << "/*delayed_output string size: " << delayed_outputs.back().size() << "*/\n";
       os << delayed_outputs.back();
+      os << "\n/*delayed_outputs layer:" << delayed_outputs.size() << " end*/\n";
       delayed_outputs.pop_back();
     }
     os << '\n';
@@ -2190,8 +2195,11 @@ public:
       if(print_out_counter <= 0)
         continue;
 
-      if(delayed_outputs.size() > delayed_output_layer){
+      while(delayed_outputs.size() > delayed_output_layer){
+        ros << "\n/*delayed_outputs layer:" << delayed_outputs.size() << " begin(to ros)*/\n";
+        ros << "/*delayed_output string size: " << delayed_outputs.back().size() << "*/\n";
         ros << delayed_outputs.back();
+        ros << "\n/*delayed_outputs layer:" << delayed_outputs.size() << " end(to ros)*/\n";
         delayed_outputs.pop_back();
       }
       ros.flush();
@@ -2328,10 +2336,14 @@ public:
         print_out(Terminator);
     }
 
-    if(delayed_outputs.size() > delayed_output_layer){
+    while(delayed_outputs.size() > delayed_output_layer){
+      ros << "\n/*delayed_outputs layer:" << delayed_outputs.size() << " begin(to ros unpop)*/\n";
+      ros << "/*delayed_output string size: " << delayed_outputs.back().size() << "*/\n";
       ros << delayed_outputs.back();
-      delayed_outputs.clear();
+      ros << "\n/*delayed_outputs layer:" << delayed_outputs.size() << " end(to ros unpop)*/\n";
+      delayed_outputs.pop_back();
     }
+    delayed_outputs.push_back("");
     ros.flush();
     os << os_source;
 
@@ -3055,6 +3067,7 @@ public:
         if(!str.empty() && !needs_equal){
           llvm::raw_string_ostream ros{delayed_outputs.back()};
           ros << str << ';';
+          ros.flush();
         }
         else
           os << str;
@@ -3404,7 +3417,7 @@ struct ast_frontend_action : clang::SyntaxOnlyAction{
 
 }
 
-int main(int argc, const char** argv){
+int main(int argc, const char** argv)try{
   llvm::cl::OptionCategory tool_category("ultima options");
   llvm::cl::extrahelp common_help(clang::tooling::CommonOptionsParser::HelpMessage);
   std::vector<const char*> params;
@@ -3419,5 +3432,12 @@ int main(int argc, const char** argv){
   params.emplace_back("-includecuda_stub.hpp");
   clang::tooling::CommonOptionsParser options_parser(argc = static_cast<int>(params.size()), params.data(), tool_category);
   clang::tooling::ClangTool tool(options_parser.getCompilations(), options_parser.getSourcePathList());
-  return tool.run(clang::tooling::newFrontendActionFactory<ultima::registrar::ast_frontend_action>().get());
+  const auto ret = tool.run(clang::tooling::newFrontendActionFactory<ultima::registrar::ast_frontend_action>().get());
+  std::cout << "\n/*finished*/\n";
+  std::ofstream("/tmp/po.txt");
+  llvm::outs().flush();
+  return ret;
+}catch(std::exception& e){
+  llvm::outs() << "/*EXCEPTION RAISED!!!!!!!!!!!!: " << e.what() << "*/\n";
+  return 1;
 }
