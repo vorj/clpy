@@ -1,7 +1,7 @@
 # ClPy: OpenCL backend for CuPy
 
 *ClPy* is an implementation of [CuPy](https://cupy.chainer.org/)'s OpenCL backend.
-In other words, ClPy enables softwares written in CuPy to work also on OpenCL devices, not only on CUDA (NVIDIA) devices.
+In other words, ClPy enables software written in CuPy to work also on OpenCL devices, not only on CUDA (NVIDIA) devices.
 
 ## Current status
 
@@ -28,7 +28,7 @@ See current [Chainer's test and example results](https://github.com/fixstars/ClP
 
 ## Recommended system
 
-We develop and test ClPy in following environments.
+We develop and test ClPy in the following environments.
 
 * Primary machine
 	* OS: Ubuntu 16.04.4 LTS
@@ -52,7 +52,7 @@ Install and setup OpenCL environment.
 
 `cl.h` and OpenCL libs (`libOpenCL.so`) must be able to be included and linked without any special path settings.
 
-For example with AMD APP SDK, you should set following environment variables:
+For example with AMD APP SDK, you should set the following environment variables:
 
 ```sh
 export C_INCLUDE_PATH=${C_INCLUDE_PATH}:${AMDAPPSDKROOT}/include
@@ -83,7 +83,7 @@ Install it and set the paths if needed.
 ### Install ClPy
 
 After OpenCL and LLVM/Clang is successfully installed, install ClPy.
-ClPy uses `make` command in build process, so if you do not have `make` , please install it before install ClPy.
+ClPy uses `make` command in the build process, so if you do not have `make`, please install it before installing ClPy.
 
 ```console
 $ pip install cython
@@ -97,12 +97,12 @@ This option adds aliases to CuPy by hooking `import cupy` and call ClPy through 
 You don't need to modify any your codes.
 
 If you don't want to run with `-m` option, you must add `import clpy` before `import cupy` in your codes.
-`import clpy` adds the aliases same as `-m clpy`.
+`import clpy` adds the aliases the same as `-m clpy`.
 
 If you want to disable such aliases, set `export CLPY_NOT_HOOK_CUPY=1` before execution.
-Then, you need to replace `cupy` to `clpy` in your all codes (e.g. `import cupy` -> `import clpy`).
+Then, you need to replace `cupy` to `clpy` in all your codes (e.g. `import cupy` -> `import clpy`).
 
-### Woking with Chainer
+### Working with Chainer
 
 It's confirmed that ClPy works with [Chainer v3.3.0](https://github.com/chainer/chainer/tree/v3.3.0).
 
@@ -117,21 +117,21 @@ $ python -m pytest test_you_want.py
 ## Development
 
 1. All source codes (including comments) and commit messages should be written in English.
-2. Issues and pull requests are welcome in any languages (recommended in English or Japanese).
-3. Detailed coding styles are same as [CuPy's](https://docs-cupy.chainer.org/en/stable/contribution.html#coding-guidelines). Read and follow the guidelines before submitting PRs.
+2. Issues and pull requests are welcome in any language (recommended in English or Japanese).
+3. Detailed coding styles are the same as [CuPy's](https://docs-cupy.chainer.org/en/stable/contribution.html#coding-guidelines). Read and follow the guidelines before submitting PRs.
 
 ## Future plan
 
-We are developing v2.1.0rc2 for next release.
+We are developing v2.1.0rc2 for the next release.
 
 * Accelerate chainer's example performance
 * Multiple CommandQueue (Stream)
 * Support sorting algorithm
-* -- and other functions and/or bug fixes that someone develops and/or requests..
+* -- and other functions and/or bug fixes that someone develops and/or requests...
 
 We also plan to update CuPy's base version to v4 or v5 after beta release.
 
-Check [github's issues and pull requests](https://github.com/fixstars/clpy/issues) to get latest status.
+Check [github's issues and pull requests](https://github.com/fixstars/clpy/issues) to get the latest status.
 
 ## License
 
