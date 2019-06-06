@@ -134,3 +134,7 @@ Check [github's issues and pull requests](https://github.com/fixstars/clpy/issue
 ## License
 
 MIT License (see `LICENSE` file).
+
+## Reference
+
+Tomokazu Higuchi, Naoki Yoshifuji, Tomoya Sakai, Yoriyuki Kitta, Ryousei Takano, Tsutomu Ikegami, Kenjiro Taura (2019): "ClPy: A NumPy-compatible Library Accelerated with OpenCL", *Scalable Deep Learning over Parallel and Distributed Infrastructures 2019*. [URL](https://docs.google.com/presentation/d/1UtZgK9La7Pz_3Qwm2hXg13TwkvKuCSLlKsGebBXY2EA) (Proceeding paper will be published on the IEEE Xplore soon)
