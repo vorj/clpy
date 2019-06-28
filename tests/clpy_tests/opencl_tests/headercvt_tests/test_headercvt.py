@@ -55,11 +55,30 @@ def kick_headercvt_and_get_results(source):
     exec_headercvt(source)
     return get_result_files()
 
+def contains(result_string, match_string):
+    return match_string in result_string
 
 class TestHeadercvtWorking(unittest.TestCase):
     def setUp(self):
         check_existence_of_headercvt()
 
     def test_headercvt_working(self):
-        kick_headercvt_and_get_results("#define CL_SOME_VALUE 1 \ntypedef int hogera;\nvoid clSomeFunction(int arg1, char* const* const arg2);")
+        results = kick_headercvt_and_get_results("")
+        # subprocess raises an exception if
+        # headercvt returned non-zero exit code.
 
+class TestHeadercvtPreprocDefines(unittest.TestCase):
+    def setUp(self):
+        check_existence_of_headercvt()
+
+    def test_headercvt_preproc_define_accept_case(self):
+        results = kick_headercvt_and_get_results("""
+        #define CL_SOME_VALUE 1
+        """)
+        self.assertTrue(contains(results["preprocessor_defines"], "CL_SOME_VALUE"))
+
+    def test_headercvt_preproc_define_decline_case(self):
+        results = kick_headercvt_and_get_results("""
+        #define SOME_VALUE 1
+        """)
+        self.assertTrue(not contains(results["preprocessor_defines"], "SOME_VALUE"))
