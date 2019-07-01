@@ -1,2 +1,4 @@
 *.pxi
+*.pyx
+*.c
 *.txt
