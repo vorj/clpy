@@ -20,14 +20,11 @@ headercvt_abspath = os.path.join(headercvt_wd, "headercvt")
 
 
 def check_existence_of_headercvt():
-    global headercvt_abspath
     if not os.path.isfile(headercvt_abspath):
         raise FileNotFoundError("headercvt does not exist")
 
 
 def exec_headercvt(source):
-    global headercvt_wd
-    global headercvt_abspath
     p = subprocess.run(f"{headercvt_abspath} /dev/stdin --",
             shell=True,
             cwd=filedir,
@@ -82,3 +79,20 @@ class TestHeadercvtPreprocDefines(unittest.TestCase):
         #define SOME_VALUE 1
         """)
         self.assertTrue(not contains(results["preprocessor_defines"], "SOME_VALUE"))
+
+class TestHeadercvtFuncDecl(unittest.TestCase):
+    def setUp(self):
+        check_existence_of_headercvt()
+
+    def test_headercvt_funcdecl_accept_case(self):
+        results = kick_headercvt_and_get_results("""
+        void clSomeFunction(int, void *);
+        """)
+        self.assertTrue(contains(results["func_decl"], "clSomeFunction(int, void *)"))
+
+    def test_headercvt_funcdecl_decline_case(self):
+        results = kick_headercvt_and_get_results("""
+        void SomeFunction(int, void *);
+        """)
+        self.assertTrue(not contains(results["func_decl"], "SomeFunction"))
+
