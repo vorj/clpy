@@ -160,3 +160,28 @@ class TestHeadercvtTypes(unittest.TestCase):
         typedef struct clpy_struct_tag clpy_struct_t;
         """)
         # Syntax Error :(
+
+    def test_headercvt_typedef_to_implicitly_declared_pointer(self):
+        results = kick_headercvt_and_get_results("""
+        typedef struct clpy_struct_tag *    clpy_pointer_to_struct_t;
+        """)
+        self.assertTrue(contains(results["types"], "cdef struct clpy_struct_tag"))
+        self.assertTrue(contains(results["types"], "ctypedef clpy_struct_tag * clpy_pointer_to_struct_t"))
+        self.assertTrue(compile_with("cdef clpy_pointer_to_struct_t foo = <clpy_pointer_to_struct_t>0"))
+
+    def test_headercvt_ignore_union_decl(self):
+        results = kick_headercvt_and_get_results("""
+        typedef union clpy_union_tag{
+            int member1;
+        } clpy_union_t;
+        """)
+        self.assertTrue(not contains(results["types"], "clpy_union_t"))
+
+    def test_headercvt_ignore_union_reference(self):
+        results = kick_headercvt_and_get_results("""
+        typedef union clpy_union_tag{
+            int member1;
+        } clpy_union_t;
+        typedef clpy_union_t clpy_typedefed_union_t;
+        """)
+        self.assertTrue(not contains(results["types"], "clpy_typedefed_union_t"))
