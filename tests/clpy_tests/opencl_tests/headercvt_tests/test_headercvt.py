@@ -55,6 +55,33 @@ def kick_headercvt_and_get_results(source):
 def contains(result_string, match_string):
     return match_string in result_string
 
+def compile_with(source):
+    source = """
+include "func_decl.pxi"
+include "preprocessor_defines.pxi"
+include "types.pxi"
+
+
+""" + source
+
+    with open("test_case.pyx", "w") as f:
+        f.write(source)
+        f.flush()
+        os.fsync(f.fileno())
+        try:
+            subprocess.run(f"cython {f.name}",
+                    cwd=filedir,
+                    shell=True,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    check=True)
+            return True
+        except subprocess.CalledProcessError as e:
+            print(e.stdout.decode(locale.getpreferredencoding()))
+            print(e.stderr.decode(locale.getpreferredencoding()))
+            return False
+
+
 class TestHeadercvtWorking(unittest.TestCase):
     def setUp(self):
         check_existence_of_headercvt()
@@ -73,6 +100,7 @@ class TestHeadercvtPreprocDefines(unittest.TestCase):
         #define CL_SOME_VALUE 1
         """)
         self.assertTrue(contains(results["preprocessor_defines"], "CL_SOME_VALUE"))
+        self.assertTrue(compile_with("print(CL_SOME_VALUE)"))
 
     def test_headercvt_preproc_define_decline_case(self):
         results = kick_headercvt_and_get_results("""
@@ -89,6 +117,7 @@ class TestHeadercvtFuncDecl(unittest.TestCase):
         void clSomeFunction(int, void *);
         """)
         self.assertTrue(contains(results["func_decl"], "clSomeFunction(int, void *)"))
+        self.assertTrue(compile_with("clSomeFunction(10, <void*>0)"))
 
     def test_headercvt_funcdecl_decline_case(self):
         results = kick_headercvt_and_get_results("""
