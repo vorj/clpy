@@ -125,3 +125,38 @@ class TestHeadercvtFuncDecl(unittest.TestCase):
         """)
         self.assertTrue(not contains(results["func_decl"], "SomeFunction"))
 
+class TestHeadercvtTypes(unittest.TestCase):
+    def setUp(self):
+        check_existence_of_headercvt()
+
+    def test_headercvt_typedef(self):
+        results = kick_headercvt_and_get_results("""
+        typedef int clpy_int;
+        """)
+        self.assertTrue(contains(results["types"], "ctypedef int clpy_int"))
+        self.assertTrue(compile_with("cdef clpy_int foo = 0"))
+
+    def test_headercvt_typedef_to_pointer(self):
+        results = kick_headercvt_and_get_results("""
+        typedef int* clpy_intptr;
+        """)
+        self.assertTrue(contains(results["types"], "ctypedef int * clpy_intptr"))
+        self.assertTrue(compile_with("cdef clpy_intptr foo = <clpy_intptr>0"))
+
+    def test_headercvt_typedef_to_tagged_struct(self):
+        results = kick_headercvt_and_get_results("""
+        typedef struct clpy_struct_tag{
+            int member;
+        } clpy_struct_t;
+        """)
+        self.assertTrue(contains(results["types"], "ctypedef struct clpy_struct_t:"))
+        self.assertTrue(compile_with("cdef clpy_struct_t foo\nfoo.member = 0"))
+
+    def test_headercvt_typedef_to_discretely_tagged_struct(self):
+        results = kick_headercvt_and_get_results("""
+        typedef struct clpy_struct_tag{
+            int member;
+        };
+        typedef struct clpy_struct_tag clpy_struct_t;
+        """)
+        # Syntax Error :(
