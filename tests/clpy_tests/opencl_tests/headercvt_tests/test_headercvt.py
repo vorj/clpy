@@ -159,7 +159,8 @@ class TestHeadercvtTypes(unittest.TestCase):
         };
         typedef struct clpy_struct_tag clpy_struct_t;
         """)
-        # Syntax Error :(
+        # TODO(nsakabe-fixstars):
+        # Make headercvt support this case of decl and update this testcase.
 
     def test_headercvt_typedef_to_implicitly_declared_pointer(self):
         results = kick_headercvt_and_get_results("""
