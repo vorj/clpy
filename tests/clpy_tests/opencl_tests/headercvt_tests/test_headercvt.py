@@ -152,6 +152,15 @@ class TestHeadercvtTypes(unittest.TestCase):
         self.assertTrue(contains(results["types"], "ctypedef struct clpy_struct_t:"))
         self.assertTrue(compile_with("cdef clpy_struct_t foo\nfoo.member = 0"))
 
+    def test_headercvt_typedef_to_struct_which_contains_an_array(self):
+        results = kick_headercvt_and_get_results("""
+        typedef struct clpy_struct_tag{
+            int member[100];
+        } clpy_struct_t;
+        """)
+        self.assertTrue(contains(results["types"], "int member[100]"))
+        self.assertTrue(compile_with("cdef clpy_struct_t foo\nfoo.member[0] = 0"))
+
     def test_headercvt_typedef_to_discretely_tagged_struct(self):
         results = kick_headercvt_and_get_results("""
         typedef struct clpy_struct_tag{
@@ -170,6 +179,13 @@ class TestHeadercvtTypes(unittest.TestCase):
         self.assertTrue(contains(results["types"], "ctypedef clpy_struct_tag * clpy_pointer_to_struct_t"))
         self.assertTrue(compile_with("cdef clpy_pointer_to_struct_t foo = <clpy_pointer_to_struct_t>0"))
 
+    def test_headercvt_ignore_typedef_to_function_pointer(self):
+        results = kick_headercvt_and_get_results("""
+        typedef void(*clpy_function_i_vstar_l_t)(int, void*, long);
+        """)
+        self.assertTrue(not contains(results["types"], "clpy_function_i_vstar_l_t"))
+        self.assertTrue(compile_with(""))
+
     def test_headercvt_ignore_union_decl(self):
         results = kick_headercvt_and_get_results("""
         typedef union clpy_union_tag{
@@ -177,6 +193,7 @@ class TestHeadercvtTypes(unittest.TestCase):
         } clpy_union_t;
         """)
         self.assertTrue(not contains(results["types"], "clpy_union_t"))
+        self.assertTrue(compile_with(""))
 
     def test_headercvt_ignore_union_reference(self):
         results = kick_headercvt_and_get_results("""
@@ -186,3 +203,22 @@ class TestHeadercvtTypes(unittest.TestCase):
         typedef clpy_union_t clpy_typedefed_union_t;
         """)
         self.assertTrue(not contains(results["types"], "clpy_typedefed_union_t"))
+        self.assertTrue(compile_with(""))
+
+    def test_headercvt_ignore_pthread_related_groupdecl(self):
+        results = kick_headercvt_and_get_results("""
+        typedef struct{
+            int* ptr;
+        } clpy_pthread_struct_intptr;
+        """)
+        self.assertTrue(not contains(results["types"], "clpy_pthread_struct_intptr"))
+        self.assertTrue(compile_with(""))
+
+    def test_headercvt_ignore_pthread_related_recorddecl(self):
+        results = kick_headercvt_and_get_results("""
+        typedef struct clpy_struct_tag{
+            int* ptr;
+        } clpy_pthread_struct_intptr;
+        """)
+        self.assertTrue(not contains(results["types"], "clpy_pthread_struct_intptr"))
+        self.assertTrue(compile_with(""))
