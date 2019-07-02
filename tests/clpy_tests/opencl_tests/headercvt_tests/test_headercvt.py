@@ -1,5 +1,3 @@
-import clpy
-
 import unittest
 
 import os
@@ -36,11 +34,11 @@ def exec_headercvt(source):
             )
 
 def get_result_files():
-    with open("func_decl.pxi", "r") as f:
+    with open(os.path.join(filedir, "func_decl.pxi"), "r") as f:
         func_decl_str = f.read()
-    with open("preprocessor_defines.pxi", "r") as f:
+    with open(os.path.join(filedir, "preprocessor_defines.pxi"), "r") as f:
         preprocessor_defines_str = f.read()
-    with open("types.pxi", "r") as f:
+    with open(os.path.join(filedir, "types.pxi"), "r") as f:
         types_str = f.read()
     return { \
             "func_decl": func_decl_str,
@@ -63,8 +61,9 @@ include "types.pxi"
 
 
 """ + source
+    print(source)
 
-    with open("test_case.pyx", "w") as f:
+    with open(os.path.join(filedir, "test_case.pyx"), "w") as f:
         f.write(source)
         f.flush()
         os.fsync(f.fileno())
