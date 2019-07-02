@@ -28,10 +28,10 @@ public:
   CountingLLVMOstream(std::ofstream& ofstream):llvm_ost(ofstream){
   }
   template <typename T>
-  decltype(llvm_ost)& operator << (T&& rhs){
+  CountingLLVMOstream& operator << (T&& rhs){
     llvm_ost << std::forward<T>(rhs);
     line_count++;
-    return llvm_ost;
+    return *this;
   }
   decltype(llvm_ost)& without_counting(){
     return llvm_ost;
