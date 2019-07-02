@@ -22,7 +22,7 @@ source venv/bin/activate
 
 # Install dependencies
 pip install -U pip
-pip install Cython pytest mock nose
+pip install 'Cython==0.29.10' 'pytest==4.3.0' 'mock==3.0.5' 'nose==1.3.7'
 
 # Ignore occurred errors below
 set +e
