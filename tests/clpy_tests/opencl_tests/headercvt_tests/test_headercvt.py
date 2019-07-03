@@ -39,6 +39,9 @@ def get_result_files(workingdir):
         preprocessor_defines_str = f.read()
     with open(os.path.join(workingdir, "types.pxi"), "r") as f:
         types_str = f.read()
+    print(func_decl_str)
+    print(preprocessor_defines_str)
+    print(types_str)
     return { \
             "func_decl": func_decl_str,
             "preprocessor_defines": preprocessor_defines_str,
@@ -166,6 +169,25 @@ class TestHeadercvtTypes(unittest.TestCase):
         self.assertTrue(compile_with(wd, "cdef clpy_struct_t foo\nfoo.member = 0"))
 
     @with_temp_wd
+    def test_headercvt_typedef_to_anonymous_struct(self, wd):
+        results = kick_headercvt_and_get_results(wd, """
+        typedef struct {
+            int member;
+        } clpy_struct_t;
+        """)
+        self.assertTrue(contains(results["types"], "ctypedef struct clpy_struct_t:"))
+        self.assertTrue(compile_with(wd, "cdef clpy_struct_t foo\nfoo.member = 0"))
+
+    @with_temp_wd
+    def test_headercvt_typedef_to_empty_struct(self, wd):
+        results = kick_headercvt_and_get_results(wd, """
+        typedef struct {
+        } clpy_empty_struct_t;
+        """)
+        self.assertTrue(contains(results["types"], "ctypedef struct clpy_empty_struct_t:"))
+        self.assertTrue(compile_with(wd, "cdef clpy_empty_struct_t* foo"))
+
+    @with_temp_wd
     def test_headercvt_typedef_to_struct_which_contains_an_array(self, wd):
         results = kick_headercvt_and_get_results(wd, """
         typedef struct clpy_struct_tag{
@@ -174,6 +196,16 @@ class TestHeadercvtTypes(unittest.TestCase):
         """)
         self.assertTrue(contains(results["types"], "int member[100]"))
         self.assertTrue(compile_with(wd, "cdef clpy_struct_t foo\nfoo.member[0] = 0"))
+
+    @with_temp_wd
+    def test_headercvt_typedef_to_struct_having_a_pointer_variable(self, wd):
+        results = kick_headercvt_and_get_results(wd, """
+        typedef struct clpy_struct_tag{
+            int* ptr;
+        } clpy_struct_t;
+        """)
+        self.assertTrue(contains(results["types"], "int *ptr"))
+        self.assertTrue(compile_with(wd, "cdef clpy_struct_t foo\nfoo.ptr = <int*>0"))
 
     @with_temp_wd
     def test_headercvt_typedef_to_discretely_tagged_struct(self, wd):
@@ -204,20 +236,29 @@ class TestHeadercvtTypes(unittest.TestCase):
         self.assertTrue(compile_with(wd, ""))
 
     @with_temp_wd
-    def test_headercvt_ignore_union_decl(self, wd):
+    def test_headercvt_ignore_union_groupdecl(self, wd):
         results = kick_headercvt_and_get_results(wd, """
         typedef union clpy_union_tag{
-            int member1;
+            int member;
         } clpy_union_t;
         """)
         self.assertTrue(not contains(results["types"], "clpy_union_t"))
         self.assertTrue(compile_with(wd, ""))
 
     @with_temp_wd
+    def test_headercvt_ignore_union_recorddecl(self, wd):
+        results = kick_headercvt_and_get_results(wd, """
+        union clpy_union_tag{
+            int member;
+        };
+        """)
+        self.assertTrue(compile_with(wd, ""))
+
+    @with_temp_wd
     def test_headercvt_ignore_union_reference(self, wd):
         results = kick_headercvt_and_get_results(wd, """
         typedef union clpy_union_tag{
-            int member1;
+            int member;
         } clpy_union_t;
         typedef clpy_union_t clpy_typedefed_union_t;
         """)
