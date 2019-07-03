@@ -1,7 +1,7 @@
 import unittest
 
-import os
 import locale
+import os
 import subprocess
 import tempfile
 
@@ -22,15 +22,17 @@ def check_existence_of_headercvt():
 
 
 def exec_headercvt(workingdir, source):
-    p = subprocess.run(f"{headercvt_abspath} /dev/stdin --",
-            shell=True,
-            cwd=workingdir,
-            input=source.encode(locale.getpreferredencoding()),
-            timeout=1,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-            check=True
-            )
+    subprocess.run(
+        f"{headercvt_abspath} /dev/stdin --",
+        shell=True,
+        cwd=workingdir,
+        input=source.encode(locale.getpreferredencoding()),
+        timeout=1,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        check=True
+        )
+
 
 def get_result_files(workingdir):
     with open(os.path.join(workingdir, "func_decl.pxi"), "r") as f:
@@ -42,18 +44,21 @@ def get_result_files(workingdir):
     print(func_decl_str)
     print(preprocessor_defines_str)
     print(types_str)
-    return { \
+    return {
             "func_decl": func_decl_str,
             "preprocessor_defines": preprocessor_defines_str,
             "types": types_str
            }
 
+
 def kick_headercvt_and_get_results(workingdir, source):
     exec_headercvt(workingdir, source)
     return get_result_files(workingdir)
 
+
 def contains(result_string, match_string):
     return match_string in result_string
+
 
 def compile_with(workingdir, source):
     source = """
@@ -70,12 +75,13 @@ include "types.pxi"
         f.flush()
         os.fsync(f.fileno())
         try:
-            subprocess.run(f"cython {f.name}",
-                    cwd=workingdir,
-                    shell=True,
-                    stdout=subprocess.PIPE,
-                    stderr=subprocess.PIPE,
-                    check=True)
+            subprocess.run(
+                f"cython {f.name}",
+                cwd=workingdir,
+                shell=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                check=True)
             return True
         except subprocess.CalledProcessError as e:
             print(e.stdout.decode(locale.getpreferredencoding()))
@@ -89,16 +95,18 @@ def with_temp_wd(function):
             function(self, wd=wd)
     return impl
 
+
 class TestHeadercvtWorking(unittest.TestCase):
     def setUp(self):
         check_existence_of_headercvt()
 
     @with_temp_wd
     def test_headercvt_working(self, wd):
-        results = kick_headercvt_and_get_results(wd, "")
+        kick_headercvt_and_get_results(wd, "")
         # subprocess raises an exception if
         # headercvt returned non-zero exit code.
         self.assertTrue(compile_with(wd, ""))
+
 
 class TestHeadercvtPreprocDefines(unittest.TestCase):
     def setUp(self):
@@ -109,7 +117,8 @@ class TestHeadercvtPreprocDefines(unittest.TestCase):
         results = kick_headercvt_and_get_results(wd, """
         #define CL_SOME_VALUE 1
         """)
-        self.assertTrue(contains(results["preprocessor_defines"], "CL_SOME_VALUE"))
+        self.assertTrue(contains(
+            results["preprocessor_defines"], "CL_SOME_VALUE"))
         self.assertTrue(compile_with(wd, "print(CL_SOME_VALUE)"))
 
     @with_temp_wd
@@ -117,7 +126,9 @@ class TestHeadercvtPreprocDefines(unittest.TestCase):
         results = kick_headercvt_and_get_results(wd, """
         #define SOME_VALUE 1
         """)
-        self.assertTrue(not contains(results["preprocessor_defines"], "SOME_VALUE"))
+        self.assertTrue(not contains(
+            results["preprocessor_defines"], "SOME_VALUE"))
+
 
 class TestHeadercvtFuncDecl(unittest.TestCase):
     def setUp(self):
@@ -128,7 +139,8 @@ class TestHeadercvtFuncDecl(unittest.TestCase):
         results = kick_headercvt_and_get_results(wd, """
         void clSomeFunction(int, void *);
         """)
-        self.assertTrue(contains(results["func_decl"], "clSomeFunction(int, void *)"))
+        self.assertTrue(contains(
+            results["func_decl"], "clSomeFunction(int, void *)"))
         self.assertTrue(compile_with(wd, "clSomeFunction(10, <void*>0)"))
 
     @with_temp_wd
@@ -137,6 +149,7 @@ class TestHeadercvtFuncDecl(unittest.TestCase):
         void SomeFunction(int, void *);
         """)
         self.assertTrue(not contains(results["func_decl"], "SomeFunction"))
+
 
 class TestHeadercvtTypes(unittest.TestCase):
     def setUp(self):
@@ -155,8 +168,10 @@ class TestHeadercvtTypes(unittest.TestCase):
         results = kick_headercvt_and_get_results(wd, """
         typedef int* clpy_intptr;
         """)
-        self.assertTrue(contains(results["types"], "ctypedef int * clpy_intptr"))
-        self.assertTrue(compile_with(wd, "cdef clpy_intptr foo = <clpy_intptr>0"))
+        self.assertTrue(contains(
+            results["types"], "ctypedef int * clpy_intptr"))
+        self.assertTrue(compile_with(
+            wd, "cdef clpy_intptr foo = <clpy_intptr>0"))
 
     @with_temp_wd
     def test_headercvt_typedef_to_tagged_struct(self, wd):
@@ -165,8 +180,10 @@ class TestHeadercvtTypes(unittest.TestCase):
             int member;
         } clpy_struct_t;
         """)
-        self.assertTrue(contains(results["types"], "ctypedef struct clpy_struct_t:"))
-        self.assertTrue(compile_with(wd, "cdef clpy_struct_t foo\nfoo.member = 0"))
+        self.assertTrue(contains(
+            results["types"], "ctypedef struct clpy_struct_t:"))
+        self.assertTrue(compile_with(
+            wd, "cdef clpy_struct_t foo\nfoo.member = 0"))
 
     @with_temp_wd
     def test_headercvt_typedef_to_anonymous_struct(self, wd):
@@ -175,8 +192,10 @@ class TestHeadercvtTypes(unittest.TestCase):
             int member;
         } clpy_struct_t;
         """)
-        self.assertTrue(contains(results["types"], "ctypedef struct clpy_struct_t:"))
-        self.assertTrue(compile_with(wd, "cdef clpy_struct_t foo\nfoo.member = 0"))
+        self.assertTrue(contains(
+            results["types"], "ctypedef struct clpy_struct_t:"))
+        self.assertTrue(compile_with(
+            wd, "cdef clpy_struct_t foo\nfoo.member = 0"))
 
     @with_temp_wd
     def test_headercvt_typedef_to_empty_struct(self, wd):
@@ -184,8 +203,10 @@ class TestHeadercvtTypes(unittest.TestCase):
         typedef struct {
         } clpy_empty_struct_t;
         """)
-        self.assertTrue(contains(results["types"], "ctypedef struct clpy_empty_struct_t:"))
-        self.assertTrue(compile_with(wd, "cdef clpy_empty_struct_t* foo"))
+        self.assertTrue(contains(
+            results["types"], "ctypedef struct clpy_empty_struct_t:"))
+        self.assertTrue(compile_with(
+            wd, "cdef clpy_empty_struct_t* foo"))
 
     @with_temp_wd
     def test_headercvt_typedef_to_struct_which_contains_an_array(self, wd):
@@ -194,8 +215,10 @@ class TestHeadercvtTypes(unittest.TestCase):
             int member[100];
         } clpy_struct_t;
         """)
-        self.assertTrue(contains(results["types"], "int member[100]"))
-        self.assertTrue(compile_with(wd, "cdef clpy_struct_t foo\nfoo.member[0] = 0"))
+        self.assertTrue(contains(
+            results["types"], "int member[100]"))
+        self.assertTrue(compile_with(
+            wd, "cdef clpy_struct_t foo\nfoo.member[0] = 0"))
 
     @with_temp_wd
     def test_headercvt_typedef_to_struct_having_a_pointer_variable(self, wd):
@@ -205,11 +228,12 @@ class TestHeadercvtTypes(unittest.TestCase):
         } clpy_struct_t;
         """)
         self.assertTrue(contains(results["types"], "int *ptr"))
-        self.assertTrue(compile_with(wd, "cdef clpy_struct_t foo\nfoo.ptr = <int*>0"))
+        self.assertTrue(compile_with(
+            wd, "cdef clpy_struct_t foo\nfoo.ptr = <int*>0"))
 
     @with_temp_wd
     def test_headercvt_typedef_to_discretely_tagged_struct(self, wd):
-        results = kick_headercvt_and_get_results(wd, """
+        kick_headercvt_and_get_results(wd, """
         typedef struct clpy_struct_tag{
             int member;
         };
@@ -223,16 +247,22 @@ class TestHeadercvtTypes(unittest.TestCase):
         results = kick_headercvt_and_get_results(wd, """
         typedef struct clpy_struct_tag *    clpy_pointer_to_struct_t;
         """)
-        self.assertTrue(contains(results["types"], "cdef struct clpy_struct_tag"))
-        self.assertTrue(contains(results["types"], "ctypedef clpy_struct_tag * clpy_pointer_to_struct_t"))
-        self.assertTrue(compile_with(wd, "cdef clpy_pointer_to_struct_t foo = <clpy_pointer_to_struct_t>0"))
+        self.assertTrue(contains(
+            results["types"], "cdef struct clpy_struct_tag"))
+        self.assertTrue(contains(
+            results["types"],
+            "ctypedef clpy_struct_tag * clpy_pointer_to_struct_t"))
+        self.assertTrue(compile_with(
+            wd,
+            "cdef clpy_pointer_to_struct_t foo = <clpy_pointer_to_struct_t>0"))
 
     @with_temp_wd
     def test_headercvt_ignore_typedef_to_function_pointer(self, wd):
         results = kick_headercvt_and_get_results(wd, """
         typedef void(*clpy_function_i_vstar_l_t)(int, void*, long);
         """)
-        self.assertTrue(not contains(results["types"], "clpy_function_i_vstar_l_t"))
+        self.assertTrue(not contains(
+            results["types"], "clpy_function_i_vstar_l_t"))
         self.assertTrue(compile_with(wd, ""))
 
     @with_temp_wd
@@ -247,7 +277,7 @@ class TestHeadercvtTypes(unittest.TestCase):
 
     @with_temp_wd
     def test_headercvt_ignore_union_recorddecl(self, wd):
-        results = kick_headercvt_and_get_results(wd, """
+        kick_headercvt_and_get_results(wd, """
         union clpy_union_tag{
             int member;
         };
@@ -262,7 +292,8 @@ class TestHeadercvtTypes(unittest.TestCase):
         } clpy_union_t;
         typedef clpy_union_t clpy_typedefed_union_t;
         """)
-        self.assertTrue(not contains(results["types"], "clpy_typedefed_union_t"))
+        self.assertTrue(not contains(
+            results["types"], "clpy_typedefed_union_t"))
         self.assertTrue(compile_with(wd, ""))
 
     @with_temp_wd
@@ -272,7 +303,8 @@ class TestHeadercvtTypes(unittest.TestCase):
             int* ptr;
         } clpy_pthread_struct_intptr;
         """)
-        self.assertTrue(not contains(results["types"], "clpy_pthread_struct_intptr"))
+        self.assertTrue(not contains(
+            results["types"], "clpy_pthread_struct_intptr"))
         self.assertTrue(compile_with(wd, ""))
 
     @with_temp_wd
@@ -282,5 +314,6 @@ class TestHeadercvtTypes(unittest.TestCase):
             int* ptr;
         } clpy_pthread_struct_intptr;
         """)
-        self.assertTrue(not contains(results["types"], "clpy_pthread_struct_intptr"))
+        self.assertTrue(not contains(
+            results["types"], "clpy_pthread_struct_intptr"))
         self.assertTrue(compile_with(wd, ""))
