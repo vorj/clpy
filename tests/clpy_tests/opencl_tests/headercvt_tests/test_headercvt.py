@@ -23,8 +23,7 @@ def check_existence_of_headercvt():
 
 def exec_headercvt(workingdir, source):
     subprocess.run(
-        f"{headercvt_abspath} /dev/stdin --",
-        shell=True,
+        [headercvt_abspath, "/dev/stdin", "--"],
         cwd=workingdir,
         input=source.encode(locale.getpreferredencoding()),
         timeout=1,
@@ -76,9 +75,8 @@ include "types.pxi"
         os.fsync(f.fileno())
         try:
             subprocess.run(
-                f"cython {f.name}",
+                ["cython", f.name],
                 cwd=workingdir,
-                shell=True,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 check=True)
