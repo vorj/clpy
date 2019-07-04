@@ -7,7 +7,7 @@ import unittest
 import utility
 
 
-class TestUltimaTrickingHalf(unittest.TestCase):
+class TestUltimaHalfTrick(unittest.TestCase):
 
     def test_type_half(self):
         x = '''
