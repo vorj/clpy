@@ -30,7 +30,7 @@ def exec_headercvt(workingdir, source):
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         check=True
-        )
+    )
 
 
 def get_result_files(workingdir):
@@ -44,10 +44,10 @@ def get_result_files(workingdir):
     print(preprocessor_defines_str)
     print(types_str)
     return {
-            "func_decl": func_decl_str,
-            "preprocessor_defines": preprocessor_defines_str,
-            "types": types_str
-           }
+        "func_decl": func_decl_str,
+        "preprocessor_defines": preprocessor_defines_str,
+        "types": types_str
+    }
 
 
 def kick_headercvt_and_get_results(workingdir, source):
