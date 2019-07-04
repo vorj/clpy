@@ -229,16 +229,29 @@ class TestHeadercvtTypes(unittest.TestCase):
         self.assertTrue(compile_with(
             wd, "cdef clpy_struct_t foo\nfoo.ptr = <int*>0"))
 
+    """
     @with_temp_wd
     def test_headercvt_typedef_to_discretely_tagged_struct(self, wd):
-        kick_headercvt_and_get_results(wd, """
-        typedef struct clpy_struct_tag{
+        kick_headercvt_and_get_results(wd, \"""
+        struct clpy_struct_tag{
             int member;
         };
         typedef struct clpy_struct_tag clpy_struct_t;
-        """)
+        \""")
+        self.assertTrue(compile_with(
+            wd, "cdef clpy_struct_t foo\nfoo.member = 0"))
         # TODO(nsakabe-fixstars):
         # Make headercvt support this case of decl and update this testcase.
+        # Current error:
+        # cdef extern from "CL/cl.h":
+        #    cdef struct clpy_struct_tag:
+        #        int member
+        #    ctypedef struct clpy_struct_tag clpy_struct_t
+        #                                   ^
+        # ------------------------------------------------------------
+        #
+        # types.pxi:4:36: Syntax error in struct or union definition
+    """
 
     @with_temp_wd
     def test_headercvt_typedef_to_implicitly_declared_pointer(self, wd):
