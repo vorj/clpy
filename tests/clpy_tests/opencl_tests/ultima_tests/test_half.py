@@ -41,6 +41,18 @@ void f()
             ''')
         self.assertEqual(x[1:], y)
 
+    def test_argument_named_half(self):
+        x = '''
+void f(int __clpy__half) 
+{
+}
+'''
+        y = utility.exec_ultima(
+            '''
+            void f(int half){}
+            ''')
+        self.assertEqual(x[1:], y)
+
     def test_clpy_half(self):
         x = '''
 void f() 
