@@ -93,11 +93,20 @@ void f(int a)
 void f(double a) 
 {
 }
+int main() 
+{
+    f(42);
+    f(42.);
+}
 '''
         y = utility.exec_ultima(
             '''
             void f(int a){}
             __attribute__((annotate("clpy_no_mangle"))) void f(double a){}
+            int main(){
+              f(42);
+              f(42.);
+            }
             ''')
         self.assertEqual(x[1:], y)
 
