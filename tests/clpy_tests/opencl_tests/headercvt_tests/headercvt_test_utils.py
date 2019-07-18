@@ -35,9 +35,6 @@ def get_result_files(workingdir):
         preprocessor_defines_str = f.read()
     with open(os.path.join(workingdir, "types.pxi"), "r") as f:
         types_str = f.read()
-    print(func_decl_str)
-    print(preprocessor_defines_str)
-    print(types_str)
     return {
         "func_decl": func_decl_str,
         "preprocessor_defines": preprocessor_defines_str,
@@ -62,7 +59,6 @@ include "types.pxi"
 
 
 """ + source
-    print(source)
 
     with open(os.path.join(workingdir, "test_case.pyx"), "w") as f:
         f.write(source)
