@@ -12,7 +12,6 @@ class TestHeadercvtTypes(unittest.TestCase):
         results = util.kick_headercvt_and_get_results(wd, """
         typedef int clpy_int;
         """)
-        self.assertTrue(util.contains(results["types"], "ctypedef int clpy_int"))
         self.assertTrue(util.compile_with(wd, "cdef clpy_int foo = 0"))
 
     @util.with_temp_wd
@@ -20,8 +19,6 @@ class TestHeadercvtTypes(unittest.TestCase):
         results = util.kick_headercvt_and_get_results(wd, """
         typedef int* clpy_intptr;
         """)
-        self.assertTrue(util.contains(
-            results["types"], "ctypedef int * clpy_intptr"))
         self.assertTrue(util.compile_with(
             wd, "cdef clpy_intptr foo = <clpy_intptr>0"))
 
@@ -32,8 +29,6 @@ class TestHeadercvtTypes(unittest.TestCase):
             int member;
         } clpy_struct_t;
         """)
-        self.assertTrue(util.contains(
-            results["types"], "ctypedef struct clpy_struct_t:"))
         self.assertTrue(util.compile_with(
             wd, "cdef clpy_struct_t foo\nfoo.member = 0"))
 
@@ -44,8 +39,6 @@ class TestHeadercvtTypes(unittest.TestCase):
             int member;
         } clpy_struct_t;
         """)
-        self.assertTrue(util.contains(
-            results["types"], "ctypedef struct clpy_struct_t:"))
         self.assertTrue(util.compile_with(
             wd, "cdef clpy_struct_t foo\nfoo.member = 0"))
 
@@ -55,8 +48,6 @@ class TestHeadercvtTypes(unittest.TestCase):
         typedef struct {
         } clpy_empty_struct_t;
         """)
-        self.assertTrue(util.contains(
-            results["types"], "ctypedef struct clpy_empty_struct_t:"))
         self.assertTrue(util.compile_with(
             wd, "cdef clpy_empty_struct_t* foo"))
 
@@ -67,8 +58,6 @@ class TestHeadercvtTypes(unittest.TestCase):
             int member[100];
         } clpy_struct_t;
         """)
-        self.assertTrue(util.contains(
-            results["types"], "int member[100]"))
         self.assertTrue(util.compile_with(
             wd, "cdef clpy_struct_t foo\nfoo.member[0] = 0"))
 
@@ -79,7 +68,6 @@ class TestHeadercvtTypes(unittest.TestCase):
             int* ptr;
         } clpy_struct_t;
         """)
-        self.assertTrue(util.contains(results["types"], "int *ptr"))
         self.assertTrue(util.compile_with(
             wd, "cdef clpy_struct_t foo\nfoo.ptr = <int*>0"))
 
@@ -112,11 +100,6 @@ class TestHeadercvtTypes(unittest.TestCase):
         results = util.kick_headercvt_and_get_results(wd, """
         typedef struct clpy_struct_tag *    clpy_pointer_to_struct_t;
         """)
-        self.assertTrue(util.contains(
-            results["types"], "cdef struct clpy_struct_tag"))
-        self.assertTrue(util.contains(
-            results["types"],
-            "ctypedef clpy_struct_tag * clpy_pointer_to_struct_t"))
         self.assertTrue(util.compile_with(
             wd,
             "cdef clpy_pointer_to_struct_t foo = <clpy_pointer_to_struct_t>0"))
