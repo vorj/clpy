@@ -2,6 +2,7 @@ import unittest
 
 import headercvt_test_utils as util
 
+
 class TestHeadercvtPreprocDefines(unittest.TestCase):
     def setUp(self):
         util.check_existence_of_headercvt()

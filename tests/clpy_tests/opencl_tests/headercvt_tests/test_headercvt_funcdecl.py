@@ -2,6 +2,7 @@ import unittest
 
 import headercvt_test_utils as util
 
+
 class TestHeadercvtFuncDecl(unittest.TestCase):
     def setUp(self):
         util.check_existence_of_headercvt()
@@ -18,5 +19,6 @@ class TestHeadercvtFuncDecl(unittest.TestCase):
         results = util.kick_headercvt_and_get_results(wd, """
         void SomeFunction(int, void *);
         """)
-        self.assertTrue(not util.contains(results["func_decl"], "SomeFunction"))
+        self.assertTrue(not util.contains(
+            results["func_decl"], "SomeFunction"))
         self.assertTrue(util.compile_with(wd, ""))

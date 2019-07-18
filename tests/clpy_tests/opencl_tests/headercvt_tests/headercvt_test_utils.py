@@ -13,9 +13,11 @@ headercvt_abspath = os.path.join(
     "headercvt",
     "headercvt")
 
+
 def check_existence_of_headercvt():
     if not os.path.isfile(headercvt_abspath):
         raise FileNotFoundError("headercvt does not exist")
+
 
 def exec_headercvt(workingdir, source):
     subprocess.run(
@@ -27,6 +29,7 @@ def exec_headercvt(workingdir, source):
         stderr=subprocess.STDOUT,
         check=True
     )
+
 
 def get_result_files(workingdir):
     with open(os.path.join(workingdir, "func_decl.pxi"), "r") as f:
@@ -83,4 +86,3 @@ def with_temp_wd(function):
         with tempfile.TemporaryDirectory() as wd:
             function(self, wd=wd)
     return impl
-
