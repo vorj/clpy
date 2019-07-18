@@ -9,14 +9,14 @@ class TestHeadercvtTypes(unittest.TestCase):
 
     @util.with_temp_wd
     def test_headercvt_typedef(self, wd):
-        results = util.kick_headercvt_and_get_results(wd, """
+        util.kick_headercvt_and_get_results(wd, """
         typedef int clpy_int;
         """)
         self.assertTrue(util.compile_with(wd, "cdef clpy_int foo = 0"))
 
     @util.with_temp_wd
     def test_headercvt_typedef_to_pointer(self, wd):
-        results = util.kick_headercvt_and_get_results(wd, """
+        util.kick_headercvt_and_get_results(wd, """
         typedef int* clpy_intptr;
         """)
         self.assertTrue(util.compile_with(
@@ -24,7 +24,7 @@ class TestHeadercvtTypes(unittest.TestCase):
 
     @util.with_temp_wd
     def test_headercvt_typedef_to_tagged_struct(self, wd):
-        results = util.kick_headercvt_and_get_results(wd, """
+        util.kick_headercvt_and_get_results(wd, """
         typedef struct clpy_struct_tag{
             int member;
         } clpy_struct_t;
@@ -34,7 +34,7 @@ class TestHeadercvtTypes(unittest.TestCase):
 
     @util.with_temp_wd
     def test_headercvt_typedef_to_anonymous_struct(self, wd):
-        results = util.kick_headercvt_and_get_results(wd, """
+        util.kick_headercvt_and_get_results(wd, """
         typedef struct {
             int member;
         } clpy_struct_t;
@@ -44,7 +44,7 @@ class TestHeadercvtTypes(unittest.TestCase):
 
     @util.with_temp_wd
     def test_headercvt_typedef_to_empty_struct(self, wd):
-        results = util.kick_headercvt_and_get_results(wd, """
+        util.kick_headercvt_and_get_results(wd, """
         typedef struct {
         } clpy_empty_struct_t;
         """)
@@ -53,7 +53,7 @@ class TestHeadercvtTypes(unittest.TestCase):
 
     @util.with_temp_wd
     def test_headercvt_typedef_to_struct_which_contains_an_array(self, wd):
-        results = util.kick_headercvt_and_get_results(wd, """
+        util.kick_headercvt_and_get_results(wd, """
         typedef struct clpy_struct_tag{
             int member[100];
         } clpy_struct_t;
@@ -63,7 +63,7 @@ class TestHeadercvtTypes(unittest.TestCase):
 
     @util.with_temp_wd
     def test_headercvt_typedef_to_struct_having_a_pointer_variable(self, wd):
-        results = util.kick_headercvt_and_get_results(wd, """
+        util.kick_headercvt_and_get_results(wd, """
         typedef struct clpy_struct_tag{
             int* ptr;
         } clpy_struct_t;
@@ -97,7 +97,7 @@ class TestHeadercvtTypes(unittest.TestCase):
 
     @util.with_temp_wd
     def test_headercvt_typedef_to_implicitly_declared_pointer(self, wd):
-        results = util.kick_headercvt_and_get_results(wd, """
+        util.kick_headercvt_and_get_results(wd, """
         typedef struct clpy_struct_tag *    clpy_pointer_to_struct_t;
         """)
         self.assertTrue(util.compile_with(

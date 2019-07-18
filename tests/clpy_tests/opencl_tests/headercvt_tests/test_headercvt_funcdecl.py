@@ -9,7 +9,7 @@ class TestHeadercvtFuncDecl(unittest.TestCase):
 
     @util.with_temp_wd
     def test_headercvt_funcdecl_accept_case(self, wd):
-        results = util.kick_headercvt_and_get_results(wd, """
+        util.kick_headercvt_and_get_results(wd, """
         void clSomeFunction(int, void *);
         """)
         self.assertTrue(util.compile_with(wd, "clSomeFunction(10, <void*>0)"))
