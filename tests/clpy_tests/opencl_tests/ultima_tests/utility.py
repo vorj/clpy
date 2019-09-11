@@ -20,7 +20,10 @@ class TempFile(object):
 
 
 def exec_ultima(source, _clpy_header=''):
-    source = _clpy_header + '\n' \
+    source = \
+        'typedef ' + clpy.backend.opencl.utility.typeof_size() \
+        + ' __kernel_arg_size_t;\n' \
+        + _clpy_header + '\n' \
         'static void __clpy_begin_print_out() ' \
         '__attribute__((annotate("clpy_begin_print_out")));\n' \
         + source + '\n' \
