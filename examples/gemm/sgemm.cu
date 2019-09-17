@@ -20,18 +20,17 @@ Licensed under modified BSD license
 //#define THR_N  ${THR_N}
 //#define THR_M  ${THR_M}
 
-#define fetch(arr, col, m, n, bound) arr[min(n*col + m, bound)]
+#define fetch(arr, offs, col, m, n, bound) arr[offs + (int)min(n*col + m, bound)]
 
 
-extern "C" __global__
-void sgemm(
+__kernel void sgemm(
         int M, int N, int K,
-        const float* A,
-        const float* B,
-        float * C)
+        __global const float* A,
+        __global const float* B,
+        __global float * C)
 {
-    int idx = threadIdx.x;
-    int idy = threadIdx.y;
+    int idx = get_local_id(0);
+    int idy = get_local_id(1);
 
     int idt = DIM_X * idy + idx;
 
@@ -41,8 +40,8 @@ void sgemm(
     int idxB = idt % DIM_XB;
     int idyB = idt / DIM_XB;
 
-    int blx = blockIdx.x;
-    int bly = blockIdx.y;
+    int blx = get_group_id(0);
+    int bly = get_group_id(1);
 
     __shared__ float sA[BLK_K][BLK_M + 1];
     __shared__ float sB[BLK_N][BLK_K + 1];
@@ -55,9 +54,9 @@ void sgemm(
     float ra[BLK_K / DIM_YA][BLK_M / DIM_XA];
     float rb[BLK_N / DIM_YB][BLK_K / DIM_XB];
 
-    const float* offs_dA = A + blx * BLK_M       + idyA * M + idxA;
+    int offs_dA = blx * BLK_M       + idyA * M + idxA;
     int boundA = (M * (K - 1) + M) - (blx * BLK_M + idyA * M + idxA) - 1;
-    const float* offs_dB = B + bly * BLK_N * K + idyB * K + idxB;
+    int offs_dB = bly * BLK_N * K + idyB * K + idxB;
     int boundB = (K * (N - 1) + K) - (bly * BLK_N * K + idyB * K + idxB) - 1;
 
     int m, n, k, kk;
@@ -75,7 +74,7 @@ void sgemm(
     for (n = 0; n < BLK_K; n += DIM_YA) {
         #pragma unroll
         for (m = 0; m < BLK_M; m += DIM_XA) {
-            sA[n + idyA][m + idxA] = fetch(offs_dA, M, m, n, boundA);
+            sA[n + idyA][m + idxA] = fetch(A, offs_dA, M, m, n, boundA);
         }
     }
     // blockwise transpose to transpose load
@@ -83,10 +82,10 @@ void sgemm(
     for (n = 0; n < BLK_N; n += DIM_YB) {
         #pragma unroll
         for (m = 0; m < BLK_K; m += DIM_XB) {
-            sB[n + idyB][m + idxB] = fetch(offs_dB, K, m, n, boundB);
+            sB[n + idyB][m + idxB] = fetch(B, offs_dB, K, m, n, boundB);
         }
     }
-    __syncthreads();
+    barrier(CLK_LOCAL_MEM_FENCE);
 
     for (kk = 0; kk < K - BLK_K; kk += BLK_K)
     {
@@ -99,7 +98,7 @@ void sgemm(
         for (n = 0; n < BLK_K / DIM_YA; n++) {
             #pragma unroll
             for (m = 0; m < BLK_M / DIM_XA; m++) {
-                ra[n][m] = fetch(offs_dA, M, m * DIM_XA, n * DIM_YA, boundA);
+                ra[n][m] = fetch(A, offs_dA, M, m * DIM_XA, n * DIM_YA, boundA);
             }
         }
 
@@ -107,7 +106,7 @@ void sgemm(
         for (n = 0; n < BLK_N / DIM_YB; n++) {
             #pragma unroll
             for (m = 0; m < BLK_K / DIM_XB; m++) {
-                rb[n][m] = fetch(offs_dB, K, m * DIM_XB, n * DIM_YB, boundB);
+                rb[n][m] = fetch(B, offs_dB, K, m * DIM_XB, n * DIM_YB, boundB);
             }
         }
 
@@ -133,7 +132,7 @@ void sgemm(
                 }
             }
         }
-        __syncthreads();
+        barrier(CLK_LOCAL_MEM_FENCE);
 
         // store A regs->smem
         #pragma unroll
@@ -155,7 +154,7 @@ void sgemm(
                 sB[n * DIM_YB + idyB][m * DIM_XB + idxB] = rb[n][m];
             }
         }
-        __syncthreads();
+        barrier(CLK_LOCAL_MEM_FENCE);
     }
 
     // Multiply last full (BLK_K) or partial block of columns of A and
