@@ -20,50 +20,44 @@ Licensed under modified BSD license
 //#define THR_N  ${THR_N}
 //#define THR_M  ${THR_M}
 
-#define min(a, b) (a < b ? a : b)
+#define min(a, b) ((a) < (b) ? (a) : (b))
 #define fetch(arr, offs, col, m, n, bound) arr[offs + min((n)*(col) + m, bound)]
 
+#define INF 1000000000
 
-__kernel void sgemm(
-        long M,
-        long N,
-        long K,
+__kernel
+void sgemm(
+        long M, long N, long K,
         __global const float* A,
-        CArray_2 const info_A,
+        CArray_2 info_A,
         __global const float* B,
-        CArray_2 const info_B,
+        CArray_2 info_B,
         __global float * C,
-        CArray_2 const info_C,
+        CArray_2 info_C,
         __local float* sA,
-        __local float* sB
-) {
-    const int INF = 1e9;
-
-    // ブロック内での縦横の座標
+        __local float* sB)
+{
     int idx = get_local_id(0);
     int idy = get_local_id(1);
 
-    // ブロックを 1 次元にしたときの座標
-    // DIM_X はブロックの縦の幅
     int idt = DIM_X * idy + idx;
 
-    // ブロックに対応する A, B の部分行列での縦横の座標
     int idxA = idt % DIM_XA;
     int idyA = idt / DIM_XA;
 
     int idxB = idt % DIM_XB;
     int idyB = idt / DIM_XB;
 
-    // ブロックの番号 (縦に x、横に y)
     int blx = get_group_id(0);
     int bly = get_group_id(1);
 
-    // Declared as kernel args
-    // __shared__ float sA[BLK_K][BLK_M + 1];
-    // __shared__ float sB[BLK_N][BLK_K + 1];
+    // __shared__
+    // float sA[BLK_K][BLK_M + 1];
+    const int sA_col = BLK_M + 1;
+    // float sB[BLK_N][BLK_K + 1];
+    const int sB_col = BLK_K + 1;
 
     // registers for the innermost loop
-    // rC はこのブロックの結果 (THR = BLK / DIM なので)
     float rC[THR_N][THR_M];
     float rA[THR_M];
     float rB[THR_N];
@@ -71,8 +65,7 @@ __kernel void sgemm(
     float ra[BLK_K / DIM_YA][BLK_M / DIM_XA];
     float rb[BLK_N / DIM_YB][BLK_K / DIM_XB];
 
-    // A -> sA、ra にコピーするときのオフセット
-    int offs_dA = blx * BLK_M     + idyA * M + idxA;
+    int offs_dA = blx * BLK_M       + idyA * M + idxA;
     int boundA = (M * (K - 1) + M) - (blx * BLK_M + idyA * M + idxA) - 1;
     int offs_dB = bly * BLK_N * K + idyB * K + idxB;
     int boundB = (K * (N - 1) + K) - (bly * BLK_N * K + idyB * K + idxB) - 1;
@@ -89,13 +82,14 @@ __kernel void sgemm(
     for (n = 0; n < BLK_K; n += DIM_YA) {
         for (m = 0; m < BLK_M; m += DIM_XA) {
             // sA[n + idyA][m + idxA] = fetch(A, offs_dA, M, m, n, boundA);
-            fetch(sA, 0, BLK_K, m + idxA, n + idyA, INF) = fetch(A, offs_dA, M, m, n, boundA);
+            fetch(sA, 0, sA_col, m + idxA, n + idyA, INF) = fetch(A, offs_dA, M, m, n, boundA);
         }
     }
     // blockwise transpose to transpose load
     for (n = 0; n < BLK_N; n += DIM_YB) {
         for (m = 0; m < BLK_K; m += DIM_XB) {
-            fetch(sB, 0, BLK_N, m + idxB, n + idyB, INF) = fetch(B, offs_dB, K, m, n, boundB);
+            // sB[n + idyB][m + idxB] = fetch(B, offs_dB, K, m, n, boundB);
+            fetch(sB, 0, sB_col, m + idxB, n + idyB, INF) = fetch(B, offs_dB, K, m, n, boundB);
         }
     }
     barrier(CLK_LOCAL_MEM_FENCE);
@@ -123,14 +117,16 @@ __kernel void sgemm(
         for (k = 0; k < BLK_K; k++)
         {
             for (m = 0; m < THR_M; m++) {
-                rA[m] = fetch(sA, 0, BLK_K, m * DIM_X + idx, k, INF);
+                // rA[m] = sA[k][m * DIM_X + idx];
+                rA[m] = fetch(sA, 0, sA_col, m * DIM_X + idx, k, INF);
             }
             
             for (n = 0; n < THR_N; n++) {
-                rB[n] = fetch(sB, 0, BLK_N, k, n * DIM_Y + idy, INF);
+                // rB[n] = sB[n * DIM_Y + idy][k];
+                rB[n] = fetch(sB, 0, sB_col, k, n * DIM_Y + idy, INF);
             }
 
-            for (n = 0; n < THR_N; n++) {
+            for (n = 0; n < THR_N; n++) {  
                 for (m = 0; m < THR_M; m++) {
                     rC[n][m] += rA[m] * rB[n];
                 }
@@ -139,19 +135,23 @@ __kernel void sgemm(
         barrier(CLK_LOCAL_MEM_FENCE);
 
         // store A regs->smem
+        
         for (n = 0; n < BLK_K / DIM_YA; n++)
         {
             for (m = 0; m < BLK_M / DIM_XA; m++)
             {
-                fetch(sA, 0, BLK_K, m * DIM_XA + idxA, n * DIM_YA + idyA, INF) = ra[n][m];
+                // sA[n * DIM_YA + idyA][m * DIM_XA + idxA] = ra[n][m];
+                fetch(sA, 0, sA_col, m * DIM_XA + idxA, n * DIM_YA + idyA, INF) = ra[n][m];
             }
         }
 
+        
         for (n = 0; n < BLK_N / DIM_YB; n++)
         {
             for (m = 0; m < BLK_K / DIM_XB; m++)
             {
-                fetch(sB, 0, BLK_N, m * DIM_XB + idxB, n * DIM_YB + idyB, INF) = rb[n][m];
+                // sB[n * DIM_YB + idyB][m * DIM_XB + idxB] = rb[n][m];
+                fetch(sB, 0, sB_col, m * DIM_XB + idxB, n * DIM_YB + idyB, INF) = rb[n][m];
             }
         }
         barrier(CLK_LOCAL_MEM_FENCE);
@@ -166,11 +166,13 @@ __kernel void sgemm(
     for (k = 0; k < kk; k++)
     {
         for (m = 0; m < THR_M; m++) {
-            rA[m] = fetch(sA, 0, BLK_K, m * DIM_X + idx, k, INF);
+            // rA[m] = sA[k][m * DIM_X + idx];
+            rA[m] = fetch(sA, 0, sA_col, m * DIM_X + idx, k, INF);
         }
 
         for (n = 0; n < THR_N; n++) {
-            rB[n] = fetch(sB, 0, BLK_N, k, n * DIM_Y + idy, INF);
+            // rB[n] = sB[n * DIM_Y + idy][k];
+            rB[n] = fetch(sB, 0, sB_col, k, n * DIM_Y + idy, INF);
         }
         
         for (n = 0; n < THR_N; n++) {
@@ -179,6 +181,7 @@ __kernel void sgemm(
             }
         }
     }
+
     
     for (n = 0; n < THR_N; n++) {
         int coord_dCn = bly * BLK_N + n * DIM_Y + idy;

@@ -43,6 +43,7 @@ def sgemm(A, B,
     # grid = (int(math.ceil(m / blk_m)), int(math.ceil(n / blk_n)), 1)
     grid = (m, n, 1)
     block = (dim_x, dim_y, 1)
+    # args = (m, n, k, A, B, C)
     args = (m, n, k, A, B, C, LocalMem(), LocalMem())
     shared_mem = blk_k * (blk_m + 1) * 4 + blk_n * (blk_k + 1) * 4
     kern(grid, block, args=args, local_mem=shared_mem)
@@ -72,9 +73,32 @@ def main():
         B = cp.random.uniform(
             low=-1., high=1., size=(args.k, args.n)).astype(cp.float32)
 
+        print("A: ")
+        print(A)
+        print("B: ")
+        print(B)
+
+        with open("result.log", "w") as f:
+            C = sgemm(A, B)
+            f.write("Result of sgemm:\n")
+            for row in C:
+                f.write(str(row) + "\n")
+
+        with open("result.log", "a") as f:
+            C = cp.dot(A, B)
+            f.write("Result of cp.dot:\n")
+            for row in C:
+                f.write(str(row) + "\n")
+
+        with open("result.log", "a") as f:
+            C = sgemm(A, B) - cp.dot(A, B)
+            f.write("The difference between them:\n")
+            for row in C:
+                f.write(str(row) + "\n")
+
         # check correctness
         cp.testing.assert_array_almost_equal(
-            sgemm(A, B), cp.dot(A, B), decimal=3)
+           sgemm(A, B), cp.dot(A, B), decimal=3)
 
         # dry run
         # for _ in range(3):
