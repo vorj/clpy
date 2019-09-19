@@ -23,7 +23,6 @@ Licensed under modified BSD license
 #define min(a, b) ((a) < (b) ? (a) : (b))
 #define fetch(arr, offs, col, m, n, bound) arr[offs + min((n)*(col) + m, bound)]
 
-#define INF 1000000000 // sA, sB do not need to specify the bound
 
 __kernel void sgemm(
         long M, long N, long K, // np.int64_ in Python
@@ -33,8 +32,8 @@ __kernel void sgemm(
         CArray_2 info_B,
         __global float * C,
         CArray_2 info_C,
-        __local float* sA,
-        __local float* sB)
+        __local float sA[BLK_K][BLK_M + 1],
+        __local float sB[BLK_N][BLK_K + 1])
 {
     int idx = get_local_id(0);
     int idy = get_local_id(1);
@@ -52,9 +51,7 @@ __kernel void sgemm(
 
     // __shared__ in CUDA kernel
     // float sA[BLK_K][BLK_M + 1];
-    const int sA_col = BLK_M + 1;
     // float sB[BLK_N][BLK_K + 1];
-    const int sB_col = BLK_K + 1;
 
     // registers for the innermost loop
     float rC[THR_N][THR_M];
@@ -80,15 +77,13 @@ __kernel void sgemm(
     // blockwise transpose to transpose load
     for (n = 0; n < BLK_K; n += DIM_YA) {
         for (m = 0; m < BLK_M; m += DIM_XA) {
-            // sA[n + idyA][m + idxA] = fetch(A, offs_dA, M, m, n, boundA);
-            fetch(sA, 0, sA_col, m + idxA, n + idyA, INF) = fetch(A, offs_dA, M, m, n, boundA);
+            sA[n + idyA][m + idxA] = fetch(A, offs_dA, M, m, n, boundA);
         }
     }
     // blockwise transpose to transpose load
     for (n = 0; n < BLK_N; n += DIM_YB) {
         for (m = 0; m < BLK_K; m += DIM_XB) {
-            // sB[n + idyB][m + idxB] = fetch(B, offs_dB, K, m, n, boundB);
-            fetch(sB, 0, sB_col, m + idxB, n + idyB, INF) = fetch(B, offs_dB, K, m, n, boundB);
+            sB[n + idyB][m + idxB] = fetch(B, offs_dB, K, m, n, boundB);
         }
     }
     barrier(CLK_LOCAL_MEM_FENCE);
@@ -116,13 +111,11 @@ __kernel void sgemm(
         for (k = 0; k < BLK_K; k++)
         {
             for (m = 0; m < THR_M; m++) {
-                // rA[m] = sA[k][m * DIM_X + idx];
-                rA[m] = fetch(sA, 0, sA_col, m * DIM_X + idx, k, INF);
+                rA[m] = sA[k][m * DIM_X + idx];
             }
             
             for (n = 0; n < THR_N; n++) {
-                // rB[n] = sB[n * DIM_Y + idy][k];
-                rB[n] = fetch(sB, 0, sB_col, k, n * DIM_Y + idy, INF);
+                rB[n] = sB[n * DIM_Y + idy][k];
             }
 
             for (n = 0; n < THR_N; n++) {  
@@ -139,8 +132,7 @@ __kernel void sgemm(
         {
             for (m = 0; m < BLK_M / DIM_XA; m++)
             {
-                // sA[n * DIM_YA + idyA][m * DIM_XA + idxA] = ra[n][m];
-                fetch(sA, 0, sA_col, m * DIM_XA + idxA, n * DIM_YA + idyA, INF) = ra[n][m];
+                sA[n * DIM_YA + idyA][m * DIM_XA + idxA] = ra[n][m];
             }
         }
 
@@ -149,8 +141,7 @@ __kernel void sgemm(
         {
             for (m = 0; m < BLK_K / DIM_XB; m++)
             {
-                // sB[n * DIM_YB + idyB][m * DIM_XB + idxB] = rb[n][m];
-                fetch(sB, 0, sB_col, m * DIM_XB + idxB, n * DIM_YB + idyB, INF) = rb[n][m];
+                sB[n * DIM_YB + idyB][m * DIM_XB + idxB] = rb[n][m];
             }
         }
         barrier(CLK_LOCAL_MEM_FENCE);
@@ -165,13 +156,11 @@ __kernel void sgemm(
     for (k = 0; k < kk; k++)
     {
         for (m = 0; m < THR_M; m++) {
-            // rA[m] = sA[k][m * DIM_X + idx];
-            rA[m] = fetch(sA, 0, sA_col, m * DIM_X + idx, k, INF);
+            rA[m] = sA[k][m * DIM_X + idx];
         }
 
         for (n = 0; n < THR_N; n++) {
-            // rB[n] = sB[n * DIM_Y + idy][k];
-            rB[n] = fetch(sB, 0, sB_col, k, n * DIM_Y + idy, INF);
+            rB[n] = sB[n * DIM_Y + idy][k];
         }
         
         for (n = 0; n < THR_N; n++) {
