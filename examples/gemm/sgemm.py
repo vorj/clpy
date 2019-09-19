@@ -1,14 +1,14 @@
 from __future__ import division
 
 import argparse
-import math
+# import math
 import os
 
 import clpy as cp
 from clpy.core.core import LocalMem
 import numpy as np
 
-from utils import benchmark
+# from utils import benchmark
 from utils import load_kernel
 from utils import read_code
 
@@ -75,8 +75,8 @@ def main():
 
         # check correctness
         cp.testing.assert_array_almost_equal(
-           sgemm(A, B), cp.dot(A, B), decimal=3)
-        
+            sgemm(A, B), cp.dot(A, B), decimal=3)
+
         print("Checked sgemm(A, B) = cp.dot(A, B).")
 
         # TODO: ClPy does not support cp.backend.Event (clpy/backend/stream.py)
