@@ -31,10 +31,8 @@ __kernel void sgemm(
         __global const float* B,
         CArray_2 info_B,
         __global float * C,
-        CArray_2 info_C,
-        __local float sA[BLK_K][BLK_M + 1],
-        __local float sB[BLK_N][BLK_K + 1])
-{
+        CArray_2 info_C
+) {
     int idx = get_local_id(0);
     int idy = get_local_id(1);
 
@@ -50,8 +48,8 @@ __kernel void sgemm(
     int bly = get_group_id(1);
 
     // __shared__ in CUDA kernel
-    // float sA[BLK_K][BLK_M + 1];
-    // float sB[BLK_N][BLK_K + 1];
+    __local float sA[BLK_K][BLK_M + 1];
+    __local float sB[BLK_N][BLK_K + 1];
 
     // registers for the innermost loop
     float rC[THR_N][THR_M];

@@ -16,7 +16,8 @@ def read_code(code_filename, params):
     return code
 
 
-# TODO: ClPy does not support cp.backend.Event (clpy/backend/stream.py)
+# TODO(shusukeueda):
+# ClPy does not support cp.backend.Event (clpy/backend/stream.py)
 def benchmark(func, args, n_run):
     times = []
     for _ in range(n_run):

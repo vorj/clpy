@@ -5,7 +5,6 @@ import argparse
 import os
 
 import clpy as cp
-from clpy.core.core import LocalMem
 import numpy as np
 
 # from utils import benchmark
@@ -43,8 +42,7 @@ def sgemm(A, B,
     # grid = (int(math.ceil(m / blk_m)), int(math.ceil(n / blk_n)), 1)
     grid = (m, n, 1)
     block = (dim_x, dim_y, 1)
-    # args = (m, n, k, A, B, C)
-    args = (m, n, k, A, B, C, LocalMem(), LocalMem())
+    args = (m, n, k, A, B, C)
     shared_mem = blk_k * (blk_m + 1) * 4 + blk_n * (blk_k + 1) * 4
     kern(grid, block, args=args, local_mem=shared_mem)
     return C
@@ -79,7 +77,9 @@ def main():
 
         print("Checked sgemm(A, B) = cp.dot(A, B).")
 
-        # TODO: ClPy does not support cp.backend.Event (clpy/backend/stream.py)
+        # TODO(shusukeueda):
+        # ClPy does not support cp.backend.Event (clpy/backend/stream.py)
+
         # dry run
         # for _ in range(3):
         #    sgemm(A, B)
