@@ -39,7 +39,6 @@ def sgemm(A, B,
     code = read_code(sgemm_file, params=config)
     kern = load_kernel('sgemm', code)
 
-    # grid = (int(math.ceil(m / blk_m)), int(math.ceil(n / blk_n)), 1)
     grid = (m, n, 1)
     block = (dim_x, dim_y, 1)
     args = (m, n, k, A, B, C)

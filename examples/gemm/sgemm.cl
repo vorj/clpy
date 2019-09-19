@@ -20,12 +20,11 @@ Licensed under modified BSD license
 //#define THR_N  ${THR_N}
 //#define THR_M  ${THR_M}
 
-#define min(a, b) ((a) < (b) ? (a) : (b))
-#define fetch(arr, offs, col, m, n, bound) arr[offs + min((n)*(col) + m, bound)]
+#define fetch(arr, offs, col, m, n, bound) arr[offs + (long)min((long)((n)*(col) + m), (long)bound)]
 
 
 __kernel void sgemm(
-        long M, long N, long K, // np.int64_ in Python
+        long M, long N, long K, // np.int_ in Python
         __global const float* A,
         CArray_2 info_A,
         __global const float* B,
@@ -47,7 +46,6 @@ __kernel void sgemm(
     int blx = get_group_id(0);
     int bly = get_group_id(1);
 
-    // __shared__ in CUDA kernel
     __local float sA[BLK_K][BLK_M + 1];
     __local float sB[BLK_N][BLK_K + 1];
 
