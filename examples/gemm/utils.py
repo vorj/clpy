@@ -4,7 +4,7 @@ import clpy as cp
 @cp.util.memoize(for_each_device=True)
 def load_kernel(kernel_name, code, options=()):
     assert isinstance(options, tuple)
-    kernel_code = cp.backend.compile_with_cache(code, options=options)
+    kernel_code = cp.core.core.compile_with_cache(code, options=options)
     return kernel_code.get_function(kernel_name)
 
 
@@ -16,6 +16,8 @@ def read_code(code_filename, params):
     return code
 
 
+# TODO(shusukeueda):
+# ClPy does not support cp.backend.Event (clpy/backend/stream.py)
 def benchmark(func, args, n_run):
     times = []
     for _ in range(n_run):

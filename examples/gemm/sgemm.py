@@ -1,18 +1,18 @@
 from __future__ import division
 
 import argparse
-import math
+# import math
 import os
 
 import clpy as cp
 import numpy as np
 
-from utils import benchmark
+# from utils import benchmark
 from utils import load_kernel
 from utils import read_code
 
 
-sgemm_file = os.path.join(os.path.dirname(__file__), 'sgemm.cu')
+sgemm_file = os.path.join(os.path.dirname(__file__), 'sgemm.cl')
 
 
 def sgemm(A, B,
@@ -39,11 +39,11 @@ def sgemm(A, B,
     code = read_code(sgemm_file, params=config)
     kern = load_kernel('sgemm', code)
 
-    grid = (int(math.ceil(m / blk_m)), int(math.ceil(n / blk_n)), 1)
+    grid = (m, n, 1)
     block = (dim_x, dim_y, 1)
     args = (m, n, k, A, B, C)
     shared_mem = blk_k * (blk_m + 1) * 4 + blk_n * (blk_k + 1) * 4
-    kern(grid, block, args=args, shared_mem=shared_mem)
+    kern(grid, block, args=args, local_mem=shared_mem)
     return C
 
 
@@ -74,18 +74,23 @@ def main():
         cp.testing.assert_array_almost_equal(
             sgemm(A, B), cp.dot(A, B), decimal=3)
 
+        print("Checked sgemm(A, B) = cp.dot(A, B).")
+
+        # TODO(shusukeueda):
+        # ClPy does not support cp.backend.Event (clpy/backend/stream.py)
+
         # dry run
-        for _ in range(3):
-            sgemm(A, B)
-        kernel_times = benchmark(sgemm, (A, B), n_run=5)
+        # for _ in range(3):
+        #    sgemm(A, B)
+        # kernel_times = benchmark(sgemm, (A, B), n_run=5)
 
-        for _ in range(3):
-            cp.dot(A, B)
-        cublas_times = benchmark(cp.dot, (A, B), n_run=5)
+        # for _ in range(3):
+        #     cp.dot(A, B)
+        # cublas_times = benchmark(cp.dot, (A, B), n_run=5)
 
-    print('=============================Result===============================')
-    print('hand written kernel time {} ms'.format(np.mean(kernel_times)))
-    print('cuBLAS              time {} ms'.format(np.mean(cublas_times)))
+    # print('=============================Result===============================')
+    # print('hand written kernel time {} ms'.format(np.mean(kernel_times)))
+    # print('cuBLAS              time {} ms'.format(np.mean(cublas_times)))
 
 
 if __name__ == '__main__':
