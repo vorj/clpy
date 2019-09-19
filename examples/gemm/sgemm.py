@@ -73,36 +73,16 @@ def main():
         B = cp.random.uniform(
             low=-1., high=1., size=(args.k, args.n)).astype(cp.float32)
 
-        print("A: ")
-        print(A)
-        print("B: ")
-        print(B)
-
-        with open("result.log", "w") as f:
-            C = sgemm(A, B)
-            f.write("Result of sgemm:\n")
-            for row in C:
-                f.write(str(row) + "\n")
-
-        with open("result.log", "a") as f:
-            C = cp.dot(A, B)
-            f.write("Result of cp.dot:\n")
-            for row in C:
-                f.write(str(row) + "\n")
-
-        with open("result.log", "a") as f:
-            C = sgemm(A, B) - cp.dot(A, B)
-            f.write("The difference between them:\n")
-            for row in C:
-                f.write(str(row) + "\n")
-
         # check correctness
         cp.testing.assert_array_almost_equal(
            sgemm(A, B), cp.dot(A, B), decimal=3)
+        
+        print("Checked sgemm(A, B) = cp.dot(A, B).")
 
+        # TODO: ClPy does not support cp.backend.Event (clpy/backend/stream.py)
         # dry run
         # for _ in range(3):
-        #     sgemm(A, B)
+        #    sgemm(A, B)
         # kernel_times = benchmark(sgemm, (A, B), n_run=5)
 
         # for _ in range(3):

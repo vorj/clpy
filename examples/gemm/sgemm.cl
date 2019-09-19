@@ -23,11 +23,10 @@ Licensed under modified BSD license
 #define min(a, b) ((a) < (b) ? (a) : (b))
 #define fetch(arr, offs, col, m, n, bound) arr[offs + min((n)*(col) + m, bound)]
 
-#define INF 1000000000
+#define INF 1000000000 // sA, sB do not need to specify the bound
 
-__kernel
-void sgemm(
-        long M, long N, long K,
+__kernel void sgemm(
+        long M, long N, long K, // np.int64_ in Python
         __global const float* A,
         CArray_2 info_A,
         __global const float* B,
@@ -51,7 +50,7 @@ void sgemm(
     int blx = get_group_id(0);
     int bly = get_group_id(1);
 
-    // __shared__
+    // __shared__ in CUDA kernel
     // float sA[BLK_K][BLK_M + 1];
     const int sA_col = BLK_M + 1;
     // float sB[BLK_N][BLK_K + 1];
@@ -65,7 +64,7 @@ void sgemm(
     float ra[BLK_K / DIM_YA][BLK_M / DIM_XA];
     float rb[BLK_N / DIM_YB][BLK_K / DIM_XB];
 
-    int offs_dA = blx * BLK_M       + idyA * M + idxA;
+    int offs_dA = blx * BLK_M     + idyA * M + idxA;
     int boundA = (M * (K - 1) + M) - (blx * BLK_M + idyA * M + idxA) - 1;
     int offs_dB = bly * BLK_N * K + idyB * K + idxB;
     int boundB = (K * (N - 1) + K) - (bly * BLK_N * K + idyB * K + idxB) - 1;
