@@ -201,6 +201,143 @@ decltype(PredefinedExpr::getIdentKindName(std::declval<PredefinedExpr>().getIden
   return PredefinedExpr::getIdentKindName(pe->getIdentKind());
 }
 
+template<typename GenericSelectionExpr>
+class generic_selection_expr_index{
+  GenericSelectionExpr* t;
+ public:
+  class iterator{
+    class accessor{
+      GenericSelectionExpr* t;
+      unsigned index;
+     public:
+      accessor() = default;
+      accessor(GenericSelectionExpr* ptr, unsigned ind):t{ptr}, index{ind}{}
+      accessor(const accessor&) = default;
+      accessor(accessor&&) = default;
+      clang::QualType get_type()const{
+        return t->getAssocType(index);
+      }
+      clang::Expr* get_expr()const{
+        return t->getAssocExpr(index);
+      }
+      friend class iterator;
+    }t;
+   public:
+    iterator() = default;
+    iterator(GenericSelectionExpr* ptr, unsigned ind):t{ptr, ind}{}
+    iterator(const iterator&) = default;
+    iterator(iterator&&) = default;
+    iterator& operator++()noexcept{
+      ++t.index;
+      return *this;
+    }
+    iterator operator++(int){
+      iterator it = *this;
+      ++t.index;
+      return it;
+    }
+    bool operator==(const iterator& other)const{
+      return t.index == other.t.index;
+    }
+    bool operator!=(const iterator& other)const{
+      return !(*this == other);
+    }
+    accessor& operator*()noexcept{
+      return t;
+    }
+    const accessor& operator*()const noexcept{
+      return t;
+    }
+    accessor* operator->()noexcept{
+      return &t;
+    }
+    const accessor* operator->()const noexcept{
+      return &t;
+    }
+  };
+  constexpr generic_selection_expr_index(GenericSelectionExpr* ptr):t{ptr}{}
+  iterator begin()const{return iterator{t, 0u};}
+  iterator end()const{return iterator{t, t->getNumAssocs()};}
+};
+
+template<typename GenericSelectionExpr>
+class generic_selection_expr_iterator{
+  GenericSelectionExpr* t;
+ public:
+  class iterator{
+    class accessor{
+      typename GenericSelectionExpr::AssociationIterator t;
+     public:
+      accessor() = default;
+      accessor(const typename GenericSelectionExpr::AssociationIterator& it):t{it}{}
+      accessor(const accessor&) = default;
+      accessor(accessor&&) = default;
+      clang::QualType get_type()const{
+        return t->getType();
+      }
+      clang::Expr* get_expr()const{
+        return t->getAssociationExpr();
+      }
+      friend class iterator;
+    }t;
+   public:
+    iterator() = default;
+    iterator(typename GenericSelectionExpr::AssociationIterator itr):t{itr}{}
+    iterator(const iterator&) = default;
+    iterator(iterator&&) = default;
+    iterator& operator++()noexcept{
+      ++t.t;
+      return *this;
+    }
+    iterator operator++(int){
+      iterator it = *this;
+      ++t.t;
+      return it;
+    }
+    bool operator==(const iterator& other)const{
+      return t.t == other.t.t;
+    }
+    bool operator!=(const iterator& other)const{
+      return !(*this == other);
+    }
+    accessor& operator*()noexcept{
+      return t;
+    }
+    const accessor& operator*()const noexcept{
+      return t;
+    }
+    accessor* operator->()noexcept{
+      return &t;
+    }
+    const accessor* operator->()const noexcept{
+      return &t;
+    }
+  };
+  constexpr generic_selection_expr_iterator(GenericSelectionExpr* ptr):t{ptr}{}
+  iterator begin()const{return iterator{t->associations().begin()};}
+  iterator end()const{return iterator{t->associations().end()};}
+};
+
+template<typename GenericSelectionExpr, typename std::enable_if<std::is_same<clang::QualType, decltype(std::declval<GenericSelectionExpr>().getAssocType(0u))>::value, std::nullptr_t>::type = nullptr>
+static constexpr generic_selection_expr_index<GenericSelectionExpr> generic_selection_expr_wrapper(GenericSelectionExpr* t){
+  return {t};
+}
+template<typename GenericSelectionExpr, typename std::enable_if<std::is_same<clang::QualType, decltype(std::declval<GenericSelectionExpr>().associations().begin()->getType())>::value, std::nullptr_t>::type = nullptr>
+static constexpr generic_selection_expr_iterator<GenericSelectionExpr> generic_selection_expr_wrapper(GenericSelectionExpr* t){
+  return {t};
+}
+
+template<typename CXXNewExpr, typename std::enable_if<std::is_same<clang::Expr*, decltype(std::declval<CXXNewExpr>().getArraySize())>::value, std::nullptr_t>::type = nullptr>
+static inline clang::Expr* get_array_size(CXXNewExpr* node){
+   return node->getArraySize();
+}
+
+template<typename CXXNewExpr, typename std::enable_if<std::is_same<clang::Optional<clang::Expr*>, decltype(std::declval<CXXNewExpr>().getArraySize())>::value, std::nullptr_t>::type = nullptr>
+static inline clang::Expr* get_array_size(CXXNewExpr* node){
+   auto e = node->getArraySize();
+   return e ? *e : nullptr;
+}
+
 }
 
 class decl_visitor;
@@ -815,15 +952,16 @@ public:
   void VisitGenericSelectionExpr(clang::GenericSelectionExpr *Node) {
     os << "_Generic(";
     PrintExpr(Node->getControllingExpr());
-    for (unsigned i = 0; i != Node->getNumAssocs(); ++i) {
+    auto node = ultima::detail::generic_selection_expr_wrapper(Node);
+    for (auto&& x : node) {
       os << ", ";
-      auto T = Node->getAssocType(i);
+      auto T = x.get_type();
       if (T.isNull())
         os << "default";
       else
         T.print(os, Policy);
       os << ": ";
-      PrintExpr(Node->getAssocExpr(i));
+      PrintExpr(x.get_expr());
     }
     os << ')';
   }
@@ -1618,7 +1756,7 @@ public:
     if (E->isParenTypeId())
       os << '(';
     std::string TypeS;
-    if (clang::Expr *Size = E->getArraySize()) {
+    if (clang::Expr *Size = ultima::detail::get_array_size(E)) {
       llvm::raw_string_ostream s(TypeS);
       s << '[';
       Visit(Size);
