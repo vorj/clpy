@@ -52,6 +52,7 @@ tests/clpy_tests/prof_tests/
 tests/clpy_tests/statics_tests/
 tests/clpy_tests/math_tests/
 tests/clpy_tests/logic_tests/
+tests/example_tests/
 "
 
 TEST_DIRS_IN_ROOT_DIR="
@@ -64,9 +65,6 @@ tests/clpy_tests/random_tests/test_distributions.py
 tests/clpy_tests/sorting_tests/test_count.py
 tests/clpy_tests/sorting_tests/test_search.py
 tests/clpy_tests/sorting_tests/test_sort.py::TestSort
-tests/example_tests/test_gmm.py
-tests/example_tests/test_kmeans.py
-tests/example_tests/test_gemm.py
 "
 
 export CLPY_TEST_GPU_LIMIT=1
