@@ -1,7 +1,7 @@
 from __future__ import division
 
 import argparse
-# import math
+import math
 import os
 
 import clpy as cp
@@ -39,7 +39,9 @@ def sgemm(A, B,
     code = read_code(sgemm_file, params=config)
     kern = load_kernel('sgemm', code)
 
-    grid = (m, n, 1)
+    grid = (int(math.ceil(m / blk_m)) * dim_x,
+            int(math.ceil(n / blk_n)) * dim_y,
+            1)
     block = (dim_x, dim_y, 1)
     args = (m, n, k, A, B, C)
     shared_mem = blk_k * (blk_m + 1) * 4 + blk_n * (blk_k + 1) * 4
