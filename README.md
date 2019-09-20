@@ -73,6 +73,8 @@ In that case, you will need to set `PATH` and `CPLUS_INCLUDE_PATH` environment v
 # apt install clang-6.0 libclang-6.0-dev
 $ export PATH=/usr/lib/llvm-6.0/bin:${PATH}
 $ export CPLUS_INCLUDE_PATH=/usr/lib/llvm-6.0/include:${CPLUS_INCLUDE_PATH}
+$ export LIBRARY_PATH=/usr/lib/llvm-6.0/lib:${LIBRARY_PATH}
+$ export LD_LIBRARY_PATH=/usr/lib/llvm-6.0/lib:${LD_LIBRARY_PATH}
 ```
 
 ### Install CLBlast
