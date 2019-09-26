@@ -1,3 +1,4 @@
+from clpy.backend import api
 # from clpy.backend import runtime
 
 
@@ -22,9 +23,11 @@ class Event(object):
 
     """
 
-    def __init__(self, block=False, disable_timing=False, interprocess=False):
-        self.ptr = 0
-        raise NotImplementedError("clpy does not supoort this")
+    def __init__(self):
+    # def __init__(self, block=False, disable_timing=False, interprocess=False):
+        self.time = 0
+        # self.ptr = 0
+        # raise NotImplementedError("clpy does not supoort this")
 
         # if interprocess and not disable_timing:
         #     raise ValueError(
@@ -35,8 +38,8 @@ class Event(object):
         # self.ptr = runtime.eventCreateWithFlags(flag)
 
     def __del__(self):
-        if self.ptr:
-            raise NotImplementedError("clpy does not supoort this")
+        # if self.ptr:
+        #     raise NotImplementedError("clpy does not supoort this")
             # runtime.eventDestroy(self.ptr)
 
     @property
@@ -55,9 +58,9 @@ class Event(object):
         .. seealso:: :meth:`clpy.cuda.Stream.record`
 
         """
-        if stream is None:
-            stream = Stream.null
-        raise NotImplementedError("clpy does not supoort this")
+        # if stream is None:
+        #     stream = Stream.null
+        self.time = api.eventRecord()
         # runtime.eventRecord(self.ptr, stream.ptr)
 
     def synchronize(self):
@@ -67,7 +70,7 @@ class Event(object):
         thread until the event is done.
 
         """
-        raise NotImplementedError("clpy does not supoort this")
+        api.eventSynchronize()
         # runtime.eventSynchronize(self.ptr)
 
 
@@ -82,7 +85,7 @@ def get_elapsed_time(start_event, end_event):
         float: Elapsed time in milliseconds.
 
     """
-    raise NotImplementedError("clpy does not supoort this")
+    return api.eventElapsedTime(start_event, end_event)
     # return runtime.eventElapsedTime(start_event.ptr, end_event.ptr)
 
 
