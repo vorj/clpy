@@ -133,6 +133,7 @@ cdef void GetProgramInfo(
         size_t param_value_size,
         void *param_value,
         size_t *param_value_size_ret) except *:
+
     cdef cl_int status
     status = clGetProgramInfo(
         program,
@@ -365,7 +366,7 @@ cpdef size_t eventRecord() except *:
     cpdef size_t time
     GetEventProfilingInfo(
         event=event,
-        param_name=4739, # CL_PROFILING_COMMAND_END
+        param_name=4739,  # CL_PROFILING_COMMAND_END
         param_value_size=sizeof(time),
         param_value=&time,
         param_value_size_ret=NULL)

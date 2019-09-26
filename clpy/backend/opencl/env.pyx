@@ -131,9 +131,9 @@ logging.info("Create command_queues...", end='')
 cdef cl_command_queue* __command_queues = \
     <cl_command_queue*>malloc(sizeof(cl_command_queue)*__num_devices)
 for id in range(__num_devices):
+    # Set CL_QUEUE_PROFILING_ENABLE (2)
     __command_queues[id] = \
         api.CreateCommandQueue(__contexts[id], __devices[id], 2)
-        # 2: CL_QUEUE_PROFILING_ENABLE
 logging.info("SUCCESS")
 
 ##########################################
