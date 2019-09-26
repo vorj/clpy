@@ -1,5 +1,8 @@
 cimport exceptions
 
+import clpy.backend.opencl.env
+cimport clpy.backend.opencl.env
+
 
 ###############################################################################
 # thin wrappers
@@ -298,6 +301,31 @@ cdef void EnqueueFillBuffer(
         event)
     exceptions.check_status(status)
 
+cdef void EnqueueBarrierWithWaitList(
+        cl_command_queue command_queue,
+        cl_uint num_events_in_wait_list=0,
+        const cl_event* event_wait_list=<cl_event*>NULL,
+        cl_event* event=<cl_event*>NULL) except *:
+    cdef cl_int status = clEnqueueBarrierWithWaitList(
+        command_queue,
+        num_events_in_wait_list,
+        event_wait_list,
+        event)
+    exceptions.check_status(status)
+
+cdef void GetEventProfilingInfo(
+        cl_event event,
+        cl_profiling_info param_name,
+        size_t param_value_size,
+        void* param_value,
+        size_t* param_value_size_ret) except *:
+    cdef cl_int status = clGetEventProfilingInfo(
+        event,
+        param_name,
+        param_value_size,
+        param_value,
+        param_value_size_ret)
+    exceptions.check_status(status)
 
 cdef void Flush(cl_command_queue command_queue) except *:
     exceptions.check_status(clFlush(command_queue))
@@ -325,6 +353,26 @@ cdef void ReleaseContext(cl_context context) except *:
 
 cdef void WaitForEvents(size_t num_events, cl_event* event_list) except *:
     exceptions.check_status(clWaitForEvents(<cl_uint>num_events, event_list))
+
+cpdef size_t eventRecord() except *:
+    cdef cl_event event
+    EnqueueBarrierWithWaitList(
+        command_queue=clpy.backend.opencl.env.get_command_queue(),
+        num_events_in_wait_list=0,
+        event_wait_list=NULL,
+        event=&event)
+    WaitForEvents(1, &event)
+    cpdef size_t time
+    GetEventProfilingInfo(
+        event=event,
+        param_name=4739, # CL_PROFILING_COMMAND_END
+        param_value_size=sizeof(time),
+        param_value=&time,
+        param_value_size_ret=NULL)
+    return time
+
+cpdef void eventSynchronize() except *:
+    Finish(command_queue=clpy.backend.opencl.env.get_command_queue())
 
 
 TRUE = CL_TRUE

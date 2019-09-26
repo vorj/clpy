@@ -1,4 +1,4 @@
-from clpy.backend import api
+from clpy.backend.opencl import api
 # from clpy.backend import runtime
 
 
@@ -37,7 +37,7 @@ class Event(object):
         #         (interprocess and runtime.eventInterprocess))
         # self.ptr = runtime.eventCreateWithFlags(flag)
 
-    def __del__(self):
+    # def __del__(self):
         # if self.ptr:
         #     raise NotImplementedError("clpy does not supoort this")
             # runtime.eventDestroy(self.ptr)
