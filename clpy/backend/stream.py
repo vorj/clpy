@@ -85,7 +85,7 @@ def get_elapsed_time(start_event, end_event):
         float: Elapsed time in milliseconds.
 
     """
-    return api.eventElapsedTime(start_event, end_event)
+    return (end_event.time - start_event.time) / 1e6 # miliseconds
     # return runtime.eventElapsedTime(start_event.ptr, end_event.ptr)
 
 

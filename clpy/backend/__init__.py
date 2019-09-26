@@ -8,6 +8,7 @@ from clpy.backend import memory  # NOQA
 # from clpy.backend import memory_hooks  # NOQA
 from clpy.backend import pinned_memory  # NOQA
 # from clpy.backend import profiler  # NOQA
+from clpy.backend.opencl import api
 # from clpy.backend import runtime  # NOQA
 from clpy.backend import stream  # NOQA
 from clpy.backend.ultima import exceptions  # NOQA
@@ -71,7 +72,7 @@ from clpy.backend.pinned_memory import PinnedMemoryPointer  # NOQA
 from clpy.backend.pinned_memory import PinnedMemoryPool  # NOQA
 from clpy.backend.pinned_memory import set_pinned_memory_allocator  # NOQA
 from clpy.backend.stream import Event  # NOQA
-# from clpy.backend.stream import get_elapsed_time  # NOQA
+from clpy.backend.stream import get_elapsed_time  # NOQA
 from clpy.backend.stream import Stream  # NOQA
 
 
