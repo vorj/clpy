@@ -23,8 +23,7 @@ class Event(object):
 
     """
 
-    def __init__(self):
-    # def __init__(self, block=False, disable_timing=False, interprocess=False):
+    def __init__(self, block=False, disable_timing=False, interprocess=False):
         self.time = 0
         # self.ptr = 0
         # raise NotImplementedError("clpy does not supoort this")
@@ -40,7 +39,7 @@ class Event(object):
     # def __del__(self):
         # if self.ptr:
         #     raise NotImplementedError("clpy does not supoort this")
-            # runtime.eventDestroy(self.ptr)
+        #     runtime.eventDestroy(self.ptr)
 
     @property
     def done(self):
@@ -85,7 +84,7 @@ def get_elapsed_time(start_event, end_event):
         float: Elapsed time in milliseconds.
 
     """
-    return (end_event.time - start_event.time) / 1e6 # miliseconds
+    return (end_event.time - start_event.time) / 1e6  # miliseconds
     # return runtime.eventElapsedTime(start_event.ptr, end_event.ptr)
 
 
