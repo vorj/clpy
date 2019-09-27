@@ -176,10 +176,8 @@ def typeof_size():
 
 cpdef size_t eventRecord() except *:
     cdef cl_event event
-    api.EnqueueBarrierWithWaitList(
+    api.EnqueueMarker(
         env.get_command_queue(),
-        0,
-        NULL,
         &event)
     api.WaitForEvents(1, &event)
     cpdef size_t time

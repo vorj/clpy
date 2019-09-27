@@ -117,6 +117,9 @@ cdef void EnqueueFillBuffer(
     cl_uint num_events_in_wait_list=*,
     cl_event* event_wait_list=*,
     cl_event* event=*) except *
+cdef void EnqueueMarker(
+    cl_command_queue command_queue,
+    cl_event* event) except *
 cdef void EnqueueBarrierWithWaitList(
     cl_command_queue command_queue,
     cl_uint num_events_in_wait_list=*,
