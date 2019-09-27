@@ -1,5 +1,4 @@
-from clpy.backend.opencl import api
-# from clpy.backend import runtime
+from clpy.backend.opencl import utility
 
 
 class Event(object):
@@ -59,7 +58,7 @@ class Event(object):
         """
         # if stream is None:
         #     stream = Stream.null
-        self.time = api.eventRecord()
+        self.time = utility.eventRecord()
         # runtime.eventRecord(self.ptr, stream.ptr)
 
     def synchronize(self):
@@ -69,7 +68,7 @@ class Event(object):
         thread until the event is done.
 
         """
-        api.eventSynchronize()
+        utility.eventSynchronize()
         # runtime.eventSynchronize(self.ptr)
 
 

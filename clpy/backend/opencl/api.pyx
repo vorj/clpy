@@ -1,8 +1,5 @@
 cimport exceptions
 
-import clpy.backend.opencl.env
-cimport clpy.backend.opencl.env
-
 
 ###############################################################################
 # thin wrappers
@@ -354,26 +351,6 @@ cdef void ReleaseContext(cl_context context) except *:
 
 cdef void WaitForEvents(size_t num_events, cl_event* event_list) except *:
     exceptions.check_status(clWaitForEvents(<cl_uint>num_events, event_list))
-
-cpdef size_t eventRecord() except *:
-    cdef cl_event event
-    EnqueueBarrierWithWaitList(
-        command_queue=clpy.backend.opencl.env.get_command_queue(),
-        num_events_in_wait_list=0,
-        event_wait_list=NULL,
-        event=&event)
-    WaitForEvents(1, &event)
-    cpdef size_t time
-    GetEventProfilingInfo(
-        event=event,
-        param_name=CL_PROFILING_COMMAND_END,
-        param_value_size=sizeof(time),
-        param_value=&time,
-        param_value_size_ret=NULL)
-    return time
-
-cpdef void eventSynchronize() except *:
-    Finish(command_queue=clpy.backend.opencl.env.get_command_queue())
 
 
 TRUE = CL_TRUE
