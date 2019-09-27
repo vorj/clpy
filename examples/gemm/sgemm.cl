@@ -20,6 +20,8 @@ Licensed under modified BSD license
 //#define THR_N  ${THR_N}
 //#define THR_M  ${THR_M}
 
+#include<clpy/carray.clh>
+
 #define fetch(arr, offs, col, m, n, bound) arr[offs + (long)min((long)((n)*(col) + m), (long)bound)]
 
 
