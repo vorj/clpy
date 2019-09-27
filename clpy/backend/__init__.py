@@ -1,6 +1,6 @@
 import contextlib
 
-# from clpy.backend import compiler  # NOQA
+from clpy.backend import compiler  # NOQA
 from clpy.backend import device  # NOQA
 from clpy.backend import function  # NOQA
 from clpy.backend import memory  # NOQA
@@ -51,7 +51,7 @@ def is_available():
 
 
 # import class and function
-# from clpy.backend.compiler import compile_with_cache  # NOQA
+from clpy.backend.compiler import compile_with_cache  # NOQA
 from clpy.backend.device import Device  # NOQA
 from clpy.backend.device import get_cublas_handle  # NOQA
 from clpy.backend.device import get_device_id  # NOQA
