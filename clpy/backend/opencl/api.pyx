@@ -299,6 +299,14 @@ cdef void EnqueueFillBuffer(
         event)
     exceptions.check_status(status)
 
+cdef void EnqueueMarker(
+        cl_command_queue command_queue,
+        cl_event* event) except *:
+    cdef cl_int status = clEnqueueMarker(
+        command_queue,
+        event)
+    exceptions.check_status(status)
+
 cdef void EnqueueBarrierWithWaitList(
         cl_command_queue command_queue,
         cl_uint num_events_in_wait_list=0,
