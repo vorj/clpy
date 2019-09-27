@@ -145,7 +145,7 @@ class TempFile(object):
             os.remove(self.fn)
 
 cpdef function.Module compile_with_cache(
-        str source, tuple options=(), arch=None, cachd_dir=None):
+        str source, tuple options=(), arch=None, cache_dir=None):
     kernel_arg_size_t_code = 'typedef ' \
         + clpy.backend.opencl.utility.typeof_size() + ' __kernel_arg_size_t;\n'
     source = kernel_arg_size_t_code + _clpy_header + '\n' \
