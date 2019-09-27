@@ -24,9 +24,10 @@ class Event(object):
 
     def __init__(self, block=False, disable_timing=False, interprocess=False):
         self.time = 0
-        # self.ptr = 0
-        # raise NotImplementedError("clpy does not supoort this")
 
+        # TODO(shusukeueda): CUDA event flags
+        #
+        # self.ptr = 0
         # if interprocess and not disable_timing:
         #     raise ValueError(
         #         'Timing must be disabled for interprocess events')
@@ -34,11 +35,6 @@ class Event(object):
         #         (disable_timing and runtime.eventDisableTiming) |
         #         (interprocess and runtime.eventInterprocess))
         # self.ptr = runtime.eventCreateWithFlags(flag)
-
-    # def __del__(self):
-        # if self.ptr:
-        #     raise NotImplementedError("clpy does not supoort this")
-        #     runtime.eventDestroy(self.ptr)
 
     @property
     def done(self):
@@ -56,10 +52,10 @@ class Event(object):
         .. seealso:: :meth:`clpy.cuda.Stream.record`
 
         """
+        # TODO(shusukeueda): specify command queue (CUDA stream)
         # if stream is None:
         #     stream = Stream.null
         self.time = utility.eventRecord()
-        # runtime.eventRecord(self.ptr, stream.ptr)
 
     def synchronize(self):
         """Synchronizes all device work to the event.
@@ -69,7 +65,6 @@ class Event(object):
 
         """
         utility.eventSynchronize()
-        # runtime.eventSynchronize(self.ptr)
 
 
 def get_elapsed_time(start_event, end_event):
@@ -84,7 +79,6 @@ def get_elapsed_time(start_event, end_event):
 
     """
     return (end_event.time - start_event.time) / 1e6  # miliseconds
-    # return runtime.eventElapsedTime(start_event.ptr, end_event.ptr)
 
 
 class Stream(object):
