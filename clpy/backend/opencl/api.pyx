@@ -366,7 +366,7 @@ cpdef size_t eventRecord() except *:
     cpdef size_t time
     GetEventProfilingInfo(
         event=event,
-        param_name=4739,  # CL_PROFILING_COMMAND_END
+        param_name=CL_PROFILING_COMMAND_END,
         param_value_size=sizeof(time),
         param_value=&time,
         param_value_size_ret=NULL)
