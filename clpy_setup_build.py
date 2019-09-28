@@ -95,6 +95,7 @@ MODULES = [
             # 'clpy.backend.cublas',
             # 'clpy.backend.curand',
             # 'clpy.backend.cusparse',
+            'clpy.backend.compiler',
             'clpy.backend.device',
             # 'clpy.backend.driver',
             'clpy.backend.memory',

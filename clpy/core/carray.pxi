@@ -1,5 +1,3 @@
-import functools
-import operator
 import os
 import subprocess
 import tempfile
@@ -8,11 +6,9 @@ import warnings
 
 
 from clpy import backend
-from clpy.backend cimport function
-# from clpy.backend cimport runtime
+import clpy.backend.compiler
+cimport clpy.backend.compiler
 cimport clpy.backend.opencl.api
-cimport clpy.backend.opencl.utility
-import clpy.backend.opencl.env
 cimport clpy.backend.opencl.env
 
 
@@ -145,7 +141,7 @@ class TempFile(object):
             os.remove(self.fn)
 
 cpdef function.Module compile_with_cache(
-        str source, tuple options=(), arch=None, cachd_dir=None):
+        str source, tuple options=(), arch=None, cache_dir=None):
     kernel_arg_size_t_code = 'typedef ' \
         + clpy.backend.opencl.utility.typeof_size() + ' __kernel_arg_size_t;\n'
     source = kernel_arg_size_t_code + _clpy_header + '\n' \
@@ -185,16 +181,10 @@ cpdef function.Module compile_with_cache(
 
     extra_source = _get_header_source()
     options += ('-I%s' % _get_header_dir_path(),)
-    options += (' -cl-fp32-correctly-rounded-divide-sqrt', )
-    optionStr = functools.reduce(operator.add, options)
 
-    device = clpy.backend.opencl.env.get_device()
-    program = clpy.backend.opencl.utility.CreateProgram(
-        [(kernel_arg_size_t_code + source).encode('utf-8')],
-        clpy.backend.opencl.env.get_context(),
-        1,
-        &device,
-        optionStr.encode('utf-8'))
-    cdef function.Module module = function.Module()
-    module.set(program)
-    return module
+    return clpy.backend.compiler.compile_with_cache(
+        kernel_arg_size_t_code + source,
+        options,
+        arch,
+        cache_dir,
+        extra_source)

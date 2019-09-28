@@ -1,10 +1,17 @@
 import clpy as cp
 
 
+import os
+
+
+def include_path():
+    return os.path.join(cp.__path__[0], "..", "clpy", "core", "include")
+
+
 @cp.util.memoize(for_each_device=True)
 def load_kernel(kernel_name, code, options=()):
     assert isinstance(options, tuple)
-    kernel_code = cp.core.core.compile_with_cache(code, options=options)
+    kernel_code = cp.backend.compile_with_cache(code, options=options)
     return kernel_code.get_function(kernel_name)
 
 
