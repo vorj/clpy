@@ -175,7 +175,7 @@ cpdef function.Module compile_with_cache(
             proc.kill()
             source, errstream = proc.communicate()
 
-        if proc.returncode != 0 and len(errstream) > 0:
+        if proc.returncode != 0 or len(errstream) > 0:
             raise clpy.backend.ultima.exceptions.UltimaRuntimeError(
                 proc.returncode, errstream)
 
