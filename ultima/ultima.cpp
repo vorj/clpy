@@ -62,7 +62,7 @@ struct ostreams{
   std::vector<llvm::raw_ostream*> oss;
   ostreams(llvm::raw_ostream& os):oss{&os}{}
   template<typename T>
-    llvm::raw_ostream& operator<<(T&& rhs){return (*oss.back()) << rhs;}
+  llvm::raw_ostream& operator<<(T&& rhs){return (*oss.back()) << rhs;}
   operator llvm::raw_ostream&(){return *oss.back();}
   void push(llvm::raw_ostream& os){oss.emplace_back(&os);}
   void pop(){oss.pop_back();}
@@ -190,12 +190,12 @@ class preprocessor : public pp_callbacks<clang::PPCallbacks>{
 namespace detail{
 
 template<typename PredefinedExpr>
-decltype(PredefinedExpr::getIdentTypeName(std::declval<PredefinedExpr>().getIdentType())) getIdentTypeName(PredefinedExpr* pe){
+static inline decltype(PredefinedExpr::getIdentTypeName(std::declval<PredefinedExpr>().getIdentType())) getIdentTypeName(PredefinedExpr* pe){
   return PredefinedExpr::getIdentTypeName(pe->getIdentType());
 }
 
 template<typename PredefinedExpr>
-decltype(PredefinedExpr::getIdentKindName(std::declval<PredefinedExpr>().getIdentKind())) getIdentTypeName(PredefinedExpr* pe){
+static inline decltype(PredefinedExpr::getIdentKindName(std::declval<PredefinedExpr>().getIdentKind())) getIdentTypeName(PredefinedExpr* pe){
   return PredefinedExpr::getIdentKindName(pe->getIdentKind());
 }
 
