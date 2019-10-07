@@ -2864,11 +2864,19 @@ public:
     std::string init_str;
     bool recover_suppress_specifiers = false;
     {
+      auto get_ndim = [D](clang::Expr* e){
+        llvm::APSInt result;
+        const auto& ast_context = D->getASTContext();
+        if(e->isIntegerConstantExpr(result, ast_context))
+          return result.getLimitedValue();
+        else
+          throw std::runtime_error("VisitVarDecl::carray_argument::get_ndim: unexpected AST");
+      };
       const auto annons = prettyPrintPragmas(D);
       auto template_type = D->getType()->getAs<clang::TemplateSpecializationType>();
-      auto carray_argument = [this](const clang::TemplateSpecializationType* tt, const std::string& name, bool is_raw, bool is_input){
+      auto carray_argument = [&get_ndim, this](const clang::TemplateSpecializationType* tt, const std::string& name, bool is_raw, bool is_input){
         auto val_type = tt->begin()->getAsType().getAsString(policy);
-        const auto ndim = clang::dyn_cast<clang::IntegerLiteral>((tt->begin()+1)->getAsExpr())->getValue().getLimitedValue();
+        const auto ndim = get_ndim((tt->begin()+1)->getAsExpr());
         func_arg_info.back().emplace_back(function_special_argument_info{name, val_type, is_raw ? function_special_argument_info::raw : function_special_argument_info::ind, static_cast<int>(ndim), is_input});
         //TODO: Add const to val_type when is_input is true
         os << "__global " << val_type << "* const __restrict__ " << name << (is_raw ? "" : "_data")
@@ -2881,7 +2889,7 @@ public:
         if(parameter && template_type){
           auto template_type_name = template_type->getTemplateName().getAsTemplateDecl()->getQualifiedNameAsString();
           if(template_type_name == "CIndexer"){
-            const auto ndim = clang::dyn_cast<clang::IntegerLiteral>(template_type->begin()->getAsExpr())->getValue().getLimitedValue();
+            const auto ndim = get_ndim(template_type->begin()->getAsExpr());
             func_arg_info.back().emplace_back(function_special_argument_info{D->getNameAsString(), "", function_special_argument_info::cindex, static_cast<int>(ndim), true});
             os << "CIndexer_" << ndim << ' ' << D->getName();
             return;
