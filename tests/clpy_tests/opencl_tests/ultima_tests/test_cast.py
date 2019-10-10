@@ -3,8 +3,8 @@
 #               we should ignore only W291 for whole file
 #               using --per-file-ignores .
 
+import clpy
 import unittest
-import utility
 
 
 class TestUltimaCastConversion(unittest.TestCase):
@@ -16,7 +16,7 @@ void f()
     (int)(3.F);
 }
 '''
-        y = utility.exec_ultima(
+        y = clpy.backend.ultima.exec_ultima(
             '''
             void f(){
               int(3.F);
@@ -31,7 +31,7 @@ void f()
     (int)(3.F);
 }
 '''
-        y = utility.exec_ultima(
+        y = clpy.backend.ultima.exec_ultima(
             '''
             void f(){
               static_cast<int>(3.F);
@@ -47,7 +47,7 @@ void f()
     (int *)(&a);
 }
 '''
-        y = utility.exec_ultima(
+        y = clpy.backend.ultima.exec_ultima(
             '''
             void f(){
               const int a = 3;
@@ -64,7 +64,7 @@ void f()
     (float *)(&a);
 }
 '''
-        y = utility.exec_ultima(
+        y = clpy.backend.ultima.exec_ultima(
             '''
             void f(){
               int a = 3;
