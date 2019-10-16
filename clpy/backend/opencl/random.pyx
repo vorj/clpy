@@ -3,8 +3,8 @@ import clpy
 
 import math
 
-expand_kernel_src = """
-ulong roll(
+xorwow_src = """
+ulong xorwow(
     __global ulong* a,
     __global ulong* b,
     __global ulong* c,
@@ -28,6 +28,9 @@ ulong roll(
     return t + *counter;
 }
 
+"""
+
+expand_kernel_src = xorwow_src + """
 __kernel void clpy_expand_inner_state_array(
     CArray<ulong, 1> a,
     CArray<ulong, 1> b,
@@ -41,11 +44,11 @@ __kernel void clpy_expand_inner_state_array(
     size_t const base = id * stride * 2;
     size_t const target = base + stride;
 
-    a[target] = roll( &a[base], &b[base], &c[base], &d[base], &counter[base] );
-    b[target] = roll( &a[base], &b[base], &c[base], &d[base], &counter[base] );
-    c[target] = roll( &a[base], &b[base], &c[base], &d[base], &counter[base] );
-    d[target] = roll( &a[base], &b[base], &c[base], &d[base], &counter[base] );
-    counter[target] = roll( &a[base], &b[base], &c[base], &d[base], &counter[base] );
+    a[target] = xorwow( &a[base], &b[base], &c[base], &d[base], &counter[base] );
+    b[target] = xorwow( &a[base], &b[base], &c[base], &d[base], &counter[base] );
+    c[target] = xorwow( &a[base], &b[base], &c[base], &d[base], &counter[base] );
+    d[target] = xorwow( &a[base], &b[base], &c[base], &d[base], &counter[base] );
+    counter[target] = xorwow( &a[base], &b[base], &c[base], &d[base], &counter[base] );
 }
 """
 
@@ -53,30 +56,7 @@ expand_module = clpy.core.core.compile_with_cache(expand_kernel_src)
 expand_function = expand_module.get_function("clpy_expand_inner_state_array")
 
 
-roll_kernel_src = """
-ulong roll(
-    __global ulong* a,
-    __global ulong* b,
-    __global ulong* c,
-    __global ulong* d,
-    __global ulong* counter
-){
-
-    ulong t = *d;
-    ulong const s = *a;
-    *d = *c;
-    *c = *b;
-    *b = s;
-
-    t ^= t >> 2;
-    t ^= t << 1;
-    t ^= s ^ ( s << 4 );
-    *a = t;
-
-    *counter += 362437;
-
-    return t + *counter;
-}
+roll_kernel_src = xorwow_src + """
 __kernel void clpy_rng_roll(
     CArray<ulong, 1> a,
     CArray<ulong, 1> b,
@@ -86,7 +66,7 @@ __kernel void clpy_rng_roll(
     CArray<ulong, 1> output
 ){
     size_t const id = get_global_id(0);
-    output[id] = roll( &a[id], &b[id], &c[id], &d[id], &counter[id] );
+    output[id] = xorwow( &a[id], &b[id], &c[id], &d[id], &counter[id] );
 }
 """
 
