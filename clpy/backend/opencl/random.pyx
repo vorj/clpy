@@ -75,23 +75,33 @@ roll_function = roll_module.get_function("clpy_rng_roll")
 
 cdef class clrandGenerator:
 
+    def _issue_by_np(self):
+        # note(nsakabe-fixstars):
+        # numpy.random.random_integers accepts a number
+        # up to the maximum bound of *signed* int64.
+        return clpy.asarray(
+                [numpy.random.random_integers(
+                    numpy.iinfo(numpy.int64).max
+                    )
+                    ], dtype=numpy.uint64)
+
     def __init__(self):
         numpy.random.seed(0)
-        self.a = clpy.asarray([numpy.random.random_integers(1e10)], dtype=numpy.uint64)
-        self.b = clpy.asarray([numpy.random.random_integers(1e10)], dtype=numpy.uint64)
-        self.c = clpy.asarray([numpy.random.random_integers(1e10)], dtype=numpy.uint64)
-        self.d = clpy.asarray([numpy.random.random_integers(1e10)], dtype=numpy.uint64)
-        self.counter = clpy.asarray([numpy.random.random_integers(1e10)], dtype=numpy.uint64)
+        self.a = self._issue_by_np()
+        self.b = self._issue_by_np()
+        self.c = self._issue_by_np()
+        self.d = self._issue_by_np()
+        self.counter = self._issue_by_np()
         self.inner_state_size = 1
 
     def seed(self, seed):
         # seed: numpy.ndarray (uint64)
         numpy.random.seed(seed[0])
-        self.a = clpy.asarray([numpy.random.random_integers(1e10)], dtype=numpy.uint64)
-        self.b = clpy.asarray([numpy.random.random_integers(1e10)], dtype=numpy.uint64)
-        self.c = clpy.asarray([numpy.random.random_integers(1e10)], dtype=numpy.uint64)
-        self.d = clpy.asarray([numpy.random.random_integers(1e10)], dtype=numpy.uint64)
-        self.counter = clpy.asarray([numpy.random.random_integers(1e10)], dtype=numpy.uint64)
+        self.a = self._issue_by_np()
+        self.b = self._issue_by_np()
+        self.c = self._issue_by_np()
+        self.d = self._issue_by_np()
+        self.counter = self._issue_by_np()
         self.inner_state_size = 1
 
     def expand(self, size):
