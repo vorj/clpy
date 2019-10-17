@@ -175,7 +175,7 @@ cpdef generateUniform(clrandGenerator generator, ndarray array):
     size = array.size
     generator.expand(size)
     state = generator.roll()
-    state_view = state[0:size]
+    state_view = state[0:size].reshape(array.shape)
     u64_shrinkto_fp(state_view, array)
 
 cpdef generateUniformDouble(clrandGenerator generator, ndarray array):
@@ -184,7 +184,7 @@ cpdef generateUniformDouble(clrandGenerator generator, ndarray array):
     size = array.size
     generator.expand(size)
     state = generator.roll()
-    state_view = state[0:size]
+    state_view = state[0:size].reshape(array.shape)
     u64_shrinkto_fp(state_view, array)
 
 box_muller = clpy.core.core.ElementwiseKernel(
