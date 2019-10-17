@@ -90,10 +90,6 @@ def normal(loc=0.0, scale=1.0, size=None, dtype=float):
     .. seealso:: :func:`numpy.random.normal`
 
     """
-    if isinstance(loc, clpy.ndarray):
-        loc = loc.get()
-    if isinstance(scale, clpy.ndarray):
-        scale = scale.get()
     rs = generator.get_random_state()
     x = rs.normal(0, 1, size, dtype)
     clpy.multiply(x, scale, out=x)
