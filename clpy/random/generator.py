@@ -58,24 +58,6 @@ class RandomState(object):
         #     stream = backend.Stream()
         # curand.setStream(self._generator, stream.ptr)
 
-    def _generate_normal(self, func, size, dtype, *args):
-        # curand functions below don't support odd size.
-        # * curand.generateNormal
-        # * curand.generateNormalDouble
-        # * curand.generateLogNormal
-        # * curand.generateLogNormalDouble
-        raise NotImplementedError
-        size = core.get_size(size)
-        element_size = six.moves.reduce(operator.mul, size, 1)
-        if element_size % 2 == 0:
-            out = clpy.empty(size, dtype=dtype)
-            func(self._generator, out.data.ptr, out.size, *args)
-            return out
-        else:
-            out = clpy.empty((element_size + 1,), dtype=dtype)
-            func(self._generator, out.data.ptr, out.size, *args)
-            return out[:element_size].reshape(size)
-
     # NumPy compatible functions
 
     def lognormal(self, mean=0.0, sigma=1.0, size=None, dtype=float):
