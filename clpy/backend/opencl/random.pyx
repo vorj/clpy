@@ -1,5 +1,6 @@
 import numpy
 import clpy
+from clpy.core.core cimport ndarray
 
 import math
 
@@ -167,17 +168,23 @@ u64_shrinkto_fp = clpy.core.core.ElementwiseKernel(
     'clpy_u64_shrinkto_fp'
 )
 
-cpdef generateUniform(clrandGenerator generator, output_array, size):
-    #todo size不要?
+cpdef generateUniform(clrandGenerator generator, ndarray array):
+    if array.dtype.name != "float32":
+        raise TypeError("array's type must be float32")
+    size = array.size
     generator.expand(size)
     state = generator.roll()
     state_view = state[0:size]
-    u64_shrinkto_fp(state_view, output_array)
-    # フラットのまま返す
+    u64_shrinkto_fp(state_view, array)
 
-cpdef generateUniformDouble(clrandGenerator generator, output_array, size):
-    # ptr でなく clpy.ndarray を受け付けられるので、型の場合分けが不要
-    generateUniform(generator, output_array, size)
+cpdef generateUniformDouble(clrandGenerator generator, ndarray array):
+    if array.dtype.name != "float64":
+        raise TypeError("array's type must be float64")
+    size = array.size
+    generator.expand(size)
+    state = generator.roll()
+    state_view = state[0:size]
+    u64_shrinkto_fp(state_view, array)
 
 cpdef destroyGenerator(clrandGenerator generator):
     pass
