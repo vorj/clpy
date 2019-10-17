@@ -10,7 +10,7 @@ cdef class clrandGenerator:
 
 
 cpdef clrandGenerator createGenerator()
-cpdef setPseudoRandomGeneratorSeed(clrandGenerator generator, seed)
+cpdef setPseudoRandomGeneratorSeed(clrandGenerator generator, unsigned long long seed)
 
 cpdef generateUniform(clrandGenerator generator, ndarray array)
 cpdef generateUniformDouble(clrandGenerator generator, ndarray array)

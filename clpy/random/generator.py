@@ -11,7 +11,7 @@ import six
 import clpy
 from clpy import backend
 from clpy import core
-# from clpy.backend import curand
+import clpy.backend.opencl.random as clrand
 
 
 class RandomState(object):
@@ -43,8 +43,8 @@ class RandomState(object):
     """
 
     def __init__(self, seed=None, method=None):
-        self.seed_value = seed
-        self.seed_array = None
+        self._generator = clrand.createGenerator()
+        self.seed(seed)
 
     def __del__(self):
         # When createGenerator raises an error, _generator is not initialized
@@ -143,23 +143,6 @@ class RandomState(object):
     _1m_kernel = core.ElementwiseKernel(
         '', 'T x', 'x = 1 - x', 'clpy_random_1_minus_x')
 
-    _init_kernel = core.ElementwiseKernel(
-        'T seed', 'T x',
-        'x = seed + get_CArrayIndex_1(&x_info, &_ind);', 'clpy_seed_init'
-    )
-
-    _lcg_kernel = core.ElementwiseKernel(
-        '', 'T x, U out',
-        '''
-        __const__ T A = 1664525;
-        __const__ T C = 1013904223;
-        __const__ T M = 2147483647;
-        x = (x * A + C)&M;
-        out = (U)(x)/(U)(M);
-        ''',
-        'clpy_lcg_kernel'
-    )
-
     def random_sample(self, size=None, dtype=float):
         """Returns an array of random values over the interval ``[0, 1)``.
 
@@ -170,24 +153,12 @@ class RandomState(object):
         """
         dtype = _check_and_get_dtype(dtype)
         out = clpy.empty(size, dtype=dtype)
-        # 'size' is not a integer, but a tuple.
-        # To compute size of array, numpy.prod(size) is required
-        array_size = numpy.prod(size)
-
-        if (not isinstance(self.seed_array, clpy.ndarray)
-                or self.seed_array.size < array_size):
-            self.seed_array = clpy.empty(size, "uint")
-            tmp_seed_array = clpy.empty(size, "uint")
-            tmp_seed_array.fill(self.seed_value)
-            RandomState._init_kernel(tmp_seed_array, self.seed_array)
-            # not to use similar number for the first generation
-            RandomState._lcg_kernel(self.seed_array, out)
-            RandomState._lcg_kernel(self.seed_array, out)
+        if dtype.char == 'f':
+            func = clrand.generateUniform
         else:
-            tmp = self.seed_array.reshape(self.seed_array.size)[
-                0:array_size].reshape(size)
-            RandomState._lcg_kernel(tmp, out)
-
+            func = clrand.generateUniformDouble
+        func(self._generator, out)
+        RandomState._1m_kernel(out)
         return out
 
     def interval(self, mx, size):
@@ -279,8 +250,7 @@ class RandomState(object):
         else:
             seed = numpy.asarray(seed).astype(numpy.uint64, casting='safe')
 
-        raise NotImplementedError
-        # curand.setPseudoRandomGeneratorSeed(self._generator, seed)
+        clrand.setPseudoRandomGeneratorSeed(self._generator, seed)
         # curand.setGeneratorOffset(self._generator, 0)
 
     def standard_normal(self, size=None, dtype=float):

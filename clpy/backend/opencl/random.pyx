@@ -96,8 +96,9 @@ cdef class clrandGenerator:
         self.inner_state_size = 1
 
     def seed(self, seed):
-        # seed: numpy.ndarray (uint64)
-        numpy.random.seed(seed[0])
+        # note(nsakabe-fixstars):
+        # seed for numpy must be between 0 and 2**32-1.
+        numpy.random.seed(seed % (2**32-1))
         self.a = self._issue_by_np()
         self.b = self._issue_by_np()
         self.c = self._issue_by_np()
@@ -156,7 +157,7 @@ cdef class clrandGenerator:
 cpdef clrandGenerator createGenerator():
     return clrandGenerator()
 
-cpdef setPseudoRandomGeneratorSeed(clrandGenerator generator, seed):
+cpdef setPseudoRandomGeneratorSeed(clrandGenerator generator, unsigned long long seed):
     generator.seed(seed)
 
 
