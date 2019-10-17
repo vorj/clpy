@@ -21,7 +21,7 @@ from clpy.random import sample as sample_  # NOQA
 from clpy.random.distributions import normal  # NOQA
 # from clpy.random.distributions import standard_normal  # NOQA
 from clpy.random.distributions import uniform  # NOQA
-# from clpy.random.generator import get_random_state  # NOQA
+from clpy.random.generator import get_random_state  # NOQA
 # from clpy.random.generator import RandomState  # NOQA
 # from clpy.random.generator import reset_states  # NOQA
 # from clpy.random.generator import seed  # NOQA

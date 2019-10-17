@@ -81,7 +81,7 @@ cdef class clrandGenerator:
         # numpy.random.random_integers accepts a number
         # up to the maximum bound of *signed* int64.
         return clpy.asarray(
-                [numpy.random.random_integers(
+                [numpy.random.randint(
                     numpy.iinfo(numpy.int64).max
                     )
                     ], dtype=numpy.uint64)
