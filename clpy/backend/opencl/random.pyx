@@ -171,7 +171,7 @@ u64_shrinkto_fp = clpy.core.core.ElementwiseKernel(
 
 cpdef generateUniform(clrandGenerator generator, ndarray array):
     if array.dtype.name != "float32":
-        raise TypeError("array's type must be float32")
+        raise ValueError("array's type must be float32")
     size = array.size
     generator.expand(size)
     state = generator.roll()
@@ -180,7 +180,7 @@ cpdef generateUniform(clrandGenerator generator, ndarray array):
 
 cpdef generateUniformDouble(clrandGenerator generator, ndarray array):
     if array.dtype.name != "float64":
-        raise TypeError("array's type must be float64")
+        raise ValueError("array's type must be float64")
     size = array.size
     generator.expand(size)
     state = generator.roll()
