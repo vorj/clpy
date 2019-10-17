@@ -187,5 +187,43 @@ cpdef generateUniformDouble(clrandGenerator generator, ndarray array):
     state_view = state[0:size]
     u64_shrinkto_fp(state_view, array)
 
+box_muller = clpy.core.core.ElementwiseKernel(
+    '', 'T u1, T u2, U out',
+    '''
+    out = sqrt( -2.0 * log ( u1 ) ) * cos ( 2.0 * M_PI * u2 );
+    ''',
+    'clpy_box_muller'
+)
+
+cpdef generateNormal(clrandGenerator generator, ndarray array, float loc, float scale):
+    # Box-Muller method
+    if array.dtype.name != "float32":
+        raise ValueError("array's type must be float32")
+    size = array.size
+    generator.expand(size)
+    u1 = clpy.empty_like(array)
+    generateUniform(generator, u1)
+    u2 = clpy.empty_like(array)
+    generateUniform(generator, u2)
+    box_muller(u1, u2, array)
+    array += loc
+    array *= scale
+
+cpdef generateNormalDouble(clrandGenerator generator, ndarray array, float loc, float scale):
+    # Box-Muller method
+    if array.dtype.name != "float64":
+        raise ValueError("array's type must be float32")
+    size = array.size
+    generator.expand(size)
+    u1 = clpy.empty_like(array)
+    generateUniform(generator, u1)
+    u2 = clpy.empty_like(array)
+    generateUniform(generator, u2)
+    box_muller(u1, u2, array)
+    array += loc
+    array *= scale
+
+
+
 cpdef destroyGenerator(clrandGenerator generator):
     pass

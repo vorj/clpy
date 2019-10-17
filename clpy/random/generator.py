@@ -102,13 +102,13 @@ class RandomState(object):
             :meth:`numpy.random.RandomState.normal`
 
         """
-        raise NotImplementedError
-        # dtype = _check_and_get_dtype(dtype)
-        # if dtype.char == 'f':
-        #     func = curand.generateNormal
-        # else:
-        #     func = curand.generateNormalDouble
-        # return self._generate_normal(func, size, dtype, loc, scale)
+        dtype = _check_and_get_dtype(dtype)
+        out = clpy.empty(core.get_size(size), dtype=dtype)
+        if dtype.char == 'f':
+            clrand.generateNormal(self._generator, out, loc, scale)
+        else:
+            clrand.generateNormalDouble(self._generator, out, loc, scale)
+        return out
 
     def rand(self, *size, **kwarg):
         """Returns uniform random values over the interval ``[0, 1)``.
@@ -261,7 +261,6 @@ class RandomState(object):
             :meth:`numpy.random.RandomState.standard_normal`
 
         """
-        raise NotImplementedError
         return self.normal(size=size, dtype=dtype)
 
     def uniform(self, low=0.0, high=1.0, size=None, dtype=float):

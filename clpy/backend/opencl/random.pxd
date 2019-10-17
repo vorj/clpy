@@ -15,4 +15,7 @@ cpdef setPseudoRandomGeneratorSeed(clrandGenerator generator, unsigned long long
 cpdef generateUniform(clrandGenerator generator, ndarray array)
 cpdef generateUniformDouble(clrandGenerator generator, ndarray array)
 
+cpdef generateNormal(clrandGenerator generator, ndarray array, float loc, float scale)
+cpdef generateNormalDouble(clrandGenerator generator, ndarray array, float loc, float scale)
+
 cpdef destroyGenerator(clrandGenerator generator)

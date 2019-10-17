@@ -94,14 +94,10 @@ def normal(loc=0.0, scale=1.0, size=None, dtype=float):
         loc = loc.get()
     if isinstance(scale, clpy.ndarray):
         scale = scale.get()
-    x_cpu = numpy.random.normal(loc=loc, scale=scale, size=size).astype(dtype)
-    x = clpy.ndarray(x_cpu.shape, dtype=dtype)
-    x.set(x_cpu)
-    # TODO(LWisteria): implement by OpenCL
-    # rs = generator.get_random_state()
-    # x = rs.normal(0, 1, size, dtype)
-    # clpy.multiply(x, scale, out=x)
-    # clpy.add(x, loc, out=x)
+    rs = generator.get_random_state()
+    x = rs.normal(0, 1, size, dtype)
+    clpy.multiply(x, scale, out=x)
+    clpy.add(x, loc, out=x)
     return x
 
 
