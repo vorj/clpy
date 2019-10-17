@@ -212,13 +212,13 @@ cpdef generateNormal(clrandGenerator generator, ndarray array, float loc, float 
 cpdef generateNormalDouble(clrandGenerator generator, ndarray array, float loc, float scale):
     # Box-Muller method
     if array.dtype.name != "float64":
-        raise ValueError("array's type must be float32")
+        raise ValueError("array's type must be float64")
     size = array.size
     generator.expand(size)
     u1 = clpy.empty_like(array)
-    generateUniform(generator, u1)
+    generateUniformDouble(generator, u1)
     u2 = clpy.empty_like(array)
-    generateUniform(generator, u2)
+    generateUniformDouble(generator, u2)
     box_muller(u1, u2, array)
     array += loc
     array *= scale
