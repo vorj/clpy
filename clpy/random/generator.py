@@ -100,7 +100,6 @@ class RandomState(object):
             :meth:`numpy.random.RandomState.rand`
 
         """
-        raise NotImplementedError
         dtype = kwarg.pop('dtype', float)
         if kwarg:
             raise TypeError('rand() got unexpected keyword arguments %s'
@@ -115,7 +114,6 @@ class RandomState(object):
             :meth:`numpy.random.RandomState.randn`
 
         """
-        raise NotImplementedError
         dtype = kwarg.pop('dtype', float)
         if kwarg:
             raise TypeError('randn() got unexpected keyword arguments %s'
