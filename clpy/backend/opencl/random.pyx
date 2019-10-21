@@ -160,6 +160,11 @@ cpdef clrandGenerator createGenerator():
 cpdef setPseudoRandomGeneratorSeed(clrandGenerator generator, unsigned long long seed):
     generator.seed(seed)
 
+cpdef generate(clrandGenerator generator, ndarray array):
+    print("clrand.generate")
+    generator.expand(array.size)
+    state = generator.roll()
+    array[:] = state[0:array.size].reshape(array.shape)
 
 u64_shrinkto_fp = clpy.core.core.ElementwiseKernel(
     '', 'T in, U out',

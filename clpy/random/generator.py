@@ -1,6 +1,6 @@
 import atexit
 import binascii
-# import functools
+import functools
 import operator
 import os
 import time
@@ -160,18 +160,17 @@ class RandomState(object):
             If 0x80000000 :math:`\\leq` ``mx`` :math:`\\leq` 0xffffffff,
             a ``numpy.uint32`` array is returned.
         """
-        raise NotImplementedError
-        # if size is None:
-        #     return self.interval(mx, 1).reshape(())
-        # elif isinstance(size, int):
-        #     size = (size, )
+        if size is None:
+            return self.interval(mx, 1).reshape(())
+        elif isinstance(size, int):
+            size = (size, )
 
-        # if mx == 0:
-        #     return clpy.zeros(size, dtype=numpy.int32)
+        if mx == 0:
+            return clpy.zeros(size, dtype=numpy.int32)
 
-        # if mx < 0:
-        #     raise ValueError(
-        #         'mx must be non-negative (actual: {})'.format(mx))
+        if mx < 0:
+            raise ValueError(
+                'mx must be non-negative (actual: {})'.format(mx))
         # elif mx <= 0x7fffffff:
         #     dtype = numpy.int32
         # elif mx <= 0xffffffff:
@@ -179,39 +178,39 @@ class RandomState(object):
         # else:
         #     raise ValueError(
         #         'mx must be within uint32 range (actual: {})'.format(mx))
+        dtype = numpy.uint64
 
-        # mask = (1 << mx.bit_length()) - 1
-        # mask = clpy.array(mask, dtype=dtype)
+        mask = (1 << mx.bit_length()) - 1
+        mask = clpy.array(mask, dtype=dtype)
 
-        # n = functools.reduce(operator.mul, size, 1)
+        n = functools.reduce(operator.mul, size, 1)
 
-        # sample = clpy.empty((n,), dtype=dtype)
-        # n_rem = n  # The number of remaining elements to sample
-        # ret = None
-        # while n_rem > 0:
-        #     curand.generate(
-        #         self._generator, sample.data.ptr, sample.size)
-        #     # Drop the samples that exceed the upper limit
-        #     sample &= mask
-        #     success = sample <= mx
+        sample = clpy.empty((n,), dtype=dtype)
+        n_rem = n  # The number of remaining elements to sample
+        ret = None
+        while n_rem > 0:
+            clrand.generate(self._generator, sample)
+            # Drop the samples that exceed the upper limit
+            sample &= mask
+            success = sample <= mx
 
-        #     if ret is None:
-        #         # If the sampling has finished in the first iteration,
-        #         # just return the sample.
-        #         if success.all():
-        #             n_rem = 0
-        #             ret = sample
-        #             break
+            if ret is None:
+                # If the sampling has finished in the first iteration,
+                # just return the sample.
+                if success.all():
+                    n_rem = 0
+                    ret = sample
+                    break
 
-        #         # Allocate the return array.
-        #         ret = clpy.empty((n,), dtype=dtype)
+                # Allocate the return array.
+                ret = clpy.empty((n,), dtype=dtype)
 
-        #     n_succ = min(n_rem, int(success.sum()))
-        #     ret[n - n_rem:n - n_rem + n_succ] = sample[success][:n_succ]
-        #     n_rem -= n_succ
+            n_succ = min(n_rem, int(success.sum()))
+            ret[n - n_rem:n - n_rem + n_succ] = sample[success][:n_succ]
+            n_rem -= n_succ
 
-        # assert n_rem == 0
-        # return ret.reshape(size)
+        assert n_rem == 0
+        return ret.reshape(size)
 
     def seed(self, seed=None):
         """Resets the state of the random number generator with a seed.
@@ -263,7 +262,6 @@ class RandomState(object):
             :meth:`numpy.random.choice`
 
         """
-        raise NotImplementedError
         if a is None:
             raise ValueError('a must be 1-dimensional or an integer')
         if isinstance(a, clpy.ndarray) and a.ndim == 0:
