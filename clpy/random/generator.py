@@ -68,13 +68,11 @@ class RandomState(object):
             :meth:`numpy.random.RandomState.lognormal`
 
         """
-        raise NotImplementedError
-        # dtype = _check_and_get_dtype(dtype)
-        # if dtype.char == 'f':
-        #     func = curand.generateLogNormal
-        # else:
-        #     func = curand.generateLogNormalDouble
-        # return self._generate_normal(func, size, dtype, mean, sigma)
+        # Note(nsakabe-fixstars):
+        # https://github.com/numpy/numpy/blob/2a488fe76a0f732dc418d03b452caace161673da/numpy/random/src/distributions/distributions.c#L510
+        # says lognormal(mean, sigma) equals to  exp(random_normal(mean, sigma))
+
+        return clpy.exp(self.normal(loc=mean, scale=sigma, size=size, dtype=dtype))
 
     def normal(self, loc=0.0, scale=1.0, size=None, dtype=float):
         """Returns an array of normally distributed samples.

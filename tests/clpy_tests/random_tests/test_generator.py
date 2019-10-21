@@ -42,6 +42,7 @@ class TestRandomState(unittest.TestCase):
     def setUp(self):
         self.rs = generator.RandomState(seed=testing.generate_seed())
 
+    """
     def check_lognormal(self, clrand_func, dtype):
         shape = core.get_size(self.size)
         exp_size = six.moves.reduce(operator.mul, shape, 1)
@@ -68,6 +69,7 @@ class TestRandomState(unittest.TestCase):
     def test_lognormal_float64(self):
         with FunctionSwitcher(clrand.generateLogNormalDouble):
             self.check_lognormal(clrand.generateLogNormalDouble, numpy.float64)
+    """
 
     def check_normal(self, clrand_func, dtype):
         shape = core.get_size(self.size)
