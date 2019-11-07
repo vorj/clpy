@@ -34,6 +34,9 @@ cdef struct _CArray:
 cdef struct _CArray0:
     char unused
 
+cdef set _pointer_numpy_types = {numpy.dtype(i).type
+                                 for i in '?bhilqBHILQefdFD'}
+
 cdef void _launch(clpy.backend.opencl.types.cl_kernel kernel, global_work_size,
                   local_work_size, args, Py_ssize_t local_mem) except *:
     global_dim = len(global_work_size)
@@ -100,7 +103,7 @@ cdef void _launch(clpy.backend.opencl.types.cl_kernel kernel, global_work_size,
                 elif isinstance(a, bool):
                     a = numpy.bool_(a)
 
-                if numpy.issctype(type(a)):
+                if type(a) in _pointer_numpy_types:
                     ptr = <size_t>a.__array_interface__["data"][0]
                     size = a.nbytes
                 else:
