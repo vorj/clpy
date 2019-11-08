@@ -337,16 +337,15 @@ class RandomState(object):
             :meth:`numpy.random.shuffle`
 
         """
-        raise NotImplementedError
-        # if not isinstance(a, clpy.ndarray):
-        #     raise TypeError('The array must be clpy.ndarray')
+        if not isinstance(a, clpy.ndarray):
+            raise TypeError('The array must be clpy.ndarray')
 
-        # if a.ndim == 0:
-        #     raise TypeError('An array whose ndim is 0 is not supported')
+        if a.ndim == 0:
+            raise TypeError('An array whose ndim is 0 is not supported')
 
-        # sample = clpy.zeros((len(a)), dtype=numpy.int32)
-        # curand.generate(self._generator, sample.data.ptr, sample.size)
-        # a[:] = a[clpy.argsort(sample)]
+        sample = clpy.zeros((len(a)), dtype=numpy.int32)
+        clrand.generate(self._generator, sample)
+        a[:] = a[clpy.argsort(sample)]
 
 
 def seed(seed=None):
