@@ -34,9 +34,6 @@ cdef struct _CArray:
 cdef struct _CArray0:
     char unused
 
-#cdef set _pointer_numpy_types = {numpy.dtype(i).type
-#                                 for i in clpy.core._all_type_chars}
-
 cdef void _launch(clpy.backend.opencl.types.cl_kernel kernel, global_work_size,
                   local_work_size, args, Py_ssize_t local_mem) except *:
     global_dim = len(global_work_size)
