@@ -161,9 +161,11 @@ cpdef setPseudoRandomGeneratorSeed(clrandGenerator generator, unsigned long long
     generator.seed(seed)
 
 cpdef generate(clrandGenerator generator, ndarray array):
+    if not array.dtype.char in 'qlihbQLIHB':
+        raise ValueError("array's type must be integer")
     generator.expand(array.size)
     state = generator.roll()
-    array[:] = state[0:array.size].reshape(array.shape)
+    array[:] = state[0:array.size].reshape(array.shape).astype(array.dtype)
 
 u64_shrinkto_fp = clpy.core.core.ElementwiseKernel(
     '', 'T in, U out',

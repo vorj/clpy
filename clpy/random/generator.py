@@ -169,14 +169,13 @@ class RandomState(object):
         if mx < 0:
             raise ValueError(
                 'mx must be non-negative (actual: {})'.format(mx))
-        # elif mx <= 0x7fffffff:
-        #     dtype = numpy.int32
-        # elif mx <= 0xffffffff:
-        #     dtype = numpy.uint32
-        # else:
-        #     raise ValueError(
-        #         'mx must be within uint32 range (actual: {})'.format(mx))
-        dtype = numpy.uint64
+        elif mx <= 0x7fffffff:
+            dtype = numpy.int32
+        elif mx <= 0xffffffff:
+            dtype = numpy.uint32
+        else:
+            raise ValueError(
+                'mx must be within uint32 range (actual: {})'.format(mx))
 
         mask = (1 << mx.bit_length()) - 1
         mask = clpy.array(mask, dtype=dtype)
