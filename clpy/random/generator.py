@@ -10,8 +10,8 @@ import six
 
 import clpy
 from clpy import backend
-from clpy import core
 import clpy.backend.opencl.random as clrand
+from clpy import core
 
 
 class RandomState(object):
@@ -70,9 +70,10 @@ class RandomState(object):
         """
         # Note(nsakabe-fixstars):
         # https://github.com/numpy/numpy/blob/2a488fe76a0f732dc418d03b452caace161673da/numpy/random/src/distributions/distributions.c#L510
-        # says lognormal(mean, sigma) equals to  exp(random_normal(mean, sigma))
+        # says lognormal(mean, sigma) equals to exp(random_normal(mean, sigma))
 
-        return clpy.exp(self.normal(loc=mean, scale=sigma, size=size, dtype=dtype))
+        return clpy.exp(
+            self.normal(loc=mean, scale=sigma, size=size, dtype=dtype))
 
     def normal(self, loc=0.0, scale=1.0, size=None, dtype=float):
         """Returns an array of normally distributed samples.

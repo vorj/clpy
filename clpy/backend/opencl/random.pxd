@@ -10,14 +10,20 @@ cdef class clrandGenerator:
 
 
 cpdef clrandGenerator createGenerator()
-cpdef setPseudoRandomGeneratorSeed(clrandGenerator generator, unsigned long long seed)
+cpdef setPseudoRandomGeneratorSeed(
+    clrandGenerator generator, unsigned long long seed
+)
 
 cpdef generate(clrandGenerator generator, ndarray array)
 
 cpdef generateUniform(clrandGenerator generator, ndarray array)
 cpdef generateUniformDouble(clrandGenerator generator, ndarray array)
 
-cpdef generateNormal(clrandGenerator generator, ndarray array, float loc, float scale)
-cpdef generateNormalDouble(clrandGenerator generator, ndarray array, float loc, float scale)
+cpdef generateNormal(
+    clrandGenerator generator, ndarray array, float loc, float scale
+)
+cpdef generateNormalDouble(
+    clrandGenerator generator, ndarray array, float loc, float scale
+)
 
 cpdef destroyGenerator(clrandGenerator generator)

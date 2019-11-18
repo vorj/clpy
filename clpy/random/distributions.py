@@ -1,7 +1,6 @@
 import clpy
 from clpy import core
 from clpy.random import generator
-import numpy
 
 
 # TODO(beam2d): Implement many distributions

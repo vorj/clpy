@@ -1,6 +1,6 @@
-import numpy
 import clpy
 from clpy.core.core cimport ndarray
+import numpy
 
 import math
 
@@ -45,11 +45,16 @@ __kernel void clpy_expand_inner_state_array(
     size_t const base = id * stride * 2;
     size_t const target = base + stride;
 
-    counter[target] = xorwow( &a[base], &b[base], &c[base], &d[base], &counter[base] );
-    a[target] = xorwow( &a[base], &b[base], &c[base], &d[base], &counter[base] );
-    c[target] = xorwow( &a[base], &b[base], &c[base], &d[base], &counter[base] );
-    b[target] = xorwow( &a[base], &b[base], &c[base], &d[base], &counter[base] );
-    d[target] = xorwow( &a[base], &b[base], &c[base], &d[base], &counter[base] );
+    counter[target] =
+        xorwow( &a[base], &b[base], &c[base], &d[base], &counter[base] );
+    a[target] =
+        xorwow( &a[base], &b[base], &c[base], &d[base], &counter[base] );
+    c[target] =
+        xorwow( &a[base], &b[base], &c[base], &d[base], &counter[base] );
+    b[target] =
+        xorwow( &a[base], &b[base], &c[base], &d[base], &counter[base] );
+    d[target] =
+        xorwow( &a[base], &b[base], &c[base], &d[base], &counter[base] );
 }
 """
 
@@ -81,10 +86,9 @@ cdef class clrandGenerator:
         # numpy.random.random_integers accepts a number
         # up to the maximum bound of *signed* int64.
         return clpy.asarray(
-                [numpy.random.randint(
-                    numpy.iinfo(numpy.int64).max
-                    )
-                    ], dtype=numpy.uint64)
+            [numpy.random.randint(numpy.iinfo(numpy.int64).max)],
+            dtype=numpy.uint64
+        )
 
     def __init__(self):
         numpy.random.seed(0)
@@ -132,22 +136,21 @@ cdef class clrandGenerator:
         stride = new_inner_state_size // 2
         while stride >= 1:
             expand_function(
-                    global_work_size=(new_inner_state_size // (stride*2) ,),
-                    local_work_size=(1,),
-                    args=( self.a, self.b, self.c, self.d, self.counter, stride ),
-                    local_mem=0)
+                global_work_size=(new_inner_state_size // (stride*2),),
+                local_work_size=(1,),
+                args=(self.a, self.b, self.c, self.d, self.counter, stride),
+                local_mem=0)
             stride = stride // 2
 
         self.inner_state_size = new_inner_state_size
 
-
     def roll(self):
         output = clpy.empty_like(self.a)
         roll_function(
-                global_work_size=(output.size,),
-                local_work_size=(1,),
-                args=( self.a, self.b, self.c, self.d, self.counter, output ),
-                local_mem=0)
+            global_work_size=(output.size,),
+            local_work_size=(1,),
+            args=(self.a, self.b, self.c, self.d, self.counter, output),
+            local_mem=0)
         return output
 
     def reveal(self):
@@ -157,11 +160,14 @@ cdef class clrandGenerator:
 cpdef clrandGenerator createGenerator():
     return clrandGenerator()
 
-cpdef setPseudoRandomGeneratorSeed(clrandGenerator generator, unsigned long long seed):
+cpdef setPseudoRandomGeneratorSeed(
+    clrandGenerator generator, unsigned long long seed
+):
     generator.seed(seed)
 
+
 def safe_cast_to_ints(array, dtype):
-    if not dtype.char in 'qlihbQLIHB':
+    if dtype.char not in 'qlihbQLIHB':
         raise ValueError("array's type must be integer")
     if array.dtype == dtype:
         return array
@@ -174,11 +180,13 @@ def safe_cast_to_ints(array, dtype):
 
 
 cpdef generate(clrandGenerator generator, ndarray array):
-    if not array.dtype.char in 'qlihbQLIHB':
+    if array.dtype.char not in 'qlihbQLIHB':
         raise ValueError("array's type must be integer")
     generator.expand(array.size)
     state = generator.roll()
-    array[:] = safe_cast_to_ints(state[0:array.size].reshape(array.shape), dtype=array.dtype)
+    array[:] = safe_cast_to_ints(
+        state[0:array.size].reshape(array.shape), dtype=array.dtype
+    )
 
 u64_shrinkto_fp = clpy.core.core.ElementwiseKernel(
     '', 'T in, U out',
@@ -214,7 +222,9 @@ box_muller = clpy.core.core.ElementwiseKernel(
     'clpy_box_muller'
 )
 
-cpdef generateNormal(clrandGenerator generator, ndarray array, float loc, float scale):
+cpdef generateNormal(
+    clrandGenerator generator, ndarray array, float loc, float scale
+):
     # Box-Muller method
     if array.dtype.name != "float32":
         raise ValueError("array's type must be float32")
@@ -228,7 +238,9 @@ cpdef generateNormal(clrandGenerator generator, ndarray array, float loc, float 
     array += loc
     array *= scale
 
-cpdef generateNormalDouble(clrandGenerator generator, ndarray array, float loc, float scale):
+cpdef generateNormalDouble(
+    clrandGenerator generator, ndarray array, float loc, float scale
+):
     # Box-Muller method
     if array.dtype.name != "float64":
         raise ValueError("array's type must be float64")
@@ -241,7 +253,6 @@ cpdef generateNormalDouble(clrandGenerator generator, ndarray array, float loc, 
     box_muller(u1, u2, array)
     array += loc
     array *= scale
-
 
 
 cpdef destroyGenerator(clrandGenerator generator):
