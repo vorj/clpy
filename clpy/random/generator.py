@@ -390,7 +390,9 @@ def get_random_state():
     dev = backend.Device()
     rs = _random_states.get(dev.id, None)
     if rs is None:
-        seed = int(time.mktime(time.localtime()))
+        seed = os.getenv('CLPY_SEED')
+        if seed is None:
+            seed = os.getenv('CHAINER_SEED')
         rs = RandomState(seed)
         rs = _random_states.setdefault(dev.id, rs)
     return rs
