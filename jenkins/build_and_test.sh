@@ -63,6 +63,7 @@ TEST_FILES="
 tests/clpy_tests/linalg_tests/test_product.py
 tests/clpy_tests/random_tests/test_distributions.py
 tests/clpy_tests/random_tests/test_random.py
+tests/clpy_tests/random_tests/test_generator.py
 tests/clpy_tests/sorting_tests/test_count.py
 tests/clpy_tests/sorting_tests/test_search.py
 tests/clpy_tests/sorting_tests/test_sort.py::TestSort
