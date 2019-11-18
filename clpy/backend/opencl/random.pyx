@@ -45,11 +45,11 @@ __kernel void clpy_expand_inner_state_array(
     size_t const base = id * stride * 2;
     size_t const target = base + stride;
 
-    a[target] = xorwow( &a[base], &b[base], &c[base], &d[base], &counter[base] );
-    b[target] = xorwow( &a[base], &b[base], &c[base], &d[base], &counter[base] );
-    c[target] = xorwow( &a[base], &b[base], &c[base], &d[base], &counter[base] );
-    d[target] = xorwow( &a[base], &b[base], &c[base], &d[base], &counter[base] );
     counter[target] = xorwow( &a[base], &b[base], &c[base], &d[base], &counter[base] );
+    a[target] = xorwow( &a[base], &b[base], &c[base], &d[base], &counter[base] );
+    c[target] = xorwow( &a[base], &b[base], &c[base], &d[base], &counter[base] );
+    b[target] = xorwow( &a[base], &b[base], &c[base], &d[base], &counter[base] );
+    d[target] = xorwow( &a[base], &b[base], &c[base], &d[base], &counter[base] );
 }
 """
 
@@ -89,8 +89,8 @@ cdef class clrandGenerator:
     def __init__(self):
         numpy.random.seed(0)
         self.a = self._issue_by_np()
-        self.b = self._issue_by_np()
         self.c = self._issue_by_np()
+        self.b = self._issue_by_np()
         self.d = self._issue_by_np()
         self.counter = self._issue_by_np()
         self.inner_state_size = 1
@@ -100,8 +100,8 @@ cdef class clrandGenerator:
         # seed for numpy must be between 0 and 2**32-1.
         numpy.random.seed(seed % (2**32-1))
         self.a = self._issue_by_np()
-        self.b = self._issue_by_np()
         self.c = self._issue_by_np()
+        self.b = self._issue_by_np()
         self.d = self._issue_by_np()
         self.counter = self._issue_by_np()
         self.inner_state_size = 1
@@ -160,12 +160,25 @@ cpdef clrandGenerator createGenerator():
 cpdef setPseudoRandomGeneratorSeed(clrandGenerator generator, unsigned long long seed):
     generator.seed(seed)
 
+def safe_cast_to_ints(array, dtype):
+    if not dtype.char in 'qlihbQLIHB':
+        raise ValueError("array's type must be integer")
+    if array.dtype == dtype:
+        return array
+    mask = (1 << dtype.itemsize*8) - 1
+    mask = clpy.array(mask, dtype=numpy.uint64)
+
+    masked_array = array & mask
+
+    return masked_array.astype(dtype)
+
+
 cpdef generate(clrandGenerator generator, ndarray array):
     if not array.dtype.char in 'qlihbQLIHB':
         raise ValueError("array's type must be integer")
     generator.expand(array.size)
     state = generator.roll()
-    array[:] = state[0:array.size].reshape(array.shape).astype(array.dtype)
+    array[:] = safe_cast_to_ints(state[0:array.size].reshape(array.shape), dtype=array.dtype)
 
 u64_shrinkto_fp = clpy.core.core.ElementwiseKernel(
     '', 'T in, U out',
