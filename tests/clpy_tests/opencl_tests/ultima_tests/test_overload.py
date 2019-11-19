@@ -3,8 +3,8 @@
 #               we should ignore only W291 for whole file
 #               using --per-file-ignores .
 
+import clpy
 import unittest
-import utility
 
 
 class TestUltimaOverloadMangling(unittest.TestCase):
@@ -18,7 +18,7 @@ void f__left_paren__int__right_paren__(int arg)
 {
 }
 '''
-        y = utility.exec_ultima(
+        y = clpy.backend.ultima.exec_ultima(
             '''
             void f(){}
             void f(int arg){}
@@ -39,7 +39,7 @@ int main()
     f__left_paren__int__right_paren__(42);
 }
 '''
-        y = utility.exec_ultima(
+        y = clpy.backend.ultima.exec_ultima(
             '''
             void f(){}
             void f(int arg){}
@@ -71,7 +71,7 @@ int main()
     f__left_paren__constchar__pointer____comma__size_t__comma____dot____dot____dot____right_paren__("abc", sizeof ("abc") / sizeof(char), 42, 42, 42, 42., 42.F, 42U, 42L, 42);
 }
 '''
-        y = utility.exec_ultima(
+        y = clpy.backend.ultima.exec_ultima(
             '''
             int f(){return 0;}
             int f(int arg1, double arg2){return 1;}
@@ -99,7 +99,7 @@ int main()
     f(42.);
 }
 '''
-        y = utility.exec_ultima(
+        y = clpy.backend.ultima.exec_ultima(
             '''
             void f(int a){}
             __attribute__((annotate("clpy_no_mangle"))) void f(double a){}

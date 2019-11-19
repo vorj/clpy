@@ -3,8 +3,8 @@
 #               we should ignore only W291 for whole file
 #               using --per-file-ignores .
 
+import clpy
 import unittest
-import utility
 
 
 class TestUltimaHalfTrick(unittest.TestCase):
@@ -17,7 +17,7 @@ __clpy__half f()
     return (__clpy__half)(42.F);
 }
 '''
-        y = utility.exec_ultima(
+        y = clpy.backend.ultima.exec_ultima(
             '''
             half f(){
               half a;
@@ -33,7 +33,7 @@ void f()
     int __clpy__half = 1 / 2;
 }
 '''
-        y = utility.exec_ultima(
+        y = clpy.backend.ultima.exec_ultima(
             '''
             void f(){
               int half = 1/2;
@@ -47,7 +47,7 @@ void f(int __clpy__half)
 {
 }
 '''
-        y = utility.exec_ultima(
+        y = clpy.backend.ultima.exec_ultima(
             '''
             void f(int half){}
             ''')
@@ -61,7 +61,7 @@ void f()
     int __clpy__half = half_;
 }
 '''
-        y = utility.exec_ultima(
+        y = clpy.backend.ultima.exec_ultima(
             '''
             void f(){
               __clpy__half half_ = 42.f;

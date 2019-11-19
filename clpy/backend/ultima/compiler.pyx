@@ -1,9 +1,10 @@
-import clpy
-
 import os
 import subprocess
 import tempfile
 import time
+
+import clpy
+cimport clpy
 
 
 class TempFile(object):
@@ -16,14 +17,14 @@ class TempFile(object):
             f.write(self.s)
 
     def __exit__(self, exception_type, exception_value, traceback):
-        os.remove(self.fn)
+        if os.getenv("CLPY_SAVE_PRE_KERNEL_SOURCE") != "1":
+            os.remove(self.fn)
 
 
-def exec_ultima(source, _clpy_header=''):
-    source = \
-        'typedef ' + clpy.backend.opencl.utility.typeof_size() \
-        + ' __kernel_arg_size_t;\n' \
-        + _clpy_header + '\n' \
+cpdef str exec_ultima(str source, str _clpy_header_include=''):
+    kernel_arg_size_t_code = 'typedef ' \
+        + clpy.backend.opencl.utility.typeof_size() + ' __kernel_arg_size_t;\n'
+    source = kernel_arg_size_t_code + _clpy_header_include + '\n' \
         'static void __clpy_begin_print_out() ' \
         '__attribute__((annotate("clpy_begin_print_out")));\n' \
         + source + '\n' \
@@ -32,7 +33,7 @@ def exec_ultima(source, _clpy_header=''):
 
     filename = tempfile.gettempdir() + "/" + str(time.monotonic()) + ".cpp"
 
-    with TempFile(filename, source):
+    with TempFile(filename, source) as tf:
         root_dir = os.path.join(clpy.__path__[0], "..")
         proc = subprocess.Popen('{} {} -- -I {}'
                                 .format(os.path.join(root_dir,

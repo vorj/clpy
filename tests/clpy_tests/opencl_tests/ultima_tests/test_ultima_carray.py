@@ -3,28 +3,28 @@
 #               we should ignore only W291 for whole file
 #               using --per-file-ignores .
 
+import clpy
 import unittest
-import utility
 
 
 class TestUltimaCArray(unittest.TestCase):
 
     def test_carray_argument_mutation(self):
-        x = utility.exec_ultima('', _clpy_header='#include <cupy/carray.hpp>') + '''
+        x = clpy.backend.ultima.exec_ultima('', '#include <cupy/carray.hpp>') + '''
 void f(__global int* const __restrict__ arr, const CArray_2 arr_info) 
 {
 }
 '''[1:]
-        y = utility.exec_ultima(
+        y = clpy.backend.ultima.exec_ultima(
             '''
             void f(CArray<int, 2> arr){}
             ''',
-            _clpy_header='#include <cupy/carray.hpp>')
+            '#include <cupy/carray.hpp>')
         self.maxDiff = None
         self.assertEqual(x, y)
 
     def test_carray_member_function(self):
-        x = utility.exec_ultima('', _clpy_header='#include <cupy/carray.hpp>') + '''
+        x = clpy.backend.ultima.exec_ultima('', '#include <cupy/carray.hpp>') + '''
 void f(__global int* const __restrict__ arr, const CArray_2 arr_info) 
 {
     ((const size_t)arr_info.size_);
@@ -32,7 +32,7 @@ void f(__global int* const __restrict__ arr, const CArray_2 arr_info)
     ((const size_t*)arr_info.strides_);
 }
 '''[1:]
-        y = utility.exec_ultima(
+        y = clpy.backend.ultima.exec_ultima(
             '''
             void f(CArray<int, 2> arr){
               arr.size();
@@ -40,12 +40,12 @@ void f(__global int* const __restrict__ arr, const CArray_2 arr_info)
               arr.strides();
             }
             ''',
-            _clpy_header='#include <cupy/carray.hpp>')
+            '#include <cupy/carray.hpp>')
         self.maxDiff = None
         self.assertEqual(x, y)
 
     def test_carray_0_member_function(self):
-        x = utility.exec_ultima('', _clpy_header='#include <cupy/carray.hpp>') + '''
+        x = clpy.backend.ultima.exec_ultima('', '#include <cupy/carray.hpp>') + '''
 void f(__global int* const __restrict__ arr, const CArray_0 arr_info) 
 {
     ((const size_t)arr_info.size_);
@@ -53,7 +53,7 @@ void f(__global int* const __restrict__ arr, const CArray_0 arr_info)
     ((const size_t*)NULL);
 }
 '''[1:]
-        y = utility.exec_ultima(
+        y = clpy.backend.ultima.exec_ultima(
             '''
             void f(CArray<int, 0> arr){
               arr.size();
@@ -61,12 +61,12 @@ void f(__global int* const __restrict__ arr, const CArray_0 arr_info)
               arr.strides();
             }
             ''',
-            _clpy_header='#include <cupy/carray.hpp>')
+            '#include <cupy/carray.hpp>')
         self.maxDiff = None
         self.assertEqual(x, y)
 
     def test_carray_1_member_function(self):
-        x = utility.exec_ultima('', _clpy_header='#include <cupy/carray.hpp>') + '''
+        x = clpy.backend.ultima.exec_ultima('', '#include <cupy/carray.hpp>') + '''
 void f(__global int* const __restrict__ arr, const CArray_1 arr_info) 
 {
     ((const size_t)arr_info.size_);
@@ -74,7 +74,7 @@ void f(__global int* const __restrict__ arr, const CArray_1 arr_info)
     ((const size_t*)&arr_info.strides_);
 }
 '''[1:]
-        y = utility.exec_ultima(
+        y = clpy.backend.ultima.exec_ultima(
             '''
             void f(CArray<int, 1> arr){
               arr.size();
@@ -82,7 +82,7 @@ void f(__global int* const __restrict__ arr, const CArray_1 arr_info)
               arr.strides();
             }
             ''',
-            _clpy_header='#include <cupy/carray.hpp>')
+            '#include <cupy/carray.hpp>')
         self.maxDiff = None
         self.assertEqual(x, y)
 
