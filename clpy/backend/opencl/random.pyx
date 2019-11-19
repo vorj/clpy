@@ -172,8 +172,10 @@ cpdef setPseudoRandomGeneratorSeed(
 ):
     generator.seed(seed)
 
+
 def is_acceptable_int(dtype):
     return dtype.char in 'qlihbQLIHB'
+
 
 def safe_cast_to_ints(array, dtype):
     if not is_acceptable_int(dtype):
@@ -266,4 +268,3 @@ cpdef generateNormalDouble(
 
 CLPY_RNG_PSEUDO_DEFAULT = 0
 CLPY_RNG_XORWOW = 1
-
