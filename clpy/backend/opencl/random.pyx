@@ -57,9 +57,7 @@ __kernel void clpy_expand_inner_state_array(
         xorwow( &a[base], &b[base], &c[base], &d[base], &counter[base] );
 }
 """
-
-expand_module = clpy.core.core.compile_with_cache(expand_kernel_src)
-expand_function = expand_module.get_function("clpy_expand_inner_state_array")
+expand_function = None
 
 
 roll_kernel_src = xorwow_src + """
@@ -75,9 +73,7 @@ __kernel void clpy_rng_roll(
     output[id] = xorwow( &a[id], &b[id], &c[id], &d[id], &counter[id] );
 }
 """
-
-roll_module = clpy.core.core.compile_with_cache(roll_kernel_src)
-roll_function = roll_module.get_function("clpy_rng_roll")
+roll_function = None
 
 cdef class clrandGenerator:
 
@@ -91,6 +87,17 @@ cdef class clrandGenerator:
         )
 
     def __init__(self):
+        global expand_function
+        global roll_function
+        if expand_function is None:
+            expand_module =\
+                clpy.core.core.compile_with_cache(expand_kernel_src)
+            expand_function =\
+                expand_module.get_function("clpy_expand_inner_state_array")
+        if roll_function is None:
+            roll_module = clpy.core.core.compile_with_cache(roll_kernel_src)
+            roll_function = roll_module.get_function("clpy_rng_roll")
+
         numpy.random.seed(0)
         self.a = self._issue_by_np()
         self.c = self._issue_by_np()
