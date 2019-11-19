@@ -165,9 +165,11 @@ cpdef setPseudoRandomGeneratorSeed(
 ):
     generator.seed(seed)
 
+def is_acceptable_int(dtype):
+    return dtype.char in 'qlihbQLIHB'
 
 def safe_cast_to_ints(array, dtype):
-    if dtype.char not in 'qlihbQLIHB':
+    if not is_acceptable_int(dtype):
         raise ValueError("array's type must be integer")
     if array.dtype == dtype:
         return array
@@ -180,7 +182,7 @@ def safe_cast_to_ints(array, dtype):
 
 
 cpdef generate(clrandGenerator generator, ndarray array):
-    if array.dtype.char not in 'qlihbQLIHB':
+    if not is_acceptable_int(array.dtype):
         raise ValueError("array's type must be integer")
     generator.expand(array.size)
     state = generator.roll()
