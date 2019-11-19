@@ -47,16 +47,10 @@ class RandomState(object):
         self.seed(seed)
 
     def __del__(self):
-        # When createGenerator raises an error, _generator is not initialized
         pass
-        # if hasattr(self, '_generator'):
-        #     curand.destroyGenerator(self._generator)
 
     def set_stream(self, stream=None):
-        raise NotImplementedError
-        # if stream is None:
-        #     stream = backend.Stream()
-        # curand.setStream(self._generator, stream.ptr)
+        raise NotImplementedError("ClPy doesn't support streams yet.")
 
     # NumPy compatible functions
 
