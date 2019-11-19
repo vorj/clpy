@@ -263,6 +263,3 @@ cpdef generateNormalDouble(
     array += loc
     array *= scale
 
-
-cpdef destroyGenerator(clrandGenerator generator):
-    pass

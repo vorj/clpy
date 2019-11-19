@@ -25,5 +25,3 @@ cpdef generateNormal(
 cpdef generateNormalDouble(
     clrandGenerator generator, ndarray array, float loc, float scale
 )
-
-cpdef destroyGenerator(clrandGenerator generator)
