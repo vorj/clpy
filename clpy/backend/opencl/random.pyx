@@ -124,15 +124,15 @@ cdef class clrandGenerator:
         new_inner_state_size = 2 ** math.ceil(math.log2(size))  # 2べきに繰り上げ
 
         new_a = clpy.empty((new_inner_state_size,), dtype=numpy.uint64)
-        new_a[0:old_inner_state_size] = self.a
+        new_a[0] = self.a[0]
         new_b = clpy.empty((new_inner_state_size,), dtype=numpy.uint64)
-        new_b[0:old_inner_state_size] = self.b
+        new_b[0] = self.b[0]
         new_c = clpy.empty((new_inner_state_size,), dtype=numpy.uint64)
-        new_c[0:old_inner_state_size] = self.c
+        new_c[0] = self.c[0]
         new_d = clpy.empty((new_inner_state_size,), dtype=numpy.uint64)
-        new_d[0:old_inner_state_size] = self.d
+        new_d[0] = self.d[0]
         new_counter = clpy.empty((new_inner_state_size,), dtype=numpy.uint64)
-        new_counter[0:old_inner_state_size] = self.counter
+        new_counter[0] = self.counter[0]
 
         self.a = new_a
         self.b = new_b
