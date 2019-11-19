@@ -43,6 +43,15 @@ class RandomState(object):
     """
 
     def __init__(self, seed=None, method=None):
+        if method is None:
+            method = clrand.CLPY_RNG_PSEUDO_DEFAULT
+        if method not in [
+            clrand.CLPY_RNG_PSEUDO_DEFAULT,
+            clrand.CLPY_RNG_XORWOW
+        ]:
+            raise NotImplementedError(
+                "ClPy supports no other methods than XORWOW."
+            )
         self._generator = clrand.createGenerator()
         self.seed(seed)
 

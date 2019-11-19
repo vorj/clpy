@@ -263,3 +263,7 @@ cpdef generateNormalDouble(
     array += loc
     array *= scale
 
+
+CLPY_RNG_PSEUDO_DEFAULT = 0
+CLPY_RNG_XORWOW = 1
+
