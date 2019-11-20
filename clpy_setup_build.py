@@ -111,6 +111,7 @@ MODULES = [
             'clpy.backend.opencl.utility',
             'clpy.backend.opencl.exceptions',
             'clpy.backend.opencl.clblast.clblast',
+            'clpy.backend.opencl.random',
             'clpy.backend.ultima.compiler',
             'clpy.util',
             'clpy.testing.bufio',
