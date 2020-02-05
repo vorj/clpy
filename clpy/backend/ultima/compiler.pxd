@@ -1,1 +1,3 @@
-cpdef str exec_ultima(str source, str _clpy_header_include=*)
+cpdef str exec_ultima(str source,
+                      str _clpy_header_include=*,
+                      tuple _options=*)

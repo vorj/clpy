@@ -1,3 +1,5 @@
+import functools
+import operator
 import os
 import subprocess
 import tempfile
@@ -21,7 +23,9 @@ class TempFile(object):
             os.remove(self.fn)
 
 
-cpdef str exec_ultima(str source, str _clpy_header_include=''):
+cpdef str exec_ultima(str source,
+                      str _clpy_header_include='',
+                      tuple _options=('',)):
     kernel_arg_size_t_code = 'typedef ' \
         + clpy.backend.opencl.utility.typeof_size() + ' __kernel_arg_size_t;\n'
     source = kernel_arg_size_t_code + _clpy_header_include + '\n' \
@@ -35,7 +39,7 @@ cpdef str exec_ultima(str source, str _clpy_header_include=''):
 
     with TempFile(filename, source) as tf:
         root_dir = os.path.join(clpy.__path__[0], "..")
-        proc = subprocess.Popen('{} {} -- -I {}'
+        proc = subprocess.Popen('{} {} -- -I {} {}'
                                 .format(os.path.join(root_dir,
                                                      "ultima",
                                                      "ultima"),
@@ -43,7 +47,9 @@ cpdef str exec_ultima(str source, str _clpy_header_include=''):
                                         os.path.join(root_dir,
                                                      "clpy",
                                                      "core",
-                                                     "include"))
+                                                     "include"),
+                                        functools.reduce(operator.add,
+                                                         _options))
                                 .strip().split(" "),
                                 stdout=subprocess.PIPE,
                                 stderr=subprocess.PIPE,
