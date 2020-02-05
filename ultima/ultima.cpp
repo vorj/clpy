@@ -1466,12 +1466,6 @@ public:
         }
       }
     }
-    // If we have a conversion operator call only print the argument.
-    auto *MD = Node->getMethodDecl();
-    if (MD && clang::isa<clang::CXXConversionDecl>(MD)) {
-      PrintExpr(Node->getImplicitObjectArgument());
-      return;
-    }
     auto Call = clang::cast<clang::CallExpr>(Node);
     if(auto f = clang::dyn_cast<clang::FunctionDecl>(Call->getCalleeDecl())){
       auto it = func_name.find(f);
@@ -2738,7 +2732,7 @@ public:
       parent_name = sv.to_identifier(parent_name);
     }
 
-    auto name = D->getNameInfo().getAsString();
+    auto name = sv.to_identifier(D->getNameInfo().getAsString());
 
     if(CDecl)
       name = "constructor";
