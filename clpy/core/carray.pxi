@@ -130,7 +130,13 @@ cpdef function.Module compile_with_cache(
         str source, tuple options=(), arch=None, cache_dir=None):
     kernel_arg_size_t_code = 'typedef ' \
         + clpy.backend.opencl.utility.typeof_size() + ' __kernel_arg_size_t;\n'
-    source = clpy.backend.ultima.exec_ultima(source, _clpy_header)
+    if clpy.backend.opencl.env.supports_cl_khr_fp16():
+        ultima_options = (' -D__CLPY_ENABLE_CL_KHR_FP16', )
+    else:
+        ultima_options = ('', )
+    source = clpy.backend.ultima.exec_ultima(source,
+                                             _clpy_header,
+                                             ultima_options)
 
     extra_source = _get_header_source()
     options += ('-I%s' % _get_header_dir_path(),)
